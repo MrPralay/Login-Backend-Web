@@ -1,0 +1,135 @@
+/* Import Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Parisienne&family=Montserrat:wght@400;600;700&display=swap');
+
+body {
+    margin: 0;
+    font-family: 'Montserrat', sans-serif;
+    /* Animated Gradient Background */
+    background: linear-gradient(-45deg, #ffecd2, #fcb69f, #ff9a9e, #fad0c4);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    color: #4a4a4a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+/* Glassmorphism Container */
+.container {
+    background: rgba(255, 255, 255, 0.75); /* Frosted glass effect */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 25px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    padding: 50px;
+    text-align: center;
+    max-width: 600px;
+    width: 90%;
+    position: relative;
+    z-index: 10;
+    transition: transform 0.3s ease;
+}
+
+header h1 {
+    font-family: 'Parisienne', cursive;
+    font-size: 3.8em;
+    color: #d1495b;
+    margin-bottom: 20px;
+    text-shadow: 1px 1px 10px rgba(209, 73, 91, 0.2);
+}
+
+.love-message {
+    font-size: 1.15em;
+    line-height: 1.8;
+    margin-bottom: 20px;
+    color: #5d5d5d;
+    font-weight: 400;
+}
+
+/* The Secret Question Area */
+.proposal-question {
+    font-family: 'Parisienne', cursive;
+    font-size: 3.5em;
+    color: #a3333d;
+    margin: 35px 0;
+    font-weight: bold;
+    /* Soft Glow Animation */
+    animation: glow 2.5s infinite alternate;
+}
+
+.buttons-container {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.proposal-btn {
+    padding: 15px 45px;
+    font-size: 1.2em;
+    font-weight: 700;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.yes-btn {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    color: white;
+}
+
+.yes-btn:hover {
+    transform: scale(1.1) translateY(-5px);
+    box-shadow: 0 15px 25px rgba(46, 204, 113, 0.4);
+}
+
+.no-btn {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+}
+
+.no-btn:hover {
+    transform: scale(0.9) translateY(2px);
+    opacity: 0.8;
+}
+
+.logout-btn {
+    margin-top: 40px;
+    background: none;
+    border: none;
+    color: #d1495b;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 0.9em;
+    opacity: 0.7;
+}
+
+/* --- ✨ BEAUTIFUL ANIMATIONS --- */
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes glow {
+    from { text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #ff9a9e; }
+    to { text-shadow: 0 0 10px #fff, 0 0 20px #ff9a9e, 0 0 30px #ff9a9e; }
+}
+
+/* Adding a subtle zoom to the container on load */
+#main-content {
+    animation: fadeInContainer 1.5s ease-out;
+}
+
+@keyframes fadeInContainer {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
