@@ -3,44 +3,14 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
-const { google } = require('googleapis');
+const { Resend } = require('resend');
 const User = require('../models/User');
 const OTP = require('../models/OTP');
 
-// --- NODEMAILER OAUTH2 CONFIG ---
-const OAuth2 = google.auth.OAuth2;
-const oauth2Client = new OAuth2(
-    process.env.GMAIL_CLIENT_ID,
-    process.env.GMAIL_CLIENT_SECRET,
-    "https://developers.google.com/oauthplayground"
-);
-oauth2Client.setCredentials({ refresh_token: process.env.GMAIL_REFRESH_TOKEN });
+// --- RESEND CONFIG ---
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-async function createTransporter() {
-    try {
-        console.log("[DEBUG] Fetching Google OAuth2 Access Token...");
-        const accessToken = await oauth2Client.getAccessToken();
-        console.log("[DEBUG] Access Token fetched successfully.");
-
-        return nodemailer.createTransport({
-            host: "smtp.gmail.com",
-            port: 465,
-            secure: true,
-            auth: {
-                type: "OAuth2",
-                user: process.env.EMAIL_USER,
-                clientId: process.env.GMAIL_CLIENT_ID,
-                clientSecret: process.env.GMAIL_CLIENT_SECRET,
-                refreshToken: process.env.GMAIL_REFRESH_TOKEN,
-                accessToken: accessToken.token
-            }
-        });
-    } catch (err) {
-        console.error("Transporter Error:", err);
-        throw err;
-    }
-}
+// No longer using createTransporter function for Resend
 
 // --- REGISTER ROUTE ---
 router.post('/register', async (req, res) => {
@@ -86,39 +56,35 @@ router.post('/send-otp', async (req, res) => {
         );
 
         console.log(`[DEBUG] OTP for ${email}: ${otp}`);
+        
+        console.log("[DEBUG] Sending email via Resend API...");
 
-        // --- SEND ACTUAL EMAIL WITH TIMEOUT ---
-        const transporter = await createTransporter();
-        console.log("[DEBUG] Transporter created. Preparing mail options...");
+        const emailContent = `
+            <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+                <h2 style="color: #532e6d;">Registration OTP</h2>
+                <p>Hello,</p>
+                <p>Your one-time password for registration is:</p>
+                <h1 style="color: #d8b4ff; background: #532e6d; display: inline-block; padding: 10px 20px; border-radius: 5px;">${otp}</h1>
+                <p>This code will expire in 5 minutes.</p>
+                <p>If you didn't request this, please ignore this email.</p>
+                <hr />
+                <p style="font-size: 12px; color: #777;">Powered By Pralay</p>
+            </div>
+        `;
 
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
+        const { data, error } = await resend.emails.send({
+            from: 'onboarding@resend.dev',
             to: email,
-            subject: "Your Registration OTP",
-            html: `
-                <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-                    <h2 style="color: #532e6d;">Registration OTP</h2>
-                    <p>Hello,</p>
-                    <p>Your one-time password for registration is:</p>
-                    <h1 style="color: #d8b4ff; background: #532e6d; display: inline-block; padding: 10px 20px; border-radius: 5px;">${otp}</h1>
-                    <p>This code will expire in 5 minutes.</p>
-                    <p>If you didn't request this, please ignore this email.</p>
-                    <hr />
-                    <p style="font-size: 12px; color: #777;">Powered By Pralay</p>
-                </div>
-            `
-        };
+            subject: 'Your Registration OTP',
+            html: emailContent,
+        });
 
-        console.log(`[DEBUG] Attempting to send email to ${email} (with 10-second timeout)...`);
-        
-        const sendMailPromise = transporter.sendMail(mailOptions);
-        const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("Email sending timed out after 10 seconds")), 10000)
-        );
+        if (error) {
+            console.error("[RESEND ERROR]", error);
+            throw new Error(error.message);
+        }
 
-        await Promise.race([sendMailPromise, timeoutPromise]);
-        
-        console.log(`✅ Email sent successfully to ${email}`);
+        console.log(`✅ Email sent successfully via Resend. ID: ${data ? data.id : 'N/A'}`);
         res.json({ message: 'OTP sent successfully to your inbox!' });
     } catch (err) {
         console.error("OTP Error Trace:", err);
