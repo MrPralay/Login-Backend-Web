@@ -15,7 +15,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 // --- 0. CONFIGURATION CHECK (DEBUG DEPLOYMENT) ---
-const requiredEnv = ['MONGO_URI', 'EMAIL_USER', 'GMAIL_CLIENT_ID', 'GMAIL_CLIENT_SECRET', 'GMAIL_REFRESH_TOKEN', 'JWT_SECRET'];
+const requiredEnv = ['MONGO_URI', 'JWT_SECRET', 'RESEND_API_KEY'];
 const missingEnv = requiredEnv.filter(key => !process.env[key]);
 
 if (missingEnv.length > 0) {
