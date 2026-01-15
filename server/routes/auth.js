@@ -85,8 +85,10 @@ router.post('/send-otp', async (req, res) => {
 
         console.log(`[DEBUG] OTP for ${email}: ${otp}`);
 
-        // --- SEND ACTUAL EMAIL ---
+        // --- SEND ACTUAL EMAIL WITH TIMEOUT ---
         const transporter = await createTransporter();
+        console.log("[DEBUG] Transporter created. Preparing mail options...");
+
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: email,
@@ -105,13 +107,20 @@ router.post('/send-otp', async (req, res) => {
             `
         };
 
-        await transporter.sendMail(mailOptions);
-        console.log(`✅ Email sent to ${email}`);
+        console.log(`[DEBUG] Attempting to send email to ${email} (with 10-second timeout)...`);
+        
+        const sendMailPromise = transporter.sendMail(mailOptions);
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("Email sending timed out after 10 seconds")), 10000)
+        );
 
+        await Promise.race([sendMailPromise, timeoutPromise]);
+        
+        console.log(`✅ Email sent successfully to ${email}`);
         res.json({ message: 'OTP sent successfully to your inbox!' });
     } catch (err) {
-        console.error("OTP Error:", err);
-        res.status(500).json({ error: "Failed to send OTP email: " + err.message });
+        console.error("OTP Error Trace:", err);
+        res.status(500).json({ message: "Failed to send OTP: " + err.message });
     }
 });
 
