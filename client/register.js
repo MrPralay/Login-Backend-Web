@@ -56,8 +56,8 @@ async function handleRegister() {
         const data = await response.json();
 
         if (response.ok) {
-            document.getElementById('registration-form').style.display = "none";
-            document.getElementById('success-view').style.display = "block";
+            // REDIRECT to the protected success page
+            window.location.href = "/registration-success";
         } else {
             msg.innerText = data.message || "Registration failed";
             msg.className = "wrong";

@@ -38,6 +38,15 @@ router.post('/register', async (req, res) => {
         // Delete OTP after successful registration
         await OTP.deleteOne({ email });
 
+        // NEW: Set a short-lived "Proof of Success" cookie
+        // This cookie allows the user to see the success page once.
+        res.cookie('reg_success', 'true', {
+            httpOnly: true,
+            secure: true, // For Render HTTPS
+            sameSite: 'lax',
+            maxAge: 300000 // 5 minutes
+        });
+
         res.status(201).json({ message: 'User registered successfully' });
     } catch (err) {
         if (err.code === 11000) return res.status(400).json({ message: 'Email or Username already taken' });

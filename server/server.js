@@ -118,6 +118,16 @@ const protect = async (req, res, next) => {
     }
 };
 
+// --- 3. REGISTRATION SUCCESS PROTECTION ---
+const checkRegSuccess = (req, res, next) => {
+    if (req.cookies.reg_success === 'true') {
+        next();
+    } else {
+        console.log("❌ Unauthenticated access to success page attempt. Redirecting...");
+        res.redirect('/');
+    }
+};
+
 // --- ROUTES ---
 
 app.use('/api', authRoutes);
@@ -130,6 +140,13 @@ app.get('/', checkMasterKey, (req, res) => {
 app.get('/dashboard', protect, (req, res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     res.sendFile(path.join(__dirname, '../private/profile.html'));
+});
+
+// Protect the success page
+app.get('/registration-success', checkRegSuccess, (req, res) => {
+    // Burn the cookie immediately so it can't be used twice
+    res.clearCookie('reg_success');
+    res.sendFile(path.join(__dirname, '../client/success.html'));
 });
 
 app.get('/private/:fileName', protect, (req, res) => {
