@@ -19,7 +19,10 @@ oauth2Client.setCredentials({ refresh_token: process.env.GMAIL_REFRESH_TOKEN });
 
 async function createTransporter() {
     try {
+        console.log("[DEBUG] Fetching Google OAuth2 Access Token...");
         const accessToken = await oauth2Client.getAccessToken();
+        console.log("[DEBUG] Access Token fetched successfully.");
+
         return nodemailer.createTransport({
             service: "gmail",
             auth: {
