@@ -24,7 +24,9 @@ async function createTransporter() {
         console.log("[DEBUG] Access Token fetched successfully.");
 
         return nodemailer.createTransport({
-            service: "gmail",
+            host: "smtp.gmail.com",
+            port: 465,
+            secure: true,
             auth: {
                 type: "OAuth2",
                 user: process.env.EMAIL_USER,
