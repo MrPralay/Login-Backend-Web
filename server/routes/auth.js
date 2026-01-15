@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
+const OTP = require('../models/OTP');
 
 // --- REGISTER ROUTE ---
 router.post('/register', async (req, res) => {
@@ -17,6 +18,31 @@ router.post('/register', async (req, res) => {
         res.status(201).json({ message: 'User registered successfully' });
     } catch (err) {
         if (err.code === 11000) return res.status(400).json({ error: 'Email or Username already taken' });
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- SEND OTP ROUTE ---
+router.post('/send-otp', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ error: 'Email is required' });
+
+        // Generate 4-digit OTP
+        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+
+        // Save OTP to DB (replaces existing one for this email if it exists)
+        await OTP.findOneAndUpdate(
+            { email },
+            { otp, createdAt: new Date() },
+            { upsert: true, new: true }
+        );
+
+        console.log(`[DEBUG] OTP for ${email}: ${otp}`);
+        
+        // In a real app, you'd use Nodemailer here. For now, we just save to DB.
+        res.json({ message: 'OTP sent successfully' });
+    } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });

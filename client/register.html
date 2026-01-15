@@ -49,12 +49,56 @@
                   placeholder="Choose Password"
                 />
               </div>
-              <div class="phone-row">
+              <div class="email-container">
                 <input
                   type="email"
                   id="reg-email"
                   placeholder="Email Address"
                 />
+                <button
+                  id="send-otp-btn"
+                  class="send-otp-btn hidden"
+                  onclick="sendOTP(event)"
+                >
+                  Send OTP
+                </button>
+              </div>
+
+              <!-- OTP Verification Section (Hidden initially) -->
+              <div id="otp-section" class="hidden">
+                <div class="otp-hint">
+                  Enter the 4-digit code sent to your email
+                </div>
+                <div class="otp-inputs">
+                  <input
+                    type="text"
+                    maxlength="1"
+                    class="otp-box"
+                    oninput="moveNext(this, 'otp2')"
+                    id="otp1"
+                  />
+                  <input
+                    type="text"
+                    maxlength="1"
+                    class="otp-box"
+                    oninput="moveNext(this, 'otp3')"
+                    id="otp2"
+                  />
+                  <input
+                    type="text"
+                    maxlength="1"
+                    class="otp-box"
+                    oninput="moveNext(this, 'otp4')"
+                    id="otp3"
+                  />
+                  <input
+                    type="text"
+                    maxlength="1"
+                    class="otp-box"
+                    oninput="moveNext(this, 'null')"
+                    id="otp4"
+                  />
+                </div>
               </div>
             </div>
 
