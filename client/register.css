@@ -1,8 +1,286 @@
-body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f4f4f4; margin: 0; }
-.register-container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; width: 300px; }
-input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-button { width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
-button:hover { background: #218838; }
-p { font-size: 14px; margin-top: 10px; }
-.success { color: green; }
-.error { color: red; }
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-image: url('walpaper.webp');
+    background-size: cover;
+    background-position: center;
+    height: 100vh;
+    margin: 0;
+    background-repeat: no-repeat;
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+}
+
+.pic {
+    width: 450px;
+    height: 480px;
+    margin: auto;
+    padding: 20px;
+    text-align: center;
+    background-color: rgb(252, 252, 252);
+    backdrop-filter: blur(8px);
+    border-radius: 15px;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+}
+
+.photo {
+    width: 200px;
+    height: auto;
+}
+
+.container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.pralay {
+    position: absolute;
+    top: 680px;
+    white-space: nowrap;
+}
+
+#loader {
+    position: fixed;
+    inset: 0;
+    background: rgb(252, 252, 252);
+    z-index: 9999;
+}
+
+.screen-container {
+    width: 550px;
+    height: 680px;
+    margin: auto;
+    padding: 20px;
+    text-align: center;
+    background-color: rgba(237, 232, 228, 0.4);
+    backdrop-filter: blur(8px);
+    border-radius: 25px;
+    align-items: center;
+    justify-content: center;
+    animation: cardIn 0.6s ease-out forwards;
+}
+
+@keyframes cardIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.logo {
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    gap: 20px;
+    color: rgb(22, 9, 35)
+}
+
+.logo-pic {
+    margin-top: 10px;
+    width: 300px;
+    height: 150px;
+}
+
+.username input,
+.pass input {
+    width: 50%;
+    max-width: 300%;
+    padding: 10px 17px;
+    margin: 13px 0px;
+    border-radius: 14px;
+    border: 1px solid rgb(114, 109, 109);
+    font-size: 16px;
+    animation: passIn 0.7s ease-out forwards;
+}
+
+@keyframes passIn {
+    from {
+        width: 0;
+        opacity: 0;
+    }
+    to {
+        width: 50%;
+        opacity: 1;
+    }
+}
+
+.button {
+    margin: 16px;
+}
+
+.btn {
+    width: 58%;
+    border-radius: 17px;
+    border: none;
+    background: rgb(83, 46, 109);
+    color: white;
+    padding: 8px 19px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    display: inline-block;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    margin-top: 10px;
+}
+
+.btn:hover {
+    filter: drop-shadow(0 0 3px rgba(83, 46, 109));
+}
+
+.info {
+    margin: -15px;
+    margin-right: 35%;
+    color: aliceblue;
+    margin-top: 30px;
+}
+
+.except-top {
+    margin: -10px;
+}
+
+.power {
+    margin-top: 6%;
+    color: rgb(215, 215, 215);
+    font-weight: lighter;
+    font-size: 14px;
+    transform: translateY(10px);
+}
+
+#messageBOX {
+    margin-top: -8px;
+    min-height: 20px;
+    text-align: center;
+    justify-items: center;
+}
+
+.hidden {
+    text-align: center;
+}
+
+.warning {
+    color: rgb(247, 27, 27);
+}
+
+.success {
+    color: rgb(22, 189, 22);
+}
+
+.wrong {
+    color: rgb(249, 7, 7);
+}
+
+.priya {
+    color: rgb(99, 96, 96);
+}
+
+.signup-text {
+    margin-top: 20px;
+    color: rgb(215, 215, 215);
+    font-size: 16px;
+    text-align: center;
+    transform: translateY(20px);
+}
+
+.signup-link {
+    margin-left: 6px;
+    color: #d8b4ff;
+    font-weight: bold;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.signup-link:hover {
+    text-decoration: underline;
+    filter: drop-shadow(0 0 6px rgba(216, 180, 255, 0.8));
+}
+
+.again {
+    transform: translateY(5px);
+}
+
+html,
+body {
+    height: 100%;
+    overflow-X: hidden;
+}
+
+@media (max-width: 768px) {
+    body {
+        min-height: 100dvh;
+        background-image: url('walpaper.webp');
+        background-size: cover;
+        background-position: center;
+    }
+
+    .pic {
+        width: 90%;
+        max-width: 360px;
+        height: auto;
+    }
+
+    .photo {
+        width: 150px;
+    }
+
+    .screen-container {
+        width: 90%;
+        max-width: 260px;
+        max-height: 54vh;
+        padding: 16px;
+        backdrop-filter: blur(3px);
+        overflow: hidden;
+    }
+
+    .username input,
+    .pass input {
+        width: 100%;
+        animation: dividerIn 0.7s ease-out forwards;
+    }
+
+    @keyframes dividerIn {
+        from {
+            width: 0;
+            opacity: 0;
+        }
+        to {
+            width: 100%;
+            opacity: 1;
+        }
+    }
+
+    .btn {
+        width: 100%;
+        font-size: 15px;
+    }
+
+    .btn:hover {
+        transform: none;
+        filter: none;
+    }
+
+    .info {
+        margin: 10px 0;
+        text-align: center;
+    }
+
+    .power {
+        visibility: hidden;
+    }
+
+    .fuck {
+        transform: scale(0.78);
+    }
+
+    .again {
+        transform: scale(0.91);
+        transform: translateY(-13px);
+    }
+}

@@ -1,21 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - My Website</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Sign Up - My Website</title>
     <link rel="stylesheet" href="register.css">
 </head>
-<body>
-    <div class="register-container">
-        <h2>Create Account</h2>
-        <input type="text" id="reg-username" placeholder="Choose Username">
-        <input type="password" id="reg-password" placeholder="Choose Password">
-        <button onclick="handleRegister()">Sign Up</button>
-        <p id="reg-msg"></p>
-        <a href="index.html">Already have an account? Login here</a>
-    </div>
 
+<body>
+    <div class="container" id="loader">
+        <div class="pic">
+            <img src="peg.png" class="photo">
+        </div>
+        <div class="pralay">
+            <div class="priya">
+                <p>POwered By Pralay</p>
+            </div>
+        </div>
+    </div>
+    <div id="main-content" style="display:none;">
+        <div class="screen-container">
+            <div class="fuck">
+                <div class="logo">
+                    <img src="me.png" class="logo-pic">
+                </div>
+                <div class="except-top">
+                    <div class="info">
+                        <h1>Sign Up</h1>
+                    </div>
+                    <div class="username">
+                        <input type="text" id="reg-username" placeholder="Choose Username">
+                        <br>
+                    </div>
+                    <div class="pass">
+                        <input type="password" id="reg-password" placeholder="Choose Password">
+                    </div>
+                    <div class="button">
+                        <button class="btn" onclick="handleRegister()">Sign Up</button>
+                        <div id="messageBOX" class="hidden">
+                            <p id="message"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="again">
+                    <div class="signup-text">
+                        <span>Already have an account?</span>
+                        <a href="index.html" class="signup-link">Login here</a>
+                    </div>
+                    <div class="power">
+                        <p>Powered By <span>Pralay</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <script src="register.js"></script>
 </body>
+
 </html>
