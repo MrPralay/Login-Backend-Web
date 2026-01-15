@@ -12,6 +12,18 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
+// --- 0. CONFIGURATION CHECK (DEBUG DEPLOYMENT) ---
+const requiredEnv = ['MONGO_URI', 'EMAIL_USER', 'EMAIL_PASS', 'JWT_SECRET'];
+const missingEnv = requiredEnv.filter(key => !process.env[key]);
+
+if (missingEnv.length > 0) {
+    console.error("❌ CRITICAL ERROR: Missing Environment Variables:", missingEnv.join(", "));
+    console.error("👉 If running on Render, go to Dashboard > Settings > Environment Variables");
+} else {
+    console.log("✅ All required environment variables are present.");
+}
+
+
 // GLOBAL ERROR HANDLERS (Prevent Crashes)
 process.on('uncaughtException', (err) => {
     console.error('CRITICAL ERROR: Uncaught Exception:', err);

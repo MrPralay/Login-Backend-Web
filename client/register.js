@@ -32,12 +32,19 @@ async function sendOTP() {
     const msb = document.getElementById("messageBOX");
     const msg = document.getElementById("message");
 
+    const otpBtn = document.getElementById('otp-btn');
+
     if (!email || !email.includes('@')) {
         msg.innerText = "Enter a valid email address";
         msg.className = "warning";
         msb.classList.remove("hidden");
         return;
     }
+
+    // LOCK BUTTON
+    otpBtn.disabled = true;
+    otpBtn.innerText = "Sending...";
+
 
     try {
         const response = await fetch("/api/send-otp", {
@@ -53,16 +60,28 @@ async function sendOTP() {
             msg.className = "success";
             msb.classList.remove("hidden");
             document.getElementById('otp-container').style.display = "block";
-            document.getElementById('otp-btn').innerText = "Resend";
+            
+            // Re-enable but change text to Resend
+            otpBtn.disabled = false;
+            otpBtn.innerText = "Resend";
         } else {
             msg.innerText = data.error || "Failed to send OTP";
             msg.className = "wrong";
             msb.classList.remove("hidden");
+            
+            // Re-enable on failure
+            otpBtn.disabled = false;
+            otpBtn.innerText = "Send OTP";
         }
+
     } catch (err) {
         msg.innerText = "Server error";
         msg.className = "wrong";
         msb.classList.remove("hidden");
+        
+        // Re-enable on error
+        otpBtn.disabled = false;
+        otpBtn.innerText = "Send OTP";
     }
 }
 
