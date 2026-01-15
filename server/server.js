@@ -12,6 +12,15 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
+// GLOBAL ERROR HANDLERS (Prevent Crashes)
+process.on('uncaughtException', (err) => {
+    console.error('CRITICAL ERROR: Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('CRITICAL ERROR: Unhandled Rejection:', reason);
+});
+
 // --- 1. PRO SECURITY: MASTER KEY REDIRECT MIDDLEWARE (WITH TIMER & BURN) ---
 const checkMasterKey = async (req, res, next) => {
     const manualKey = req.cookies.master_key;

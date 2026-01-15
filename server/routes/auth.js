@@ -16,6 +16,15 @@ const transporter = nodemailer.createTransport({
     }
 });
 
+// Verify Connection Configuration
+transporter.verify(function (error, success) {
+    if (error) {
+        console.error("❌ SMTP Connection Error:", error);
+    } else {
+        console.log("✅ SMTP Server is ready to take messages");
+    }
+});
+
 router.post('/send-otp', async (req, res) => {
     try {
         const { email } = req.body;
