@@ -49,7 +49,7 @@ async function sendOTP() {
         const data = await response.json();
 
         if (response.ok) {
-            msg.innerText = "OTP Sent! Check Terminal/MongoDB";
+            msg.innerText = "OTP Sent! Check your Email inbox";
             msg.className = "success";
             msb.classList.remove("hidden");
             document.getElementById('otp-container').style.display = "block";

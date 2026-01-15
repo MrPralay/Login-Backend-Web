@@ -26,6 +26,7 @@ transporter.verify(function (error, success) {
 });
 
 router.post('/send-otp', async (req, res) => {
+    console.log('🔔 SEND-OTP REQUEST RECEIVED!', req.body);
     try {
         const { email } = req.body;
         if (!email) return res.status(400).json({ error: 'Email is required' });
@@ -49,6 +50,7 @@ router.post('/send-otp', async (req, res) => {
         };
 
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+            console.log(`DEBUG: Attempting to send using user: ${process.env.EMAIL_USER}`);
             await transporter.sendMail(mailOptions);
             console.log(`📧 Email sent to ${email}`);
         } else {
