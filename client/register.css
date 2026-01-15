@@ -90,26 +90,115 @@ body {
 }
 
 .username input,
-.pass input {
-    width: 50%;
+.pass input,
+.phone-row input {
+    width: 65%;
     max-width: 300%;
     padding: 10px 17px;
-    margin: 13px 0px;
+    margin: 8px 0px;
     border-radius: 14px;
-    border: 1px solid rgb(114, 109, 109);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
     font-size: 16px;
+    outline: none;
     animation: passIn 0.7s ease-out forwards;
 }
 
-@keyframes passIn {
-    from {
-        width: 0;
-        opacity: 0;
-    }
-    to {
-        width: 50%;
-        opacity: 1;
-    }
+.username input::placeholder,
+.pass input::placeholder,
+.phone-row input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.phone-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+}
+
+.phone-row input {
+    width: 45%;
+}
+
+.send-otp-btn {
+    background: #d8b4ff;
+    color: #532e6d;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+/* OTP UI */
+.otp-hint {
+    color: white;
+    font-size: 14px;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+.otp-inputs {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.otp-box {
+    width: 45px;
+    height: 45px;
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    outline: none;
+    transition: 0.3s;
+}
+
+.otp-box:focus {
+    border-color: #d8b4ff;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Success View */
+.success-content {
+    padding: 40px 20px;
+    text-align: center;
+    color: white;
+    animation: cardIn 0.6s ease-out;
+}
+
+.checkmark-circle {
+    width: 80px;
+    height: 80px;
+    background: #28a745;
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.checkmark {
+    width: 40px;
+    height: 20px;
+    border-left: 5px solid white;
+    border-bottom: 5px solid white;
+    transform: rotate(-45deg);
+    margin-top: -5px;
+}
+
+.back-btn {
+    background: #28a745 !important;
+    margin-top: 20px;
 }
 
 .button {

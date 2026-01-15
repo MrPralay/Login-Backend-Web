@@ -1,19 +1,82 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
+const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
+const OTP = require('../models/OTP');
+
+// Configure Nodemailer
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER, // Your Gmail
+        pass: process.env.EMAIL_PASS  // Your App Password
+    }
+});
+
+router.post('/send-otp', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ error: 'Email is required' });
+
+        // 1. Generate 4-digit OTP
+        const otpCode = Math.floor(1000 + Math.random() * 9000).toString();
+
+        // 2. Save to DB (TTL will handle deletion)
+        await OTP.findOneAndUpdate(
+            { email },
+            { otp: otpCode, createdAt: Date.now() },
+            { upsert: true, new: true }
+        );
+
+        // 3. Send Email via Nodemailer
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Your Antigravity OTP Code',
+            text: `Your verification code is: ${otpCode}. It expires in 5 minutes.`
+        };
+
+        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+            await transporter.sendMail(mailOptions);
+            console.log(`📧 Email sent to ${email}`);
+        } else {
+            // Fallback for development if no creds
+            console.log(`\n--------------------------`);
+            console.log(`📧 [DEV OPTION] OTP for ${email}: ${otpCode}`);
+            console.log(`--------------------------\n`);
+        }
+
+        res.status(200).json({ message: 'OTP sent! Check your Email.' });
+    } catch (err) {
+        console.error("OTP Error:", err);
+        res.status(500).json({ error: "Failed to send OTP" });
+    }
+});
 
 router.post('/register', async (req, res) => {
     try {
-        const { username, password } = req.body;
+        const { username, password, email, otp } = req.body;
+
+        // 1. Verify OTP
+        const otpRecord = await OTP.findOne({ email, otp });
+        if (!otpRecord) {
+            return res.status(400).json({ message: 'Invalid or expired OTP' });
+        }
+
+        // 2. Hash Password and Save User
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ username, password: hashedPassword });
+        const newUser = new User({ username, password: hashedPassword, email });
         await newUser.save();
-        res.status(201).json({ message: 'User registered' });
+
+        // 3. Burn OTP after successful registration
+        await OTP.deleteOne({ _id: otpRecord._id });
+
+        res.status(201).json({ message: 'User registered successfully' });
     } catch (err) {
-        if (err.code === 11000) return res.status(400).json({ error: 'Username taken' });
+        if (err.code === 11000) return res.status(400).json({ error: 'Email or Username already taken' });
         res.status(500).json({ error: err.message });
     }
 });
@@ -44,7 +107,7 @@ router.post('/login', async (req, res) => {
 
         res.cookie('token', token, {
             httpOnly: true, 
-            secure: true,      
+            secure: process.env.NODE_ENV === 'production',      
             sameSite: 'lax',   
             maxAge: 3600000    
         });

@@ -26,6 +26,16 @@ const userSchema = new mongoose.Schema({
   authIdCreatedAt: {
     type: Date,
     default: null
+  },
+  // --- PERSONAL DETAILS ---
+  bio: {
+    type: String,
+    default: ""
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true
   }
 });
 module.exports = mongoose.model('User', userSchema);

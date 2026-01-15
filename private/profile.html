@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Antigravity</title>
+    <link rel="stylesheet" href="/private/profile.css">
+</head>
+<body>
+    <div id="splash-screen">
+        <div class="loader"></div>
+        <p>Loading your profile...</p>
+    </div>
+
+    <header class="navbar">
+        <div class="nav-left">
+            <img src="/me.png" alt="Logo" class="nav-logo">
+            <span class="app-name">Antigravity</span>
+        </div>
+        <div class="nav-right">
+            <span id="nav-username" class="username-top"></span>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <main class="profile-container" id="main-content" style="display:none;">
+        <div class="profile-card glass">
+            <div class="profile-header-bg"></div>
+            <div class="profile-info">
+                <div class="avatar-container">
+                    <div class="avatar-placeholder" id="avatar-letter">?</div>
+                </div>
+                <h2 id="display-username"></h2>
+                <div id="bio-section" class="bio-container">
+                    <p id="user-bio" class="bio-display"></p>
+                    <button id="edit-bio-btn" class="action-btn" onclick="toggleEdit()">Edit Bio</button>
+                    
+                    <div id="bio-edit-area" style="display:none;">
+                        <textarea id="bio-input" maxlength="150" placeholder="Write something about yourself..."></textarea>
+                        <div class="edit-actions">
+                            <button class="save-btn" onclick="saveBio()">Save</button>
+                            <button class="cancel-btn" onclick="toggleEdit()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="profile-stats">
+                <div class="stat">
+                    <span class="stat-value">0</span>
+                    <span class="stat-label">Posts</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">0</span>
+                    <span class="stat-label">Followers</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">0</span>
+                    <span class="stat-label">Following</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/private/profile.js"></script>
+</body>
+</html>

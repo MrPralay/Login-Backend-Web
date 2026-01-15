@@ -51,7 +51,12 @@ const checkMasterKey = async (req, res, next) => {
                 );
 
                 // Set token cookie and teleport
-                res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'lax' });
+                // Set token cookie and teleport
+                res.cookie('token', token, { 
+                    httpOnly: true, 
+                    secure: process.env.NODE_ENV === 'production', 
+                    sameSite: 'lax' 
+                });
                 console.log("✅ Master Key used and destroyed. Redirecting...");
                 return res.redirect('/dashboard');
             }
@@ -96,16 +101,34 @@ app.use('/api', authRoutes);
 
 // Apply checkMasterKey to the landing page
 app.get('/', checkMasterKey, (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/index.html'));
+    res.sendFile(path.join(__dirname, '../client/home.html'));
 });
 
 app.get('/dashboard', protect, (req, res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-    res.sendFile(path.join(__dirname, '../private/proposal_dashboard.html'));
+    res.sendFile(path.join(__dirname, '../private/profile.html'));
 });
 
 app.get('/private/:fileName', protect, (req, res) => {
     res.sendFile(path.join(__dirname, '../private', req.params.fileName));
+});
+
+app.get('/api/user/profile', protect, (req, res) => {
+    res.json({
+        username: req.user.username,
+        bio: req.user.bio || ""
+    });
+});
+
+app.post('/api/user/update-bio', protect, async (req, res) => {
+    try {
+        const { bio } = req.body;
+        req.user.bio = bio;
+        await req.user.save();
+        res.json({ message: "Bio updated successfully" });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to update bio" });
+    }
 });
 
 app.get('/api/dashboard-data', protect, (req, res) => {
