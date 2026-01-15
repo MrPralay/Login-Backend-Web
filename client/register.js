@@ -1,11 +1,12 @@
 window.addEventListener("load", () => {
     setTimeout(() => {
-        document.getElementById("loader").style.display = "none";
-        document.getElementById("main-content").style.display = "block";
+        const loader = document.getElementById("loader");
+        const main = document.getElementById("main-content");
+        if(loader) loader.style.display = "none";
+        if(main) main.style.display = "block";
     }, 1000);
 });
 
-// Auto-focus logic for 4-digit OTP boxes
 const otpBoxes = [
     document.getElementById('otp-1'),
     document.getElementById('otp-2'),
@@ -14,6 +15,7 @@ const otpBoxes = [
 ];
 
 otpBoxes.forEach((box, index) => {
+    if(!box) return;
     box.addEventListener('input', (e) => {
         if (e.target.value && index < 3) {
             otpBoxes[index + 1].focus();
@@ -31,7 +33,6 @@ async function sendOTP() {
     const email = document.getElementById('reg-email').value;
     const msb = document.getElementById("messageBOX");
     const msg = document.getElementById("message");
-
     const otpBtn = document.getElementById('otp-btn');
 
     if (!email || !email.includes('@')) {
@@ -41,10 +42,8 @@ async function sendOTP() {
         return;
     }
 
-    // LOCK BUTTON
     otpBtn.disabled = true;
     otpBtn.innerText = "Sending...";
-
 
     try {
         const response = await fetch("/api/send-otp", {
@@ -56,30 +55,25 @@ async function sendOTP() {
         const data = await response.json();
 
         if (response.ok) {
-            msg.innerText = "OTP Sent! Check your Email inbox";
+            msg.innerText = data.message;
             msg.className = "success";
             msb.classList.remove("hidden");
             document.getElementById('otp-container').style.display = "block";
-            
-            // Re-enable but change text to Resend
             otpBtn.disabled = false;
             otpBtn.innerText = "Resend";
         } else {
-            msg.innerText = data.error || "Failed to send OTP";
+            // Show the actual error from the server (e.g. "Could not generate access token")
+            msg.innerText = data.message || data.error || "Failed to send OTP";
             msg.className = "wrong";
             msb.classList.remove("hidden");
-            
-            // Re-enable on failure
             otpBtn.disabled = false;
             otpBtn.innerText = "Send OTP";
         }
 
     } catch (err) {
-        msg.innerText = "Server error";
+        msg.innerText = "Connection Error: " + err.message;
         msg.className = "wrong";
         msb.classList.remove("hidden");
-        
-        // Re-enable on error
         otpBtn.disabled = false;
         otpBtn.innerText = "Send OTP";
     }
@@ -92,7 +86,6 @@ async function handleRegister() {
     const msb = document.getElementById("messageBOX");
     const msg = document.getElementById("message");
 
-    // Collect 4-digit OTP
     const otp = otpBoxes.map(box => box.value).join('');
 
     if (!user || !pass || !email || otp.length < 4) {
@@ -117,7 +110,6 @@ async function handleRegister() {
         const data = await response.json();
 
         if (response.ok) {
-            // SUCCESS FLOW: Show Success View
             document.getElementById('registration-form').style.display = "none";
             document.getElementById('success-view').style.display = "block";
         } else {

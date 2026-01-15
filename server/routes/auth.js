@@ -1,19 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
 const OTP = require('../models/OTP');
-
 const { google } = require('googleapis');
 
-// Configure OAuth2 Client (Gmail HTTP API)
+// Configure OAuth2 Client
 const oauth2Client = new google.auth.OAuth2(
     process.env.GMAIL_CLIENT_ID,
     process.env.GMAIL_CLIENT_SECRET,
-    "https://developers.google.com/oauthplayground" // Standard Redirect URI
+    "https://developers.google.com/oauthplayground"
 );
 
 oauth2Client.setCredentials({
@@ -34,7 +32,6 @@ const createEmailBody = (to, from, subject, message) => {
         message
     ].join('\n');
 
-    // URL-safe Base64 encoding
     return Buffer.from(str)
         .toString('base64')
         .replace(/\+/g, '-')
@@ -42,25 +39,26 @@ const createEmailBody = (to, from, subject, message) => {
         .replace(/=+$/, '');
 };
 
+// --- SEND OTP ROUTE ---
 router.post('/send-otp', async (req, res) => {
-    console.log('🔔 SEND-OTP REQUEST RECEIVED!', req.body);
+    console.log('🔔 Request to send OTP to:', req.body.email);
     try {
         const { email } = req.body;
         if (!email) return res.status(400).json({ error: 'Email is required' });
 
-        // 1. Generate 4-digit OTP
+        // CRITICAL FIX: Force refresh the access token before sending
+        // This prevents "Invalid Credentials" errors on cloud platforms like Render
+        const { token } = await oauth2Client.getAccessToken();
+        if (!token) throw new Error("Could not generate Google Access Token");
+
         const otpCode = Math.floor(1000 + Math.random() * 9000).toString();
 
-        // 2. Save to DB (TTL will handle deletion)
         await OTP.findOneAndUpdate(
             { email },
             { otp: otpCode, createdAt: Date.now() },
             { upsert: true, new: true }
         );
 
-        // 3. Send Email via Gmail API (REST - Port 443)
-        console.log(`DEBUG: Using Gmail API to send to ${email}`);
-        
         const rawMessage = createEmailBody(
             email,
             process.env.EMAIL_USER,
@@ -70,36 +68,35 @@ router.post('/send-otp', async (req, res) => {
 
         await gmail.users.messages.send({
             userId: 'me',
-            requestBody: {
-                raw: rawMessage
-            }
+            requestBody: { raw: rawMessage }
         });
 
-        console.log(`📧 Email sent successfully to ${email}`);
-        res.status(200).json({ message: 'OTP sent! Check your Email.' });
+        console.log(`✅ OTP ${otpCode} sent successfully to ${email}`);
+        res.status(200).json({ message: 'OTP Sent! Check your Email inbox' });
 
     } catch (err) {
-        console.error("❌ GMAIL API ERROR:", err);
-        res.status(500).json({ error: "Failed to send OTP", details: err.message });
+        console.error("❌ GMAIL API ERROR:", err.message);
+        res.status(500).json({ 
+            error: "Failed to send OTP", 
+            message: err.message 
+        });
     }
 });
 
+// --- REGISTER ROUTE ---
 router.post('/register', async (req, res) => {
     try {
         const { username, password, email, otp } = req.body;
 
-        // 1. Verify OTP
         const otpRecord = await OTP.findOne({ email, otp });
         if (!otpRecord) {
             return res.status(400).json({ message: 'Invalid or expired OTP' });
         }
 
-        // 2. Hash Password and Save User
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = new User({ username, password: hashedPassword, email });
         await newUser.save();
 
-        // 3. Burn OTP after successful registration
         await OTP.deleteOne({ _id: otpRecord._id });
 
         res.status(201).json({ message: 'User registered successfully' });
@@ -109,6 +106,7 @@ router.post('/register', async (req, res) => {
     }
 });
 
+// --- LOGIN ROUTE ---
 router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -121,10 +119,9 @@ router.post('/login', async (req, res) => {
         const sessionId = crypto.randomBytes(16).toString('hex');
         const masterAuthId = crypto.randomBytes(24).toString('hex'); 
 
-        // UPDATED: Save Session, Master Key, AND the current Timestamp
         user.currentSessionId = sessionId;
         user.authId = masterAuthId; 
-        user.authIdCreatedAt = new Date(); // <--- This starts the timer
+        user.authIdCreatedAt = new Date(); 
         await user.save();
 
         const token = jwt.sign(
@@ -135,18 +132,19 @@ router.post('/login', async (req, res) => {
 
         res.cookie('token', token, {
             httpOnly: true, 
-            secure: process.env.NODE_ENV === 'production',      
+            secure: true, // Required for Render HTTPS     
             sameSite: 'lax',   
             maxAge: 3600000    
         });
 
-        res.json({ message: "Login successful. Master Key expires in 15 mins." });
+        res.json({ message: "Login successful", masterKey: masterAuthId });
         
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
+// --- LOGOUT ROUTE ---
 router.post('/logout', async (req, res) => {
     try {
         const token = req.cookies.token;
@@ -156,13 +154,13 @@ router.post('/logout', async (req, res) => {
                 await User.findByIdAndUpdate(decoded.id, { 
                     currentSessionId: null,
                     authId: null,
-                    authIdCreatedAt: null // Wipe the timer too
+                    authIdCreatedAt: null 
                 });
             }
         }
         res.clearCookie('token');
         res.clearCookie('master_key'); 
-        res.json({ message: "Logged out. All keys destroyed." });
+        res.json({ message: "Logged out" });
     } catch (err) {
         res.status(500).json({ error: "Logout error" });
     }
