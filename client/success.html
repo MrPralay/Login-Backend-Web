@@ -1,92 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, user-scalable=no"
-    />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Registration Successful - My Website</title>
-    <link rel="stylesheet" href="register.css" />
-    <style>
-      .success-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        text-align: center;
-        padding: 20px;
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        color: white;
-      }
-      .success-card {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
-        padding: 40px;
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
-        max-width: 400px;
-        width: 100%;
-      }
-      .checkmark-circle {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #4bb543;
-        margin: 0 auto 20px;
-        box-shadow: 0 0 20px rgba(75, 181, 67, 0.4);
-      }
-      .checkmark {
-        width: 40px;
-        height: 20px;
-        border-bottom: 5px solid white;
-        border-left: 5px solid white;
-        transform: rotate(-45deg);
-        margin-top: -5px;
-      }
-      h2 {
-        margin-bottom: 10px;
-        color: #fff;
-      }
-      p {
-        color: #ccc;
-        margin-bottom: 30px;
-      }
-      .back-btn {
-        background: #532e6d;
-        color: white;
-        border: none;
-        padding: 12px 30px;
-        border-radius: 25px;
-        font-size: 16px;
-        cursor: pointer;
-        transition: transform 0.2s, background 0.2s;
-        text-decoration: none;
-        display: inline-block;
-      }
-      .back-btn:hover {
-        background: #6a3b8a;
-        transform: translateY(-2px);
-      }
-    </style>
-  </head>
-  <body>
+    <!-- Separation: External CSS -->
+    <link rel="stylesheet" href="success.css">
+</head>
+<body>
     <div class="success-container">
-      <div class="success-card">
-        <div class="checkmark-circle">
-          <div class="checkmark"></div>
+        <div class="checkmark-wrapper">
+            <div class="checkmark"></div>
         </div>
-        <h2>Registration Successful!</h2>
-        <p>
-          Welcome to our community. Your account has been created successfully.
-        </p>
-        <a href="/" class="back-btn">Go back to Login</a>
-      </div>
+        
+        <h1 class="success-title">Success!</h1>
+        <p class="success-msg">Your account has been created.<br>Welcome to the community!</p>
+        
+        <a href="/" class="back-btn">Go to Login</a>
+
+        <div class="power">
+            <p>Powered By <span>Pralay</span></p>
+        </div>
     </div>
-  </body>
+</body>
 </html>
