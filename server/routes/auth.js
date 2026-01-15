@@ -3,14 +3,20 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const { Resend } = require('resend');
+const { google } = require('googleapis');
 const User = require('../models/User');
 const OTP = require('../models/OTP');
 
-// --- RESEND CONFIG ---
-const resend = new Resend(process.env.RESEND_API_KEY);
+// --- GMAIL API OAUTH2 CONFIG ---
+const OAuth2 = google.auth.OAuth2;
+const oauth2Client = new OAuth2(
+    process.env.GMAIL_CLIENT_ID,
+    process.env.GMAIL_CLIENT_SECRET,
+    "https://developers.google.com/oauthplayground"
+);
+oauth2Client.setCredentials({ refresh_token: process.env.GMAIL_REFRESH_TOKEN });
 
-// No longer using createTransporter function for Resend
+const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
 // --- REGISTER ROUTE ---
 router.post('/register', async (req, res) => {
@@ -57,9 +63,10 @@ router.post('/send-otp', async (req, res) => {
 
         console.log(`[DEBUG] OTP for ${email}: ${otp}`);
         
-        console.log("[DEBUG] Sending email via Resend API...");
+        console.log("[DEBUG] Sending email via Gmail REST API (HTTPS)...");
 
-        const emailContent = `
+        const subject = 'Your Registration OTP';
+        const body = `
             <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
                 <h2 style="color: #532e6d;">Registration OTP</h2>
                 <p>Hello,</p>
@@ -72,20 +79,39 @@ router.post('/send-otp', async (req, res) => {
             </div>
         `;
 
-        const { data, error } = await resend.emails.send({
-            from: 'onboarding@resend.dev',
-            to: email,
-            subject: 'Your Registration OTP',
-            html: emailContent,
-        });
+        // Create the email in base64url format as required by Gmail API
+        const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
+        const messageParts = [
+            `From: ${process.env.EMAIL_USER}`,
+            `To: ${email}`,
+            'Content-Type: text/html; charset=utf-8',
+            'MIME-Version: 1.0',
+            `Subject: ${utf8Subject}`,
+            '',
+            body,
+        ];
+        const message = messageParts.join('\n');
 
-        if (error) {
-            console.error("[RESEND ERROR]", error);
-            throw new Error(error.message);
+        const encodedMessage = Buffer.from(message)
+            .toString('base64')
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/, '');
+
+        try {
+            const result = await gmail.users.messages.send({
+                userId: 'me',
+                requestBody: {
+                    raw: encodedMessage,
+                },
+            });
+            console.log(`✅ Email sent successfully via Gmail API. ID: ${result.data.id}`);
+            res.json({ message: 'OTP sent successfully to your inbox!' });
+        } catch (apiErr) {
+            console.error("[GMAIL API ERROR]", apiErr);
+            throw new Error("Gmail API failed: " + apiErr.message);
         }
 
-        console.log(`✅ Email sent successfully via Resend. ID: ${data ? data.id : 'N/A'}`);
-        res.json({ message: 'OTP sent successfully to your inbox!' });
     } catch (err) {
         console.error("OTP Error Trace:", err);
         res.status(500).json({ message: "Failed to send OTP: " + err.message });
