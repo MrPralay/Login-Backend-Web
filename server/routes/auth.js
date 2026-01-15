@@ -3,22 +3,64 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const nodemailer = require('nodemailer');
+const { google } = require('googleapis');
 const User = require('../models/User');
 const OTP = require('../models/OTP');
+
+// --- NODEMAILER OAUTH2 CONFIG ---
+const OAuth2 = google.auth.OAuth2;
+const oauth2Client = new OAuth2(
+    process.env.GMAIL_CLIENT_ID,
+    process.env.GMAIL_CLIENT_SECRET,
+    "https://developers.google.com/oauthplayground"
+);
+oauth2Client.setCredentials({ refresh_token: process.env.GMAIL_REFRESH_TOKEN });
+
+async function createTransporter() {
+    try {
+        const accessToken = await oauth2Client.getAccessToken();
+        return nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                type: "OAuth2",
+                user: process.env.EMAIL_USER,
+                clientId: process.env.GMAIL_CLIENT_ID,
+                clientSecret: process.env.GMAIL_CLIENT_SECRET,
+                refreshToken: process.env.GMAIL_REFRESH_TOKEN,
+                accessToken: accessToken.token
+            }
+        });
+    } catch (err) {
+        console.error("Transporter Error:", err);
+        throw err;
+    }
+}
 
 // --- REGISTER ROUTE ---
 router.post('/register', async (req, res) => {
     try {
-        const { username, password, email } = req.body;
+        const { username, password, email, otp } = req.body;
+
+        if (!otp) return res.status(400).json({ message: 'OTP is required' });
+
+        // Verify OTP
+        const otpRecord = await OTP.findOne({ email });
+        if (!otpRecord || otpRecord.otp !== otp) {
+            return res.status(400).json({ message: 'Invalid or expired OTP' });
+        }
 
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = new User({ username, password: hashedPassword, email });
         await newUser.save();
 
+        // Delete OTP after successful registration
+        await OTP.deleteOne({ email });
+
         res.status(201).json({ message: 'User registered successfully' });
     } catch (err) {
-        if (err.code === 11000) return res.status(400).json({ error: 'Email or Username already taken' });
-        res.status(500).json({ error: err.message });
+        if (err.code === 11000) return res.status(400).json({ message: 'Email or Username already taken' });
+        res.status(500).json({ message: err.message });
     }
 });
 
@@ -39,11 +81,34 @@ router.post('/send-otp', async (req, res) => {
         );
 
         console.log(`[DEBUG] OTP for ${email}: ${otp}`);
-        
-        // In a real app, you'd use Nodemailer here. For now, we just save to DB.
-        res.json({ message: 'OTP sent successfully' });
+
+        // --- SEND ACTUAL EMAIL ---
+        const transporter = await createTransporter();
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: "Your Registration OTP",
+            html: `
+                <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+                    <h2 style="color: #532e6d;">Registration OTP</h2>
+                    <p>Hello,</p>
+                    <p>Your one-time password for registration is:</p>
+                    <h1 style="color: #d8b4ff; background: #532e6d; display: inline-block; padding: 10px 20px; border-radius: 5px;">${otp}</h1>
+                    <p>This code will expire in 5 minutes.</p>
+                    <p>If you didn't request this, please ignore this email.</p>
+                    <hr />
+                    <p style="font-size: 12px; color: #777;">Powered By Pralay</p>
+                </div>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log(`✅ Email sent to ${email}`);
+
+        res.json({ message: 'OTP sent successfully to your inbox!' });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error("OTP Error:", err);
+        res.status(500).json({ error: "Failed to send OTP email: " + err.message });
     }
 });
 

@@ -28,8 +28,14 @@ async function handleRegister() {
     const msb = document.getElementById("messageBOX");
     const msg = document.getElementById("message");
 
-    if (!user || !pass || !email) {
-        msg.innerText = "Please complete all fields";
+    const otp1 = document.getElementById("otp1").value;
+    const otp2 = document.getElementById("otp2").value;
+    const otp3 = document.getElementById("otp3").value;
+    const otp4 = document.getElementById("otp4").value;
+    const otp = otp1 + otp2 + otp3 + otp4;
+
+    if (!user || !pass || !email || otp.length !== 4) {
+        msg.innerText = otp.length !== 4 ? "Please enter the 4-digit OTP" : "Please complete all fields";
         msg.className = "warning";
         msb.classList.remove("hidden");
         return;
@@ -42,7 +48,8 @@ async function handleRegister() {
             body: JSON.stringify({
                 username: user,
                 password: pass,
-                email: email
+                email: email,
+                otp: otp
             })
         });
 
