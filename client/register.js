@@ -7,78 +7,6 @@ window.addEventListener("load", () => {
     }, 1000);
 });
 
-const otpBoxes = [
-    document.getElementById('otp-1'),
-    document.getElementById('otp-2'),
-    document.getElementById('otp-3'),
-    document.getElementById('otp-4')
-];
-
-otpBoxes.forEach((box, index) => {
-    if(!box) return;
-    box.addEventListener('input', (e) => {
-        if (e.target.value && index < 3) {
-            otpBoxes[index + 1].focus();
-        }
-    });
-
-    box.addEventListener('keydown', (e) => {
-        if (e.key === "Backspace" && !e.target.value && index > 0) {
-            otpBoxes[index - 1].focus();
-        }
-    });
-});
-
-async function sendOTP() {
-    const email = document.getElementById('reg-email').value;
-    const msb = document.getElementById("messageBOX");
-    const msg = document.getElementById("message");
-    const otpBtn = document.getElementById('otp-btn');
-
-    if (!email || !email.includes('@')) {
-        msg.innerText = "Enter a valid email address";
-        msg.className = "warning";
-        msb.classList.remove("hidden");
-        return;
-    }
-
-    otpBtn.disabled = true;
-    otpBtn.innerText = "Sending...";
-
-    try {
-        const response = await fetch("/api/send-otp", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email })
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            msg.innerText = data.message;
-            msg.className = "success";
-            msb.classList.remove("hidden");
-            document.getElementById('otp-container').style.display = "block";
-            otpBtn.disabled = false;
-            otpBtn.innerText = "Resend";
-        } else {
-            // Show the actual error from the server (e.g. "Could not generate access token")
-            msg.innerText = data.message || data.error || "Failed to send OTP";
-            msg.className = "wrong";
-            msb.classList.remove("hidden");
-            otpBtn.disabled = false;
-            otpBtn.innerText = "Send OTP";
-        }
-
-    } catch (err) {
-        msg.innerText = "Connection Error: " + err.message;
-        msg.className = "wrong";
-        msb.classList.remove("hidden");
-        otpBtn.disabled = false;
-        otpBtn.innerText = "Send OTP";
-    }
-}
-
 async function handleRegister() {
     const user = document.getElementById("reg-username").value;
     const pass = document.getElementById("reg-password").value;
@@ -86,9 +14,7 @@ async function handleRegister() {
     const msb = document.getElementById("messageBOX");
     const msg = document.getElementById("message");
 
-    const otp = otpBoxes.map(box => box.value).join('');
-
-    if (!user || !pass || !email || otp.length < 4) {
+    if (!user || !pass || !email) {
         msg.innerText = "Please complete all fields";
         msg.className = "warning";
         msb.classList.remove("hidden");
@@ -102,8 +28,7 @@ async function handleRegister() {
             body: JSON.stringify({
                 username: user,
                 password: pass,
-                email: email,
-                otp: otp
+                email: email
             })
         });
 
