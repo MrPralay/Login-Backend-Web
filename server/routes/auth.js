@@ -7,32 +7,40 @@ const crypto = require('crypto');
 const User = require('../models/User');
 const OTP = require('../models/OTP');
 
-// Configure Nodemailer
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com', 
-    port: 587,            
-    secure: false, // Use STARTTLS
-    auth: {
-        type: 'OAuth2',
-        user: process.env.EMAIL_USER,
-        clientId: process.env.GMAIL_CLIENT_ID,
-        clientSecret: process.env.GMAIL_CLIENT_SECRET,
-        refreshToken: process.env.GMAIL_REFRESH_TOKEN
-    },
-    tls: {
-        rejectUnauthorized: false // Helps in cloud environments
-    },
-    connectionTimeout: 10000 // 10 seconds timeout
+const { google } = require('googleapis');
+
+// Configure OAuth2 Client (Gmail HTTP API)
+const oauth2Client = new google.auth.OAuth2(
+    process.env.GMAIL_CLIENT_ID,
+    process.env.GMAIL_CLIENT_SECRET,
+    "https://developers.google.com/oauthplayground" // Standard Redirect URI
+);
+
+oauth2Client.setCredentials({
+    refresh_token: process.env.GMAIL_REFRESH_TOKEN
 });
 
-// Verify Connection Configuration
-transporter.verify(function (error, success) {
-    if (error) {
-        console.error("❌ SMTP Connection Error:", error);
-    } else {
-        console.log("✅ SMTP Server is ready to take messages");
-    }
-});
+const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+
+// Helper: Create Base64 Encoded Email
+const createEmailBody = (to, from, subject, message) => {
+    const str = [
+        `To: <${to}>`,
+        `From: <${from}>`,
+        `Subject: ${subject}`,
+        `Content-Type: text/plain; charset=utf-8`,
+        `MIME-Version: 1.0`,
+        ``,
+        message
+    ].join('\n');
+
+    // URL-safe Base64 encoding
+    return Buffer.from(str)
+        .toString('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+};
 
 router.post('/send-otp', async (req, res) => {
     console.log('🔔 SEND-OTP REQUEST RECEIVED!', req.body);
@@ -50,23 +58,28 @@ router.post('/send-otp', async (req, res) => {
             { upsert: true, new: true }
         );
 
-        // 3. Send Email via Nodemailer
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: 'Your Antigravity OTP Code',
-            text: `Your verification code is: ${otpCode}. It expires in 5 minutes.`
-        };
+        // 3. Send Email via Gmail API (REST - Port 443)
+        console.log(`DEBUG: Using Gmail API to send to ${email}`);
+        
+        const rawMessage = createEmailBody(
+            email,
+            process.env.EMAIL_USER,
+            'Your Antigravity OTP Code',
+            `Your verification code is: ${otpCode}. It expires in 5 minutes.`
+        );
 
-        if (process.env.EMAIL_USER) {
-            console.log(`DEBUG: Attempting to send using user: ${process.env.EMAIL_USER}`);
-            await transporter.sendMail(mailOptions);
-            console.log(`📧 Email sent to ${email}`);
-        }
+        await gmail.users.messages.send({
+            userId: 'me',
+            requestBody: {
+                raw: rawMessage
+            }
+        });
 
+        console.log(`📧 Email sent successfully to ${email}`);
         res.status(200).json({ message: 'OTP sent! Check your Email.' });
+
     } catch (err) {
-        console.error("❌ OTP SENDING ERROR:", err);
+        console.error("❌ GMAIL API ERROR:", err);
         res.status(500).json({ error: "Failed to send OTP", details: err.message });
     }
 });
