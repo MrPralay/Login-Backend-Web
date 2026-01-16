@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Forgot Password - Premium Login</title>
+    <link rel="stylesheet" href="forgot.css">
+</head>
+<body>
+    <div class="container" id="loader">
+        <div class="pic">
+            <img src="peg.png" class="photo">
+        </div>
+        <div class="pralay">
+            <div class="priya">
+                <p>POwered By Pralay</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-content" style="display:none;">
+        <div class="screen-container">
+            <div class="form-box">
+                <div class="logo">
+                    <img src="me.png" class="logo-pic">
+                </div>
+                
+                <div class="header">
+                    <h1 id="step-title">Find Account</h1>
+                </div>
+
+                <!-- STEP 1: Find Account -->
+                <div id="step-find" class="step-container">
+                    <div class="input-group">
+                        <input type="email" id="email" placeholder="Enter your registered email">
+                    </div>
+                    <div class="button-group">
+                        <button class="btn" onclick="findAccounts()">Find Account</button>
+                    </div>
+                </div>
+
+                <!-- STEP 2: Select Account -->
+                <div id="step-select" class="step-container hidden">
+                    <p class="instruction">Multiple accounts found. Choose one:</p>
+                    <div id="accounts-list" class="accounts-list">
+                        <!-- Dynamic accounts will be injected here -->
+                    </div>
+                </div>
+
+                <!-- STEP 3: Verify OTP -->
+                <div id="step-otp" class="step-container hidden">
+                    <p class="instruction">OTP sent to <span id="display-email"></span></p>
+                    <div class="otp-group">
+                        <input type="text" id="otp1" maxlength="1" oninput="moveNext(this, 'otp2')">
+                        <input type="text" id="otp2" maxlength="1" oninput="moveNext(this, 'otp3')">
+                        <input type="text" id="otp3" maxlength="1" oninput="moveNext(this, 'otp4')">
+                        <input type="text" id="otp4" maxlength="1" oninput="moveNext(this, 'null')">
+                    </div>
+                    <div class="button-group">
+                        <button class="btn" onclick="verifyOTP()">Verify OTP</button>
+                    </div>
+                </div>
+
+                <!-- STEP 4: Reset Password -->
+                <div id="step-reset" class="step-container hidden">
+                    <div class="input-group">
+                        <input type="password" id="new-password" placeholder="Enter new password">
+                    </div>
+                    <div class="button-group">
+                        <button class="btn" onclick="resetPassword()">Reset Password</button>
+                    </div>
+                </div>
+
+                <div id="messageBOX" class="hidden">
+                    <p id="message"></p>
+                </div>
+
+                <div class="footer">
+                    <a href="index.html" class="back-link">Back to Login</a>
+                    <div class="power">
+                        <p>Powered By <span>Pralay</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="forgot.js"></script>
+</body>
+</html>

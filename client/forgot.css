@@ -1,0 +1,227 @@
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-image: url("walpaper.webp");
+  background-size: cover;
+  background-position: center;
+  height: 100vh;
+  margin: 0;
+  background-repeat: no-repeat;
+  font-family: Cambria, Cochin, Georgia, Times, "Times New Roman", serif;
+}
+
+#loader {
+  position: fixed;
+  inset: 0;
+  background: rgb(252, 252, 252);
+  z-index: 9999;
+}
+
+.pic {
+  width: 450px;
+  height: 480px;
+  margin: auto;
+  padding: 20px;
+  text-align: center;
+  background-color: rgb(252, 252, 252);
+  backdrop-filter: blur(8px);
+  border-radius: 15px;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+}
+
+.photo {
+  width: 200px;
+  height: auto;
+}
+
+.container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pralay {
+  position: absolute;
+  top: 680px;
+  white-space: nowrap;
+}
+
+.priya {
+  color: rgb(99, 96, 96);
+}
+
+.screen-container {
+  width: 500px;
+  min-height: 550px;
+  margin: auto;
+  padding: 30px;
+  text-align: center;
+  background-color: rgba(237, 232, 228, 0.4);
+  backdrop-filter: blur(10px);
+  border-radius: 25px;
+  animation: cardIn 0.6s ease-out forwards;
+}
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.logo-pic {
+  width: 250px;
+  height: auto;
+  margin-bottom: 10px;
+}
+
+.header h1 {
+  color: white;
+  font-size: 28px;
+  margin-bottom: 25px;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.instruction {
+  color: #e0e0e0;
+  margin-bottom: 20px;
+}
+
+.input-group input {
+  width: 80%;
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 16px;
+  outline: none;
+}
+
+.input-group input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.btn {
+  width: 85%;
+  border-radius: 17px;
+  border: none;
+  background: rgb(83, 46, 109);
+  color: white;
+  padding: 12px 20px;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  filter: drop-shadow(0 0 5px rgba(83, 46, 109, 0.8));
+  transform: translateY(-2px);
+}
+
+.hidden {
+  display: none !important;
+}
+
+.accounts-list {
+  margin: 20px 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.account-item {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.account-item:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #d8b4ff;
+}
+
+.otp-group {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.otp-group input {
+  width: 50px;
+  height: 50px;
+  text-align: center;
+  font-size: 24px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.2);
+  color: #d8b4ff;
+  font-weight: bold;
+}
+
+#messageBOX {
+  margin: 15px 0;
+  font-weight: bold;
+}
+
+.warning {
+  color: #ff4d4d;
+}
+.success {
+  color: #2ecc71;
+}
+.wrong {
+  color: #ff4d4d;
+}
+
+.footer {
+  margin-top: 30px;
+}
+
+.back-link {
+  color: #d8b4ff;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.power {
+  margin-top: 20px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+}
+
+.power span {
+  color: #d8b4ff;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .screen-container {
+    width: 85%;
+    padding: 20px;
+  }
+  .otp-group input {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+}

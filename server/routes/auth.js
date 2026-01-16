@@ -187,4 +187,116 @@ router.post('/logout', async (req, res) => {
     }
 });
 
+// --- FORGOT PASSWORD: FIND ACCOUNTS ---
+router.post('/find-accounts', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ message: 'Email is required' });
+
+        const users = await User.find({ email }).select('username');
+        if (users.length === 0) {
+            return res.status(404).json({ message: 'No accounts found with this email' });
+        }
+
+        res.json({ accounts: users });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// --- FORGOT PASSWORD: SEND OTP ---
+router.post('/forgot-send-otp', async (req, res) => {
+    try {
+        const { email, username } = req.body;
+        if (!email || !username) return res.status(400).json({ message: 'Email and Username are required' });
+
+        // Verify user exists with this email and username
+        const user = await User.findOne({ email, username });
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        // Generate 4-digit OTP
+        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+
+        // Save OTP to DB
+        await OTP.findOneAndUpdate(
+            { email },
+            { otp, createdAt: new Date() },
+            { upsert: true, new: true }
+        );
+
+        console.log(`[DEBUG] PASSWORD RESET OTP for ${email}: ${otp}`);
+
+        const subject = 'Your Password Reset OTP';
+        const body = `
+            <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+                <h2 style="color: #532e6d;">Password Reset OTP</h2>
+                <p>Hello <b>${username}</b>,</p>
+                <p>Your one-time password for resetting your password is:</p>
+                <h1 style="color: #d8b4ff; background: #532e6d; display: inline-block; padding: 10px 20px; border-radius: 5px;">${otp}</h1>
+                <p>This code will expire in 5 minutes.</p>
+                <p>If you didn't request this, please ignore this email.</p>
+                <hr />
+                <p style="font-size: 12px; color: #777;">Powered By Pralay</p>
+            </div>
+        `;
+
+        const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
+        const messageParts = [
+            `From: ${process.env.EMAIL_USER}`,
+            `To: ${email}`,
+            'Content-Type: text/html; charset=utf-8',
+            'MIME-Version: 1.0',
+            `Subject: ${utf8Subject}`,
+            '',
+            body,
+        ];
+        const message = messageParts.join('\n');
+        const encodedMessage = Buffer.from(message).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+        await gmail.users.messages.send({
+            userId: 'me',
+            requestBody: { raw: encodedMessage },
+        });
+
+        res.json({ message: 'OTP sent to your email!' });
+    } catch (err) {
+        res.status(500).json({ message: "Failed to send OTP: " + err.message });
+    }
+});
+
+// --- FORGOT PASSWORD: RESET PASSWORD ---
+router.post('/reset-password', async (req, res) => {
+    try {
+        const { email, username, otp, newPassword } = req.body;
+        if (!email || !username || !otp || !newPassword) {
+            return res.status(400).json({ message: 'All fields are required' });
+        }
+
+        // Verify OTP
+        const otpRecord = await OTP.findOne({ email });
+        if (!otpRecord || otpRecord.otp !== otp) {
+            return res.status(400).json({ message: 'Invalid or expired OTP' });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update User
+        const user = await User.findOneAndUpdate(
+            { email, username },
+            { password: hashedPassword },
+            { new: true }
+        );
+
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        // Delete OTP
+        await OTP.deleteOne({ email });
+
+        res.json({ message: 'Password reset successful! You can now login.' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 module.exports = router;
