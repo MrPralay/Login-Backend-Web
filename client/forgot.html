@@ -64,7 +64,14 @@
                 <!-- STEP 4: Reset Password -->
                 <div id="step-reset" class="step-container hidden">
                     <div class="input-group">
-                        <input type="password" id="new-password" placeholder="Enter new password">
+                        <div class="password-wrapper">
+                            <input type="password" id="new-password" placeholder="Enter new password">
+                            <span class="toggle-password" onclick="togglePass('new-password', this)">👁️</span>
+                        </div>
+                        <div class="password-wrapper">
+                            <input type="password" id="confirm-password" placeholder="Confirm new password">
+                            <span class="toggle-password" onclick="togglePass('confirm-password', this)">👁️</span>
+                        </div>
                     </div>
                     <div class="button-group">
                         <button class="btn" onclick="resetPassword()">Reset Password</button>

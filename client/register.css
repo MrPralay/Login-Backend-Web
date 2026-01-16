@@ -105,6 +105,34 @@ body {
   animation: passIn 0.7s ease-out forwards;
 }
 
+.password-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.password-wrapper input {
+  margin: 8px 0px !important;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 20%;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 18px;
+  user-select: none;
+  z-index: 10;
+}
+
+@media (max-width: 768px) {
+  .toggle-password {
+    right: 5%;
+  }
+}
+
 .email-container {
   display: flex;
   flex-direction: column;

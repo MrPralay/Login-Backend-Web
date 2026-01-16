@@ -90,6 +90,35 @@ body {
     font-size: 16px;
     animation: passIn 0.7s ease-out forwards;
 }
+
+.password-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.password-wrapper input {
+    margin: 13px 0px !important;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 27%;
+    cursor: pointer;
+    color: rgb(114, 109, 109);
+    font-size: 18px;
+    user-select: none;
+    z-index: 10;
+}
+
+/* Mobile Adjustments for toggle */
+@media (max-width: 768px) {
+    .toggle-password {
+        right: 5%;
+    }
+}
 @keyframes passIn {
     from {
         width: 0;

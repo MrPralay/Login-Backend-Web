@@ -98,13 +98,34 @@ body {
 .input-group input {
   width: 80%;
   padding: 12px 20px;
-  margin-bottom: 20px;
   border-radius: 15px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   background: rgba(255, 255, 255, 0.2);
   color: white;
   font-size: 16px;
   outline: none;
+}
+
+.password-wrapper {
+    position: relative;
+    width: 100%;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.password-wrapper input {
+    margin-bottom: 0px; /* Reset margin for wrapper children */
+}
+
+.toggle-password {
+    position: absolute;
+    right: 15%;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 20px;
+    user-select: none;
 }
 
 .input-group input::placeholder {

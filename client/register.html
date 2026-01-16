@@ -43,11 +43,14 @@
                 />
               </div>
               <div class="pass">
-                <input
-                  type="password"
-                  id="reg-password"
-                  placeholder="Choose Password"
-                />
+                <div class="password-wrapper">
+                  <input
+                    type="password"
+                    id="reg-password"
+                    placeholder="Choose Password"
+                  />
+                  <span class="toggle-password" onclick="togglePass('reg-password', this)">👁️</span>
+                </div>
               </div>
               <div class="email-container">
                 <input

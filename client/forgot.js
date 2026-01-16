@@ -109,12 +109,14 @@ async function verifyOTP() {
 
 async function resetPassword() {
     const newPass = document.getElementById("new-password").value;
+    const confirmPass = document.getElementById("confirm-password").value;
     const otp = document.getElementById("otp1").value +
                 document.getElementById("otp2").value +
                 document.getElementById("otp3").value +
                 document.getElementById("otp4").value;
 
     if (!newPass) return showMessage("Please enter new password", "warning");
+    if (newPass !== confirmPass) return showMessage("Passwords do not match!", "warning");
 
     try {
         const response = await fetch("/api/reset-password", {
@@ -147,4 +149,15 @@ function switchStep(stepId, title) {
     document.querySelectorAll(".step-container").forEach(el => el.classList.add("hidden"));
     document.getElementById(stepId).classList.remove("hidden");
     document.getElementById("step-title").innerText = title;
+}
+
+function togglePass(inputId, icon) {
+    const input = document.getElementById(inputId);
+    if (input.type === "password") {
+        input.type = "text";
+        icon.innerText = "🔒"; // Locked eye or simple lock to show its visible
+    } else {
+        input.type = "password";
+        icon.innerText = "👁️";
+    }
 }
