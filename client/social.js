@@ -255,12 +255,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (posts.length === 0) {
                     profileContentArea.innerHTML = `
                         <div class="empty-state-prof">
-                            <div class="empty-icon-wrap" style="border: 1px solid #000; width: 80px; height: 80px;">
+                            <div class="empty-icon-wrap">
                                 <i class="fa-solid fa-camera"></i>
                             </div>
-                            <h2 style="font-weight: 300; font-size: 2.2rem; margin-bottom: 5px;">Share photos</h2>
-                            <p style="color: #262626; font-size: 1rem; margin-bottom: 20px;">When you share photos, they will appear on your profile.</p>
-                            <a href="#" style="color: #0095f6; font-weight: 600; text-decoration: none; font-size: 0.9rem;">Share your first photo</a>
+                            <h2>Share photos</h2>
+                            <p>When you share photos, they will appear on your profile.</p>
+                            <a href="#">Share your first photo</a>
                         </div>
                     `;
                 } else {
@@ -276,21 +276,21 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (currentProfileTab === 'reels') {
                 profileContentArea.innerHTML = `
                     <div class="empty-state-prof">
-                        <div class="empty-icon-wrap" style="border: 1px solid #000; width: 80px; height: 80px;">
+                        <div class="empty-icon-wrap">
                             <i class="fa-solid fa-clapperboard"></i>
                         </div>
-                        <h2 style="font-weight: 300; font-size: 2.2rem; margin-bottom: 5px;">Reels</h2>
-                        <p style="color: #262626; font-size: 1rem; margin-bottom: 20px;">Reels help you grow your audience.</p>
+                        <h2>Reels</h2>
+                        <p>Reels help you grow your audience.</p>
                     </div>
                 `;
             } else if (currentProfileTab === 'tagged') {
                 profileContentArea.innerHTML = `
                     <div class="empty-state-prof">
-                        <div class="empty-icon-wrap" style="border: 1px solid #000; width: 80px; height: 80px;">
+                        <div class="empty-icon-wrap">
                             <i class="fa-solid fa-id-card"></i>
                         </div>
-                        <h2 style="font-weight: 300; font-size: 2.2rem; margin-bottom: 5px;">Photos of you</h2>
-                        <p style="color: #262626; font-size: 1rem; margin-bottom: 20px;">When people tag you in photos, they'll appear here.</p>
+                        <h2>Photos of you</h2>
+                        <p>When people tag you in photos, they'll appear here.</p>
                     </div>
                 `;
             }
