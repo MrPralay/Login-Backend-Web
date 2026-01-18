@@ -442,10 +442,14 @@ router.post('/story', protect, async (req, res) => {
     try {
         const { media, mediaType } = req.body;
         
+        if (!media || !mediaType) {
+            return res.status(400).json({ error: "Media data and type are required" });
+        }
+        
         // Check if user has an active story (not expired)
         let story = await Story.findOne({
             user: req.user._id,
-            expiresAt: { $gt: Date.now() }
+            expiresAt: { $gt: new Date() }
         });
 
         if (story) {
@@ -453,17 +457,19 @@ router.post('/story', protect, async (req, res) => {
             story.segments.push({ media, mediaType });
             await story.save();
         } else {
-            // Create new story
+            // Create new story with explicit expiry
             story = new Story({
                 user: req.user._id,
-                segments: [{ media, mediaType }]
+                segments: [{ media, mediaType }],
+                expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
             });
             await story.save();
         }
 
         res.status(201).json(story);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error("❌ STORY UPLOAD CRASH:", err);
+        res.status(500).json({ error: "Story update failed: " + err.message });
     }
 });
 

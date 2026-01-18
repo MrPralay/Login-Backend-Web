@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const storySegmentSchema = new mongoose.Schema({
     media: { type: String, required: true },
-    mediaType: { type: String, enum: ['image', 'video'], required: true },
+    mediaType: { type: String, required: true },
     createdAt: { type: Date, default: Date.now },
     views: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
@@ -12,7 +12,7 @@ const storySchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     segments: [storySegmentSchema],
     createdAt: { type: Date, default: Date.now },
-    expiresAt: { type: Date, required: true }
+    expiresAt: { type: Date, required: true, default: () => new Date(Date.now() + 24 * 60 * 60 * 1000) }
 });
 
 // Index for efficient expiry cleanup
@@ -23,9 +23,9 @@ storySchema.virtual('isExpired').get(function() {
     return Date.now() > this.expiresAt;
 });
 
-// Pre-save hook to set expiry (24 hours from creation)
-storySchema.pre('save', function(next) {
-    if (this.isNew) {
+// Pre-validate hook to set/refresh expiry
+storySchema.pre('validate', function(next) {
+    if (!this.expiresAt) {
         this.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
     }
     next();
