@@ -258,9 +258,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="empty-icon-wrap">
                                 <i class="fa-solid fa-camera"></i>
                             </div>
-                            <h2>Share photos</h2>
-                            <p>When you share photos, they will appear on your profile.</p>
-                            <a href="#">Share your first photo</a>
+                            <h2>Share Photos</h2>
+                            <p>When you share photos, they will appear here.</p>
                         </div>
                     `;
                 } else {

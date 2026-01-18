@@ -234,6 +234,18 @@ router.post('/post', protect, async (req, res) => {
     }
 });
 
+// --- GET MY POSTS ---
+router.get('/my-posts', protect, async (req, res) => {
+    try {
+        const posts = await Post.find({ user: req.user._id })
+            .populate('user', 'username fullName profilePicture')
+            .sort({ createdAt: -1 });
+        res.json(posts);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // --- GET GLOBAL FEED ---
 router.get('/feed', protect, async (req, res) => {
     try {
