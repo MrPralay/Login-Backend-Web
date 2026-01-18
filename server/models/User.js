@@ -32,10 +32,35 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ""
   },
+  fullName: {
+    type: String,
+    default: ""
+  },
+  profilePicture: {
+    type: String,
+    default: ""
+  },
   email: {
     type: String,
     required: true,
     unique: true
-  }
+  },
+  // --- SOCIAL FEATURES ---
+  isPrivate: {
+    type: Boolean,
+    default: false
+  },
+  followers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  following: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  followRequests: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }]
 });
 module.exports = mongoose.model('User', userSchema);

@@ -9,7 +9,8 @@ const cookieParser = require('cookie-parser');
 const crypto = require('crypto');
 const authRoutes = require('./routes/auth');
 const User = require('./models/User'); 
-
+const { protect } = require('./middleware/auth');
+const socialRoutes = require('./routes/social');
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
@@ -90,29 +91,20 @@ const checkMasterKey = async (req, res, next) => {
     next();
 };
 
-// --- 2. SESSION-AWARE PROTECT MIDDLEWARE ---
-const protect = async (req, res, next) => {
+// --- 2. AUTH MIDDLEWARE ---
+const protectRedirect = async (req, res, next) => {
     const token = req.cookies.token; 
-    
-    if (!token) {
-        return res.redirect('/'); 
-    }
-
+    if (!token) return res.redirect('/'); 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const user = await User.findById(decoded.id);
-
-        // Security Check: Token's sessionId MUST match the one in DB
         if (!user || user.currentSessionId !== decoded.sessionId) {
-            console.log("❌ Session mismatch/expired. Redirecting to login...");
             res.clearCookie('token'); 
             return res.redirect('/'); 
         }
-
         req.user = user;
         next();
     } catch (err) {
-        console.error("Auth Error:", err.message);
         res.clearCookie('token');
         return res.redirect('/'); 
     }
@@ -131,13 +123,18 @@ const checkRegSuccess = (req, res, next) => {
 // --- ROUTES ---
 
 app.use('/api', authRoutes);
+app.use('/api/social', socialRoutes);
 
 // Apply checkMasterKey to the landing page
 app.get('/', checkMasterKey, (req, res) => {
     res.sendFile(path.join(__dirname, '../client/home.html'));
 });
 
-app.get('/dashboard', protect, (req, res) => {
+app.get('/social', protectRedirect, (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/social.html'));
+});
+
+app.get('/dashboard', protectRedirect, (req, res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     res.sendFile(path.join(__dirname, '../private/profile.html'));
 });
@@ -149,7 +146,7 @@ app.get('/registration-success', checkRegSuccess, (req, res) => {
     res.sendFile(path.join(__dirname, '../client/success.html'));
 });
 
-app.get('/private/:fileName', protect, (req, res) => {
+app.get('/private/:fileName', protectRedirect, (req, res) => {
     res.sendFile(path.join(__dirname, '../private', req.params.fileName));
 });
 

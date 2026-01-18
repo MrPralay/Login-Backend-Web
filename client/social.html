@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socially | Experience the Connection</title>
+    <link rel="stylesheet" href="social.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-mode">
+    <div id="app">
+        <!-- Top Header (Contextual) -->
+        <header id="main-header">
+            <h1 class="logo">Socially</h1>
+            <div class="header-actions">
+                <i class="fa-regular fa-heart"></i>
+                <i class="fa-regular fa-paper-plane"></i>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main id="content-area">
+            <!-- Home Section -->
+            <section id="home-section" class="tab-content active">
+                <div class="social-feed">
+                    <div class="coming-soon">
+                        <i class="fa-solid fa-house-chimney"></i>
+                        <h2>Your Feed</h2>
+                        <p>Stay tuned for updates from people you follow!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Search Section -->
+            <section id="search-section" class="tab-content">
+                <div class="search-container">
+                    <div class="search-bar-wrapper">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="search-input" placeholder="Search users...">
+                    </div>
+                    <div id="search-results" class="user-list">
+                        <!-- Search results will appear here -->
+                        <div class="search-placeholder">
+                            <i class="fa-solid fa-users"></i>
+                            <p>Search for your friends and creators</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Reels Section -->
+            <section id="reels-section" class="tab-content">
+                <div class="reels-container">
+                    <div class="coming-soon">
+                        <i class="fa-solid fa-clapperboard"></i>
+                        <h2>Reels</h2>
+                        <p>Short, fun videos coming soon!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Profile Section -->
+            <section id="profile-section" class="tab-content">
+                <div id="profile-container">
+                    <!-- Profile header will be loaded here dynamically -->
+                </div>
+            </section>
+
+            <!-- User Detail Section (For viewing others) -->
+            <section id="user-profile-section" class="tab-content">
+                <div class="back-button" id="back-to-search">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Back</span>
+                </div>
+                <div id="user-profile-container">
+                    <!-- Other user's profile header will be loaded here -->
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom Navigation Bar -->
+        <nav id="bottom-nav">
+            <div class="nav-item active" data-tab="home">
+                <i class="fa-solid fa-house"></i>
+                <span class="nav-label">Home</span>
+            </div>
+            <div class="nav-item" data-tab="search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <span class="nav-label">Search</span>
+            </div>
+            <div class="nav-item" data-tab="reels">
+                <i class="fa-solid fa-clapperboard"></i>
+                <span class="nav-label">Reels</span>
+            </div>
+            <div class="nav-item" data-tab="profile">
+                <div class="profile-nav-icon">
+                    <img src="me.png" alt="P" id="nav-profile-pic">
+                </div>
+                <span class="nav-label">Profile</span>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Modals / Overlays -->
+    <div id="loading-overlay" class="hidden">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="social.js"></script>
+</body>
+</html>

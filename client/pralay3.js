@@ -46,7 +46,7 @@ async function login() {
 
             setTimeout(() => {
                 // SSR CHANGE: Redirect to the ROUTE, not the FILE
-                window.location.href = "/dashboard"; 
+                window.location.href = "/social"; 
             }, 1200);
         } else {
             msg.innerText = data.message || "Incorrect credentials";
