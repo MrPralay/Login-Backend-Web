@@ -453,26 +453,37 @@ document.addEventListener('DOMContentLoaded', () => {
         // Setup Progress Bars
         renderProgressBars(userGroup.story.segments.length);
         
-        // Record View
-        markSegmentViewed(userGroup.story._id, segment._id);
+        // Initialize Interactions
+        updateStoryInteractions();
+    }
+
+    function updateStoryInteractions() {
+        const userGroup = activeStories[currentStoryUserIndex];
+        const segment = userGroup.story.segments[currentStorySegmentIndex];
+        const myId = me.id || me._id;
 
         // Setup Action Buttons
         const likeBtn = document.getElementById('story-like-btn');
-        const myId = me.id || me._id;
         const isLiked = segment.likes.some(v => (v._id || v) === myId);
         likeBtn.className = isLiked ? 'fa-solid fa-heart liked' : 'fa-regular fa-heart';
         likeBtn.style.color = isLiked ? '#ed4956' : '#fff';
         
-        likeBtn.onclick = async () => {
+        likeBtn.onclick = async (e) => {
+            e.stopPropagation();
+            // Animation
+            likeBtn.classList.add('heart-pop');
+            setTimeout(() => likeBtn.classList.remove('heart-pop'), 300);
+
             const res = await fetch(`/api/social/story/${userGroup.story._id}/segment/${segment._id}/like`, { method: 'POST' });
             const data = await res.json();
+            
             // Update local state
             if (data.liked) {
                 if (!segment.likes.some(v => (v._id || v) === myId)) segment.likes.push(myId);
             } else {
                 segment.likes = segment.likes.filter(v => (v._id || v) !== myId);
             }
-            openStoryViewer(); // Refresh UI
+            updateStoryInteractions(); // Refresh ONLY buttons
         };
 
         // Viewer List Logic
@@ -480,28 +491,30 @@ document.addEventListener('DOMContentLoaded', () => {
         if (userGroup.user._id === myId) {
             viewersBtn.classList.remove('hidden');
             document.getElementById('story-viewers-count').textContent = `${segment.views.length} viewers`;
-            viewersBtn.onclick = () => showViewersOverlay(userGroup.story._id);
+            viewersBtn.onclick = (e) => {
+                e.stopPropagation();
+                showViewersOverlay(userGroup.story._id);
+            };
         } else {
             viewersBtn.classList.add('hidden');
         }
 
         // Share Story Logic
         const shareBtn = document.getElementById('story-share-btn');
-        shareBtn.onclick = async () => {
-            if (storyTimer) clearTimeout(storyTimer); // Pause
-            
-            showToast('Sharing to feed...', 'normal');
+        shareBtn.onclick = async (e) => {
+            e.stopPropagation();
+            showToast('Sharing to story...', 'normal');
             try {
                 const res = await fetch(`/api/social/story/${userGroup.story._id}/segment/${segment._id}/share`, { method: 'POST' });
                 if (res.ok) {
-                    showToast('Story shared to your feed!', 'success');
+                    showToast('Shared to your feed!', 'success');
                 } else {
-                    showToast('Failed to share story', 'error');
+                    showToast('Failed to share', 'error');
                 }
             } catch (err) {
                 console.error(err);
             }
-            openStoryViewer(); // Resume/Restart
+            // No need to reset viewer
         };
     }
 
