@@ -662,6 +662,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (updatedUser.user) me = updatedUser.user;
                 updateMeUI();
                 alert('Profile saved!');
+                document.getElementById('close-settings').click();
             } else {
                 const err = await res.json();
                 alert(err.message || 'Failed to save');
