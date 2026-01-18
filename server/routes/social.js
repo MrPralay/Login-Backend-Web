@@ -451,25 +451,206 @@ router.post('/story', protect, async (req, res) => {
     }
 });
 
+// ===== STORIES API =====
+
+// Create new story or add segment to existing story
+router.post('/story', protect, async (req, res) => {
+    try {
+        const { media, mediaType } = req.body;
+        
+        // Check if user has an active story (not expired)
+        let story = await Story.findOne({
+            user: req.user._id,
+            expiresAt: { $gt: Date.now() }
+        });
+
+        if (story) {
+            // Add segment to existing story
+            story.segments.push({ media, mediaType });
+            await story.save();
+        } else {
+            // Create new story
+            story = new Story({
+                user: req.user._id,
+                segments: [{ media, mediaType }]
+            });
+            await story.save();
+        }
+
+        res.status(201).json(story);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get all active stories from followed users + own story
 router.get('/stories', protect, async (req, res) => {
     try {
-        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-        
-        // Get stories from self and following
         const user = await User.findById(req.user._id);
         const followingIds = [...user.following, req.user._id];
 
         const stories = await Story.find({
             user: { $in: followingIds },
-            createdAt: { $gte: twentyFourHoursAgo }
+            expiresAt: { $gt: Date.now() }
         })
         .populate('user', 'username profilePicture')
-        .sort({ createdAt: 1 }); // Oldest first for viewing sequence? Or newest? Usually chronological per user.
+        .populate('segments.views', 'username')
+        .populate('segments.likes', 'username')
+        .sort({ createdAt: -1 });
 
-        res.json(stories);
+        // Group by user and mark if viewed
+        const storiesByUser = {};
+        stories.forEach(story => {
+            const userId = story.user._id.toString();
+            if (!storiesByUser[userId]) {
+                storiesByUser[userId] = {
+                    user: story.user,
+                    story: story,
+                    hasUnviewed: story.segments.some(seg => 
+                        !seg.views.some(v => v._id.toString() === req.user._id.toString())
+                    )
+                };
+            }
+        });
+
+        res.json(Object.values(storiesByUser));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get specific user's story with all segments
+router.get('/story/:userId', protect, async (req, res) => {
+    try {
+        const story = await Story.findOne({
+            user: req.params.userId,
+            expiresAt: { $gt: Date.now() }
+        })
+        .populate('user', 'username profilePicture')
+        .populate('segments.views', 'username profilePicture')
+        .populate('segments.likes', 'username');
+
+        if (!story) {
+            return res.status(404).json({ message: 'No active story found' });
+        }
+
+        res.json(story);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Mark segment as viewed
+router.post('/story/:storyId/segment/:segmentId/view', protect, async (req, res) => {
+    try {
+        const story = await Story.findById(req.params.storyId);
+        if (!story) return res.status(404).json({ message: 'Story not found' });
+
+        const segment = story.segments.id(req.params.segmentId);
+        if (!segment) return res.status(404).json({ message: 'Segment not found' });
+
+        // Add view if not already viewed
+        if (!segment.views.includes(req.user._id)) {
+            segment.views.push(req.user._id);
+            await story.save();
+        }
+
+        res.json({ message: 'View recorded' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Like/unlike segment
+router.post('/story/:storyId/segment/:segmentId/like', protect, async (req, res) => {
+    try {
+        const story = await Story.findById(req.params.storyId);
+        if (!story) return res.status(404).json({ message: 'Story not found' });
+
+        const segment = story.segments.id(req.params.segmentId);
+        if (!segment) return res.status(404).json({ message: 'Segment not found' });
+
+        const likeIndex = segment.likes.indexOf(req.user._id);
+        if (likeIndex > -1) {
+            segment.likes.splice(likeIndex, 1);
+        } else {
+            segment.likes.push(req.user._id);
+        }
+
+        await story.save();
+        res.json({ liked: likeIndex === -1, likesCount: segment.likes.length });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Share story segment to followers (creates a post)
+router.post('/story/:storyId/segment/:segmentId/share', protect, async (req, res) => {
+    try {
+        const story = await Story.findById(req.params.storyId).populate('user', 'username');
+        if (!story) return res.status(404).json({ message: 'Story not found' });
+
+        const segment = story.segments.id(req.params.segmentId);
+        if (!segment) return res.status(404).json({ message: 'Segment not found' });
+
+        // Create a post sharing this story
+        const post = new Post({
+            user: req.user._id,
+            content: `Shared ${story.user.username}'s story`,
+            image: segment.media,
+            isSharedStory: true,
+            originalStory: story._id
+        });
+
+        await post.save();
+        res.json({ message: 'Story shared successfully', post });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get list of users who viewed your story
+router.get('/story/:storyId/viewers', protect, async (req, res) => {
+    try {
+        const story = await Story.findById(req.params.storyId)
+            .populate('segments.views', 'username profilePicture');
+
+        if (!story) return res.status(404).json({ message: 'Story not found' });
+
+        // Check ownership
+        if (story.user.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        // Collect unique viewers across all segments
+        const viewersMap = new Map();
+        story.segments.forEach(segment => {
+            segment.views.forEach(viewer => {
+                if (!viewersMap.has(viewer._id.toString())) {
+                    viewersMap.set(viewer._id.toString(), viewer);
+                }
+            });
+        });
+
+        const viewers = Array.from(viewersMap.values());
+        res.json({ viewersCount: viewers.length, viewers });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Cleanup expired stories (can be called by cron job or middleware)
+router.delete('/stories/cleanup', protect, async (req, res) => {
+    try {
+        const result = await Story.deleteMany({
+            expiresAt: { $lt: Date.now() }
+        });
+
+        res.json({ message: `Deleted ${result.deletedCount} expired stories` });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
 module.exports = router;
+
