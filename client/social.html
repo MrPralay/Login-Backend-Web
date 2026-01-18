@@ -113,6 +113,86 @@
                     <!-- Empty state or regular grid will be injected here -->
                 </div>
             </div>
+
+            <!-- Messenger View -->
+            <div id="messenger-view" class="hidden">
+                <div class="messenger-container">
+                    <div class="messenger-sidebar">
+                        <header class="messenger-sidebar-header">
+                            <h3 id="messenger-my-username">priya5</h3>
+                            <i class="fa-regular fa-pen-to-square" id="new-chat-btn"></i>
+                        </header>
+                        <div class="conversation-list" id="conversation-list">
+                            <!-- Conversations go here -->
+                        </div>
+                    </div>
+                    <div class="messenger-main" id="messenger-main-empty">
+                        <div class="messenger-empty-state">
+                            <div class="icon-circle">
+                                <i class="fa-regular fa-paper-plane"></i>
+                            </div>
+                            <h3>Your Messages</h3>
+                            <p>Send private photos and messages to a friend or group.</p>
+                            <button class="primary-btn" id="messenger-start-btn">Send Message</button>
+                        </div>
+                    </div>
+                    <div class="messenger-main hidden" id="messenger-main-active">
+                        <header class="messenger-chat-header">
+                            <div class="chat-user-info">
+                                <img src="me.png" id="chat-user-pfp">
+                                <b id="chat-user-username">username</b>
+                            </div>
+                            <i class="fa-solid fa-circle-info"></i>
+                        </header>
+                        <div class="chat-messages" id="chat-messages-container">
+                            <!-- Messages go here -->
+                        </div>
+                        <div class="chat-input-area">
+                            <div class="chat-input-wrap">
+                                <i class="fa-regular fa-face-smile"></i>
+                                <input type="text" placeholder="Message..." id="chat-msg-input">
+                                <button id="chat-send-btn">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <!-- Search View -->
+            <div id="search-view" class="hidden">
+                <div class="search-header-elite">
+                    <div class="search-input-wrap-elite">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" placeholder="Search people..." id="global-search-input">
+                    </div>
+                </div>
+                <div class="search-results-elite" id="global-search-results">
+                    <!-- Search results here -->
+                    <div class="search-empty-state">
+                        <i class="fa-solid fa-user-plus"></i>
+                        <h3>Discover People</h3>
+                        <p>Search by username or name to find friends.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity / Favorites View -->
+            <div id="activity-view" class="hidden">
+                <div class="activity-tabs-elite">
+                    <div class="act-tab active" data-act-tab="favorites">My Favorites</div>
+                    <div class="act-tab" data-act-tab="notifications">Notifications</div>
+                </div>
+                
+                <div id="activity-content-favorites" class="act-content-block">
+                    <div class="saved-posts-grid" id="saved-posts-container">
+                        <!-- Saved posts go here -->
+                    </div>
+                </div>
+
+                <div id="activity-content-notifications" class="act-content-block hidden">
+                    <div class="notifications-list" id="notifications-container">
+                        <!-- Notifications go here -->
+                    </div>
+                </div>
+            </div>
         </main>
 
         <!-- RIGHT SIDEBAR -->
@@ -385,9 +465,16 @@
                     <b id="story-username" style="color: #fff;">priya5</b>
                     <span id="story-time">12h</span>
                 </div>
-                <!-- <i class="fa-solid fa-ellipsis" style="color: #fff;"></i> -->
-                <i class="fa-solid fa-xmark" id="close-story-btn" style="color: #fff; font-size: 1.5rem; cursor: pointer;"></i>
+                <div class="story-header-right">
+                    <i class="fa-solid fa-ellipsis" id="story-menu-btn"></i>
+                    <i class="fa-solid fa-xmark" id="close-story-btn"></i>
+                </div>
             </header>
+
+            <!-- Story Menu Dropdown -->
+            <div id="story-menu-container" class="story-menu-dropdown hidden">
+                <!-- Items injected via JS -->
+            </div>
             <div class="story-media-container" id="story-media-container">
                 <!-- Navigation Overlays -->
                 <div class="story-nav-overlay left" id="story-prev-btn"></div>
@@ -423,6 +510,24 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Story Share Modal -->
+    <div id="story-share-modal" class="hidden">
+        <div class="share-card">
+            <header>
+                <h3>Share to Chat</h3>
+                <i class="fa-solid fa-xmark" id="close-share-btn"></i>
+            </header>
+            <div class="share-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" placeholder="Search friends..." id="share-user-search">
+            </div>
+            <div class="share-list" id="share-users-list">
+                <!-- Users injected here -->
+            </div>
+            <button id="confirm-share-btn" class="primary-btn" disabled>Send</button>
         </div>
     </div>
 

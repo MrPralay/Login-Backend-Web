@@ -11,6 +11,7 @@ const authRoutes = require('./routes/auth');
 const User = require('./models/User'); 
 const { protect } = require('./middleware/auth');
 const socialRoutes = require('./routes/social');
+const messagingRoutes = require('./routes/messaging');
 const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
@@ -124,6 +125,7 @@ const checkRegSuccess = (req, res, next) => {
 
 app.use('/api', authRoutes);
 app.use('/api/social', socialRoutes);
+app.use('/api/messaging', messagingRoutes);
 
 // Apply checkMasterKey to the landing page
 app.get('/', checkMasterKey, (req, res) => {

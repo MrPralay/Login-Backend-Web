@@ -97,7 +97,16 @@ router.post('/follow/:id', protect, async (req, res) => {
             } else {
                 // Public: direct follow
                 currentUser.following.push(userToFollow._id);
+                userToFollow.following.includes(currentUser._id);
                 userToFollow.followers.push(currentUser._id);
+                
+                // Add Activity
+                userToFollow.activity.push({
+                    type: 'follow',
+                    user: currentUser._id,
+                    text: 'started following you'
+                });
+
                 await currentUser.save();
                 await userToFollow.save();
                 return res.json({ message: 'Followed', isFollowing: true });
@@ -133,6 +142,14 @@ router.post('/requests/:id/:action', protect, async (req, res) => {
         if (action === 'accept') {
             currentUser.followers.push(requestUser._id);
             requestUser.following.push(currentUser._id);
+
+            // Add Activity to both? Usually just the one being followed
+            currentUser.activity.push({
+                type: 'follow',
+                user: requestUser._id,
+                text: 'started following you'
+            });
+
             await requestUser.save();
         }
         
@@ -337,14 +354,31 @@ router.post('/post/:id/like', protect, async (req, res) => {
         if (!post) return res.status(404).json({ message: 'Post not found' });
 
         const likeIndex = post.likes.indexOf(req.user._id);
+        let isLiked = false;
         if (likeIndex > -1) {
             post.likes.splice(likeIndex, 1);
+            isLiked = false;
         } else {
             post.likes.push(req.user._id);
+            isLiked = true;
+
+            // Add Activity to post owner (if not liking own post)
+            if (post.user.toString() !== req.user._id.toString()) {
+                const postOwner = await User.findById(post.user);
+                if (postOwner) {
+                    postOwner.activity.push({
+                        type: 'like',
+                        user: req.user._id,
+                        post: post._id,
+                        text: 'liked your post'
+                    });
+                    await postOwner.save();
+                }
+            }
         }
 
         await post.save();
-        res.json({ likesCount: post.likes.length, isLiked: post.likes.includes(req.user._id) });
+        res.json({ likesCount: post.likes.length, isLiked });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -636,6 +670,106 @@ router.get('/story/:storyId/viewers', protect, async (req, res) => {
 
         const viewers = Array.from(viewersMap.values());
         res.json({ viewersCount: viewers.length, viewers });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Delete a story segment
+router.delete('/story/:storyId/segment/:segmentId', protect, async (req, res) => {
+    try {
+        const story = await Story.findById(req.params.storyId);
+        if (!story) return res.status(404).json({ message: 'Story not found' });
+
+        // Ownership check
+        if (story.user.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        // Remove the segment
+        const segment = story.segments.id(req.params.segmentId);
+        if (!segment) return res.status(404).json({ message: 'Segment not found' });
+
+        segment.remove();
+
+        // If no segments left, delete the entire story document
+        if (story.segments.length === 0) {
+            await Story.findByIdAndDelete(req.params.storyId);
+            return res.json({ message: 'Story deleted completely', storyDeleted: true });
+        }
+
+        await story.save();
+        res.json({ message: 'Segment deleted successfully', storyDeleted: false });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- SEARCH & ACTIVITY ---
+
+// Global Search
+router.get('/search', protect, async (req, res) => {
+    try {
+        const query = req.query.q;
+        if (!query) return res.json([]);
+
+        // Fuzzy search for username or full name
+        const users = await User.find({
+            $or: [
+                { username: { $regex: query, $options: 'i' } },
+                { fullName: { $regex: query, $options: 'i' } }
+            ],
+            _id: { $ne: req.user._id } // Exclude self
+        }).select('username fullName profilePicture followers');
+
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Toggle Save Post (Favorites)
+router.post('/post/:postId/save', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        const postIndex = user.savedPosts.indexOf(req.params.postId);
+
+        let saved = false;
+        if (postIndex === -1) {
+            user.savedPosts.push(req.params.postId);
+            saved = true;
+        } else {
+            user.savedPosts.splice(postIndex, 1);
+            saved = false;
+        }
+
+        await user.save();
+        res.json({ saved, message: saved ? 'Post saved to favorites' : 'Post removed from favorites' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get Saved Posts
+router.get('/saved', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).populate({
+            path: 'savedPosts',
+            populate: { path: 'user', select: 'username profilePicture' }
+        });
+        res.json(user.savedPosts);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get Activity Feed
+router.get('/activity', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).populate('activity.user', 'username profilePicture');
+        // Return latest 50 activities
+        const activities = user.activity.sort((a, b) => b.createdAt - a.createdAt).slice(0, 50);
+        res.json(activities);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

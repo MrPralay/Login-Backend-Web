@@ -16,6 +16,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileView = document.getElementById('profile-view');
     const profileContentArea = document.getElementById('profile-content-area');
 
+    function hideAllViews() {
+        feedView.classList.add('hidden');
+        profileView.classList.add('hidden');
+        document.getElementById('messenger-view').classList.add('hidden');
+        document.getElementById('search-view').classList.add('hidden');
+        document.getElementById('activity-view').classList.add('hidden');
+    }
+
     const createPostModal = document.getElementById('create-post-modal');
     const postFileInput = document.getElementById('post-file-input');
     const mediaPreview = document.getElementById('media-preview');
@@ -300,12 +308,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 feedView.classList.add('hidden');
                 profileView.classList.remove('hidden');
                 renderProfile();
-            } else if (tabId === 'create') {
-                showToast('Create post functionality coming soon!');
             } else if (tabId === 'search') {
-                showToast('Search functionality coming soon!');
+                hideAllViews();
+                document.getElementById('search-view').classList.remove('hidden');
+                initSearchView();
+            } else if (tabId === 'activity') {
+                hideAllViews();
+                document.getElementById('activity-view').classList.remove('hidden');
+                initActivityView();
             } else if (tabId === 'messenger') {
-                showToast('Messenger coming soon!');
+                hideAllViews();
+                document.getElementById('messenger-view').classList.remove('hidden');
+                openMessengerView();
             }
         };
     });
@@ -436,6 +450,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Setup Progress Bars FIRST (Required by startSegmentTimer)
         renderProgressBars(userGroup.story.segments.length);
 
+        // Reset Menu
+        const menuContainer = document.getElementById('story-menu-container');
+        if (menuContainer) menuContainer.classList.add('hidden');
+
         // Update User Info
         document.getElementById('story-user-pfp').src = userGroup.user.profilePicture || 'me.png';
         document.getElementById('story-username').textContent = userGroup.user.username;
@@ -471,6 +489,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         updateStoryInteractions();
+
+        // Bind Menu Toggle
+        document.getElementById('story-menu-btn').onclick = (e) => {
+            e.stopPropagation();
+            toggleStoryMenu();
+        };
     }
 
     function updateStoryInteractions() {
@@ -526,17 +550,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const newShareBtn = shareBtn.cloneNode(true);
         shareBtn.parentNode.replaceChild(newShareBtn, shareBtn);
         
-        newShareBtn.onclick = async (e) => {
+        newShareBtn.onclick = (e) => {
             e.stopPropagation();
-            showToast('Sharing story...', 'normal');
-            try {
-                const res = await fetch(`/api/social/story/${storyId}/segment/${segment._id}/share`, { method: 'POST' });
-                if (res.ok) {
-                    showToast('Shared to your feed!', 'success');
-                } else {
-                    showToast('Failed to share', 'error');
-                }
-            } catch (err) { console.error(err); }
+            openShareModal(segment);
         };
     }
 
@@ -668,10 +684,378 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('close-viewers-btn').onclick = () => {
         viewersOverlay.classList.add('hidden');
-        // Resume story? For simplicity, we'll just keep it paused or user can restart.
-        // Let's restart the current segment.
         openStoryViewer();
     };
+
+    // --- STORY MENU LOGIC ---
+    function toggleStoryMenu() {
+        const menu = document.getElementById('story-menu-container');
+        if (menu.classList.contains('hidden')) {
+            if (storyTimer) clearTimeout(storyTimer); // Pause story
+            renderStoryMenu();
+            menu.classList.remove('hidden');
+        } else {
+            menu.classList.add('hidden');
+            openStoryViewer(); // Resume
+        }
+    }
+
+    function renderStoryMenu() {
+        const menu = document.getElementById('story-menu-container');
+        const userGroup = activeStories[currentStoryUserIndex];
+        const segment = userGroup.story.segments[currentStorySegmentIndex];
+        const myId = me.id || me._id;
+        const isOwner = userGroup.user._id === myId;
+
+        menu.innerHTML = '';
+
+        // Copy Link Option
+        const copyItem = document.createElement('div');
+        copyItem.className = 'story-menu-item';
+        copyItem.innerHTML = `<i class="fa-solid fa-link"></i> Copy Link`;
+        copyItem.onclick = () => copyStoryLink(segment);
+        menu.appendChild(copyItem);
+
+        // Delete Option (Owners Only)
+        if (isOwner) {
+            const deleteItem = document.createElement('div');
+            deleteItem.className = 'story-menu-item danger';
+            deleteItem.innerHTML = `<i class="fa-solid fa-trash"></i> Delete Story`;
+            deleteItem.onclick = () => deleteStorySegment(segment);
+            menu.appendChild(deleteItem);
+        }
+    }
+
+    async function deleteStorySegment(segment) {
+        if (!confirm('Are you sure you want to delete this story?')) return;
+        
+        const storyId = segment.storyId;
+        try {
+            const res = await fetch(`/api/social/story/${storyId}/segment/${segment._id}`, { method: 'DELETE' });
+            const data = await res.json();
+            
+            if (res.ok) {
+                showToast('Story deleted', 'success');
+                if (data.storyDeleted) {
+                    // Entire story doc gone, skip to next user or close
+                    location.reload(); // Simplest way to refresh states
+                } else {
+                    // Just one segment gone, go to next or reload
+                    location.reload();
+                }
+            } else {
+                showToast(data.message || 'Failed to delete', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function copyStoryLink(segment) {
+        const url = `${window.location.origin}/social?story=${segment._id}`;
+        navigator.clipboard.writeText(url).then(() => {
+            showToast('Link copied to clipboard!', 'success');
+            toggleStoryMenu(); // Close menu
+        });
+    }
+
+    // Close menu on outside click
+    document.addEventListener('click', (e) => {
+        const menu = document.getElementById('story-menu-container');
+        const menuBtn = document.getElementById('story-menu-btn');
+        if (menu && !menu.classList.contains('hidden') && !menu.contains(e.target) && e.target !== menuBtn) {
+            menu.classList.add('hidden');
+            openStoryViewer();
+        }
+    });
+
+    // --- STORY SHARE MODAL LOGIC ---
+    let selectedShareUsers = new Set();
+    let currentShareSegment = null;
+    let allFriends = [];
+
+    async function openShareModal(segment) {
+        if (storyTimer) clearTimeout(storyTimer); // Pause story
+        
+        currentShareSegment = segment;
+        selectedShareUsers.clear();
+        document.getElementById('story-share-modal').classList.remove('hidden');
+        document.getElementById('confirm-share-btn').disabled = true;
+        
+        const listContainer = document.getElementById('share-users-list');
+        listContainer.innerHTML = '<p>Loading friends...</p>';
+
+        try {
+            // Fetch users I follow (Instagram style share list)
+            const res = await fetch('/api/user/profile');
+            const myProfile = await res.json();
+            
+            // For a real app, we'd have an /api/social/following endpoint
+            // Here we'll fetch my followers-following info or search users
+            const fRes = await fetch('/api/social/suggested'); // Using suggested for demo if following is empty
+            const suggested = await fRes.json();
+            
+            allFriends = suggested;
+            renderShareList(allFriends);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function renderShareList(users) {
+        const listContainer = document.getElementById('share-users-list');
+        listContainer.innerHTML = '';
+        
+        users.forEach(user => {
+            const div = document.createElement('div');
+            div.className = `share-user-item ${selectedShareUsers.has(user._id) ? 'selected' : ''}`;
+            div.innerHTML = `
+                <div class="share-user-info">
+                    <img src="${user.profilePicture || 'me.png'}">
+                    <b>${user.username}</b>
+                </div>
+                <div class="share-check"></div>
+            `;
+            div.onclick = () => {
+                if (selectedShareUsers.has(user._id)) {
+                    selectedShareUsers.delete(user._id);
+                } else {
+                    selectedShareUsers.add(user._id);
+                }
+                div.classList.toggle('selected');
+                document.getElementById('confirm-share-btn').disabled = selectedShareUsers.size === 0;
+            };
+            listContainer.appendChild(div);
+        });
+    }
+
+    document.getElementById('share-user-search').oninput = (e) => {
+        const query = e.target.value.toLowerCase();
+        const filtered = allFriends.filter(u => u.username.toLowerCase().includes(query));
+        renderShareList(filtered);
+    };
+
+    document.getElementById('close-share-btn').onclick = () => {
+        document.getElementById('story-share-modal').classList.add('hidden');
+        openStoryViewer(); // Resume
+    };
+
+    document.getElementById('confirm-share-btn').onclick = async () => {
+        const btn = document.getElementById('confirm-share-btn');
+        btn.disabled = true;
+        btn.textContent = 'Sending...';
+
+        try {
+            const storyId = currentShareSegment.storyId;
+            const sharedStory = {
+                story: storyId,
+                segmentId: currentShareSegment._id,
+                media: currentShareSegment.media,
+                mediaType: currentShareSegment.mediaType
+            };
+
+            const promises = Array.from(selectedShareUsers).map(userId => 
+                fetch('/api/messaging/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ recipientId: userId, sharedStory })
+                })
+            );
+
+            await Promise.all(promises);
+            showToast(`Shared with ${selectedShareUsers.size} friends!`, 'success');
+            document.getElementById('story-share-modal').classList.add('hidden');
+            openStoryViewer();
+        } catch (err) {
+            console.error(err);
+            showToast('Failed to share', 'error');
+        } finally {
+            btn.textContent = 'Send';
+        }
+    };
+
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+        const shareModal = document.getElementById('story-share-modal');
+        const shareCard = document.querySelector('.share-card');
+        if (shareModal && !shareModal.classList.contains('hidden') && !shareCard.contains(e.target)) {
+            shareModal.classList.add('hidden');
+            openStoryViewer();
+        }
+    });
+
+    // --- MESSENGER LOGIC ---
+    let currentConversationId = null;
+    let currentChatRecipient = null;
+
+    function openMessengerView() {
+        document.getElementById('messenger-my-username').textContent = me.username;
+        loadConversations();
+    }
+
+    async function loadConversations() {
+        const list = document.getElementById('conversation-list');
+        list.innerHTML = '<p style="padding: 20px; color: #8e8e8e;">Loading chats...</p>';
+
+        try {
+            const res = await fetch('/api/messaging/conversations');
+            const conversations = await res.json();
+            
+            list.innerHTML = '';
+            if (conversations.length === 0) {
+                list.innerHTML = '<p style="padding: 20px; color: #8e8e8e; text-align: center;">No messages yet. <br> Start a chat!</p>';
+            }
+
+            conversations.forEach(conv => {
+                const otherUser = conv.participants.find(p => p._id !== (me.id || me._id));
+                if (!otherUser) return;
+
+                const div = document.createElement('div');
+                div.className = `conv-item ${currentConversationId === conv._id ? 'active' : ''}`;
+                div.innerHTML = `
+                    <img src="${otherUser.profilePicture || 'me.png'}">
+                    <div class="conv-info">
+                        <h4>${otherUser.username}</h4>
+                        <p>${conv.lastMessageText || 'No messages yet'}</p>
+                    </div>
+                `;
+                div.onclick = () => openConversation(conv._id, otherUser);
+                list.appendChild(div);
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function openConversation(convId, otherUser) {
+        currentConversationId = convId;
+        currentChatRecipient = otherUser;
+        
+        document.getElementById('messenger-main-empty').classList.add('hidden');
+        document.getElementById('messenger-main-active').classList.remove('hidden');
+        
+        const headerPfp = document.getElementById('chat-user-pfp');
+        const headerUsername = document.getElementById('chat-user-username');
+        headerPfp.src = otherUser.profilePicture || 'me.png';
+        headerUsername.textContent = otherUser.username;
+
+        loadMessages(convId);
+        
+        // Mark as active in list
+        document.querySelectorAll('.conv-item').forEach(item => {
+            item.classList.remove('active');
+            if (item.querySelector('h4').textContent === otherUser.username) {
+                item.classList.add('active');
+            }
+        });
+    }
+
+    async function loadMessages(convId) {
+        const container = document.getElementById('chat-messages-container');
+        container.innerHTML = '<p style="text-align: center; color: #8e8e8e;">Loading history...</p>';
+
+        try {
+            const res = await fetch(`/api/messaging/conversation/with/${currentChatRecipient._id}`);
+            const data = await res.json();
+            
+            container.innerHTML = '';
+            data.messages.forEach(msg => renderMessage(msg));
+            container.scrollTop = container.scrollHeight;
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function renderMessage(msg) {
+        const container = document.getElementById('chat-messages-container');
+        const isOutgoing = msg.sender === (me.id || me._id);
+        
+        const bubble = document.createElement('div');
+        bubble.className = `message-bubble ${isOutgoing ? 'outgoing' : 'incoming'}`;
+        
+        if (msg.sharedStory) {
+            const storyPreview = document.createElement('div');
+            storyPreview.className = 'shared-story-msg';
+            if (msg.sharedStory.mediaType === 'video') {
+                storyPreview.innerHTML = `
+                    <video src="${msg.sharedStory.media}"></video>
+                    <div class="shared-story-tag"><i class="fa-solid fa-play"></i> Story</div>
+                `;
+            } else {
+                storyPreview.innerHTML = `
+                    <img src="${msg.sharedStory.media}">
+                    <div class="shared-story-tag">Story</div>
+                `;
+            }
+            storyPreview.onclick = () => {
+                // Logic to view this story segment? For now just toast
+                showToast('Viewing shared story...', 'success');
+            };
+            bubble.appendChild(storyPreview);
+        }
+
+        if (msg.text) {
+            const textSpan = document.createElement('span');
+            textSpan.textContent = msg.text;
+            bubble.appendChild(textSpan);
+        }
+
+        container.appendChild(bubble);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    document.getElementById('chat-send-btn').onclick = sendMessage;
+    document.getElementById('chat-msg-input').onkeypress = (e) => {
+        if (e.key === 'Enter') sendMessage();
+    };
+
+    async function sendMessage() {
+        const input = document.getElementById('chat-msg-input');
+        const text = input.value.trim();
+        if (!text || !currentChatRecipient) return;
+
+        input.value = '';
+        try {
+            const res = await fetch('/api/messaging/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    recipientId: currentChatRecipient._id, 
+                    text 
+                })
+            });
+            const msg = await res.json();
+            renderMessage(msg);
+            loadConversations(); // Update last message in list
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    document.getElementById('new-chat-btn').onclick = () => {
+        // Suggested users to start a chat
+        showToast('Select a user to start a chat!', 'info');
+        // We can reuse the share modal or similar
+        openNewChatSearch();
+    };
+
+    async function openNewChatSearch() {
+        // Reuse suggested logic
+        const res = await fetch('/api/social/suggested');
+        const suggested = await res.json();
+        
+        // Simple prompt for now, or build a real modal
+        const usernames = suggested.map(u => u.username).join(', ');
+        const target = prompt(`Who would you like to message?\nOptions: ${usernames}`);
+        if (!target) return;
+
+        const user = suggested.find(u => u.username.toLowerCase() === target.toLowerCase());
+        if (user) {
+            openConversation(null, user);
+        } else {
+            showToast('User not found', 'error');
+        }
+    }
 
     // --- REQUESTS ---
     async function loadRequests() {
@@ -804,24 +1188,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 ${mediaContent}
                 <div class="post-actions-elite">
-                    <div class="like-btn" data-id="${post._id}">
-                        <i class="fa-regular fa-heart"></i>
-                        <span>${post.likes?.length || '0'}</span>
+                    <div class="action-left">
+                        <div class="like-btn" data-id="${post._id}">
+                            <i class="fa-regular fa-heart"></i>
+                            <span>${post.likes?.length || '0'}</span>
+                        </div>
+                        <div onclick="openPostDetail('${post._id}')" style="cursor: pointer;">
+                            <i class="fa-regular fa-comment"></i>
+                            <span>${post.comments?.length || '0'}</span>
+                        </div>
                     </div>
-                    <div>
-                        <i class="fa-regular fa-comment"></i>
-                        <span>${post.comments?.length || '0'}</span>
+                    <div class="save-btn" data-id="${post._id}" style="cursor: pointer;">
+                        <i class="fa-regular fa-bookmark"></i>
                     </div>
                 </div>
             `;
             feedContainer.appendChild(card);
             
             // Events
-            const likeBtn = card.querySelector('.like-btn');
-            const isLiked = post.likes && post.likes.includes(me._id);
-            updateLikeBtnUI(likeBtn.querySelector('i'), isLiked);
-            
             likeBtn.onclick = () => toggleLike(post._id, likeBtn);
+
+            const saveBtn = card.querySelector('.save-btn');
+            const isSaved = me.savedPosts && me.savedPosts.includes(post._id);
+            updateSaveBtnUI(saveBtn.querySelector('i'), isSaved);
+            saveBtn.onclick = () => toggleSavePost(post._id, saveBtn);
         });
     }
 
@@ -1289,7 +1679,211 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) { console.error(err); }
     };
 
-    // Logout
+    // --- SEARCH & ACTIVITY Hub LOGIC ---
+
+    function updateSaveBtnUI(icon, isSaved) {
+        if (isSaved) {
+            icon.classList.remove('fa-regular');
+            icon.classList.add('fa-solid', 'fa-bookmark');
+            icon.style.color = '#000';
+        } else {
+            icon.classList.remove('fa-solid', 'fa-bookmark');
+            icon.classList.add('fa-regular', 'fa-bookmark');
+            icon.style.color = '';
+        }
+    }
+
+    async function toggleSavePost(postId, btn) {
+        try {
+            const res = await fetch(`/api/social/post/${postId}/save`, { method: 'POST' });
+            const data = await res.json();
+            
+            const icon = btn.querySelector('i');
+            updateSaveBtnUI(icon, data.saved);
+            
+            // Sync local 'me' state
+            if (data.saved) {
+                if (!me.savedPosts.includes(postId)) me.savedPosts.push(postId);
+            } else {
+                me.savedPosts = me.savedPosts.filter(p => p !== postId);
+            }
+            
+            showToast(data.message, 'success');
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    // --- SEARCH LOGIC ---
+    let searchTimeout = null;
+    function initSearchView() {
+        const input = document.getElementById('global-search-input');
+        input.oninput = () => {
+            if (searchTimeout) clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                performGlobalSearch(input.value);
+            }, 300);
+        };
+    }
+
+    async function performGlobalSearch(query) {
+        const resultsContainer = document.getElementById('global-search-results');
+        if (!query.trim()) {
+            resultsContainer.innerHTML = `
+                <div class="search-empty-state">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <h3>Discover People</h3>
+                    <p>Search by username or name to find friends.</p>
+                </div>`;
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/social/search?q=${query}`);
+            const users = await res.json();
+            
+            resultsContainer.innerHTML = '';
+            if (users.length === 0) {
+                resultsContainer.innerHTML = '<p style="text-align: center; padding: 40px; color: #8e8e8e;">No people found.</p>';
+                return;
+            }
+
+            users.forEach(u => renderUserSearchCard(u, resultsContainer));
+        } catch (err) { console.error(err); }
+    }
+
+    function renderUserSearchCard(user, container) {
+        const div = document.createElement('div');
+        div.className = 'search-user-card';
+        const isFollowing = me.following && me.following.includes(user._id);
+        
+        div.innerHTML = `
+            <div class="user-info">
+                <img src="${user.profilePicture || 'me.png'}" class="search-user-pfp">
+                <div>
+                    <h4 style="margin: 0;">${user.username}</h4>
+                    <span style="font-size: 0.85rem; color: #8e8e8e;">${user.fullName || ''}</span>
+                </div>
+            </div>
+            <button class="btn-follow-elite ${isFollowing ? 'following' : ''}" data-id="${user._id}">
+                ${isFollowing ? 'Following' : 'Follow'}
+            </button>
+        `;
+        
+        const followBtn = div.querySelector('button');
+        followBtn.onclick = async () => {
+            const res = await fetch(`/api/social/follow/${user._id}`, { method: 'POST' });
+            if (res.ok) {
+                const data = await res.json();
+                const nowFollowing = data.message.includes('Following');
+                followBtn.textContent = nowFollowing ? 'Following' : 'Follow';
+                followBtn.classList.toggle('following', nowFollowing);
+                
+                // Update local 'me' state
+                if (nowFollowing) {
+                    if (!me.following.includes(user._id)) me.following.push(user._id);
+                } else {
+                    me.following = me.following.filter(f => f !== user._id);
+                }
+            }
+        };
+        
+        container.appendChild(div);
+    }
+
+    // --- ACTIVITY / FAVORITES LOGIC ---
+    function initActivityView() {
+        const tabs = document.querySelectorAll('.act-tab');
+        tabs.forEach(tab => {
+            tab.onclick = () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                const target = tab.getAttribute('data-act-tab');
+                document.querySelectorAll('.act-content-block').forEach(b => b.classList.add('hidden'));
+                document.getElementById(`activity-content-${target}`).classList.remove('hidden');
+                
+                if (target === 'favorites') loadSavedPosts();
+                else loadActivityFeed();
+            };
+        });
+        
+        // Default load
+        loadSavedPosts();
+    }
+
+    async function loadSavedPosts() {
+        const container = document.getElementById('saved-posts-container');
+        container.innerHTML = '<p style="padding: 20px;">Loading your favorites...</p>';
+        
+        try {
+            const res = await fetch('/api/social/saved');
+            const posts = await res.json();
+            
+            container.innerHTML = '';
+            if (posts.length === 0) {
+                container.innerHTML = '<p style="padding: 40px; grid-column: 1/4; text-align: center; color: #8e8e8e;">No saved posts yet.</p>';
+                return;
+            }
+
+            posts.forEach(post => {
+                const item = document.createElement('div');
+                item.className = 'saved-post-item';
+                const isVideo = (post.image.includes('data:video') || post.image.endsWith('.mp4'));
+                
+                item.innerHTML = `
+                    ${isVideo ? `<video src="${post.image}"></video>` : `<img src="${post.image}">`}
+                    <div class="saved-post-overlay">
+                        <span><i class="fa-solid fa-heart"></i> ${post.likes.length}</span>
+                        <span><i class="fa-solid fa-comment"></i> ${post.comments.length}</span>
+                    </div>
+                `;
+                item.onclick = () => openPostDetail(post._id);
+                container.appendChild(item);
+            });
+        } catch (err) { console.error(err); }
+    }
+
+    async function loadActivityFeed() {
+        const container = document.getElementById('notifications-container');
+        container.innerHTML = '<p style="padding: 20px;">Loading activity...</p>';
+        
+        try {
+            const res = await fetch('/api/social/activity');
+            const activities = await res.json();
+            
+            container.innerHTML = '';
+            if (activities.length === 0) {
+                container.innerHTML = '<p style="padding: 40px; text-align: center; color: #8e8e8e;">No recent activity.</p>';
+                return;
+            }
+
+            activities.forEach(act => {
+                const item = document.createElement('div');
+                item.className = 'notif-item';
+                
+                let actionText = '';
+                if (act.type === 'like') actionText = 'liked your post';
+                else if (act.type === 'follow') actionText = 'started following you';
+                else if (act.type === 'comment') actionText = `commented: "${act.text}"`;
+
+                item.innerHTML = `
+                    <img src="${act.user.profilePicture || 'me.png'}">
+                    <div class="notif-text">
+                        <b>${act.user.username}</b> ${actionText}
+                        <div class="notif-time">${formatTime(act.createdAt)}</div>
+                    </div>
+                    ${act.post && act.post.image ? `<img src="${act.post.image}" class="notif-action-img">` : ''}
+                `;
+                item.onclick = () => {
+                    if (act.post) openPostDetail(act.post._id);
+                };
+                container.appendChild(item);
+            });
+        } catch (err) { console.error(err); }
+    }
+
+    // --- REQUESTS ---
     document.getElementById('logout-btn').onclick = () => {
         document.cookie = 'token=; Max-Age=0; path=/;';
         window.location.href = '/';

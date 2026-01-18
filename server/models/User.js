@@ -89,6 +89,17 @@ const userSchema = new mongoose.Schema({
     comments: { type: Boolean, default: true },
     newFollowers: { type: Boolean, default: true },
     messages: { type: Boolean, default: true }
-  }
+  },
+  savedPosts: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Post'
+  }],
+  activity: [{
+    type: { type: String }, // 'like', 'follow', 'comment', etc.
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    post: { type: mongoose.Schema.Types.ObjectId, ref: 'Post' },
+    text: { type: String },
+    createdAt: { type: Date, default: Date.now }
+  }]
 });
 module.exports = mongoose.model('User', userSchema);
