@@ -1509,13 +1509,15 @@ input:checked + .slider:before {
 
 .story-progress-bar-container {
     position: absolute;
-    top: 5px; /* Flush with the top edge */
-    left: 4px;
-    right: 4px;
+    top: 5px; /* Absolute top edge */
+    left: 8px;
+    right: 8px;
     height: 2px;
     display: flex;
-    gap: 4px;
-    z-index: 100; /* Above everything */
+    gap: 5px;
+    z-index: 1000;
+    /* Subtle shadow to ensure visibility on bright media */
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
 }
 
 .story-progress-segment {
@@ -1526,10 +1528,17 @@ input:checked + .slider:before {
     overflow: hidden;
 }
 
-/* Heart Pop Animation */
+.story-progress-fill {
+    height: 100%;
+    background: #ffffff; /* Pure white for high contrast */
+    width: 0%;
+}
+
+/* Heart Pop Animation - Snappier */
 @keyframes heartPop {
     0% { transform: scale(1); }
-    50% { transform: scale(1.3); }
+    30% { transform: scale(1.4); }
+    60% { transform: scale(0.9); }
     100% { transform: scale(1); }
 }
 
@@ -1539,17 +1548,11 @@ input:checked + .slider:before {
 
 .story-action-btns i {
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: transform 0.2s, color 0.2s;
 }
 
 .story-action-btns i:active {
     transform: scale(0.9);
-}
-
-.story-progress-fill {
-    height: 100%;
-    background: #fff;
-    width: 0%;
 }
 
 .story-header {

@@ -430,8 +430,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('story-username').textContent = userGroup.user.username;
         document.getElementById('story-time').textContent = formatTime(segment.createdAt);
         
-        // Mark as viewed on server
-        markSegmentViewed(userGroup.story._id, segment._id);
+        // Mark as viewed on server (Use segment.storyId)
+        markSegmentViewed(segment.storyId || userGroup.story._id, segment._id);
 
         // Update Media (Surgical removal to preserve navigation overlays)
         const oldMedia = storyMediaContainer.querySelectorAll('img, video');
@@ -441,7 +441,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const video = document.createElement('video');
             video.src = segment.media;
             video.autoplay = true;
-            video.onloadedmetadata = () => startSegmentTimer(video.duration * 1000);
+            video.muted = false;
+            // Safeguard: Start timer after 10s if metadata fails
+            let metadataLoaded = false;
+            video.onloadedmetadata = () => {
+                metadataLoaded = true;
+                startSegmentTimer(video.duration * 1000);
+            };
+            setTimeout(() => {
+                if (!metadataLoaded) startSegmentTimer(10000); // 10s fallback
+            }, 5000); 
+
             storyMediaContainer.appendChild(video);
         } else {
             const img = document.createElement('img');
@@ -461,6 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const userGroup = activeStories[currentStoryUserIndex];
         const segment = userGroup.story.segments[currentStorySegmentIndex];
         const myId = me.id || me._id;
+        const storyId = segment.storyId || userGroup.story._id;
 
         // Setup Action Buttons
         const likeBtn = document.getElementById('story-like-btn');
@@ -474,7 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
             likeBtn.classList.add('heart-pop');
             setTimeout(() => likeBtn.classList.remove('heart-pop'), 300);
 
-            const res = await fetch(`/api/social/story/${userGroup.story._id}/segment/${segment._id}/like`, { method: 'POST' });
+            const res = await fetch(`/api/social/story/${storyId}/segment/${segment._id}/like`, { method: 'POST' });
             const data = await res.json();
             
             // Update local state
@@ -493,7 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('story-viewers-count').textContent = `${segment.views.length} viewers`;
             viewersBtn.onclick = (e) => {
                 e.stopPropagation();
-                showViewersOverlay(userGroup.story._id);
+                showViewersOverlay(storyId);
             };
         } else {
             viewersBtn.classList.add('hidden');
@@ -503,18 +514,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const shareBtn = document.getElementById('story-share-btn');
         shareBtn.onclick = async (e) => {
             e.stopPropagation();
-            showToast('Sharing to story...', 'normal');
+            showToast('Sharing to Feed...', 'normal');
             try {
-                const res = await fetch(`/api/social/story/${userGroup.story._id}/segment/${segment._id}/share`, { method: 'POST' });
+                const res = await fetch(`/api/social/story/${storyId}/segment/${segment._id}/share`, { method: 'POST' });
                 if (res.ok) {
-                    showToast('Shared to your feed!', 'success');
+                    showToast('Shared successfully!', 'success');
                 } else {
                     showToast('Failed to share', 'error');
                 }
             } catch (err) {
                 console.error(err);
             }
-            // No need to reset viewer
         };
     }
 

@@ -485,12 +485,18 @@ router.get('/stories', protect, async (req, res) => {
         const storiesByUser = {};
         stories.forEach(story => {
             const userId = story.user._id.toString();
+            // Attach original storyId to each segment for interaction routing
+            const segmentsWithId = story.segments.map(seg => ({
+                ...seg.toObject(),
+                storyId: story._id
+            }));
+
             if (!storiesByUser[userId]) {
                 storiesByUser[userId] = {
                     user: story.user,
                     story: { 
-                        _id: story._id, // Keep latest ID for interaction base
-                        segments: [...story.segments] 
+                        _id: story._id, // Default ID (will use segment.storyId for actions)
+                        segments: segmentsWithId 
                     },
                     hasUnviewed: story.segments.some(seg => 
                         !seg.views.some(v => v._id.toString() === req.user._id.toString())
@@ -498,7 +504,7 @@ router.get('/stories', protect, async (req, res) => {
                 };
             } else {
                 // Merge segments and update unviewed status
-                storiesByUser[userId].story.segments.push(...story.segments);
+                storiesByUser[userId].story.segments.push(...segmentsWithId);
                 if (!storiesByUser[userId].hasUnviewed) {
                     storiesByUser[userId].hasUnviewed = story.segments.some(seg => 
                         !seg.views.some(v => v._id.toString() === req.user._id.toString())
