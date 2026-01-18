@@ -421,10 +421,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function openStoryViewer() {
         if (!me) {
-            // Lazy load 'me' if it's missing (safeguard)
             fetch('/api/user/profile').then(res => res.json()).then(data => {
                 me = data;
-                openStoryViewer(); // Retry once loaded
+                openStoryViewer();
             });
             return;
         }
@@ -434,16 +433,16 @@ document.addEventListener('DOMContentLoaded', () => {
         
         storyViewerModal.classList.remove('hidden');
         
+        // Setup Progress Bars FIRST (Required by startSegmentTimer)
+        renderProgressBars(userGroup.story.segments.length);
+
         // Update User Info
         document.getElementById('story-user-pfp').src = userGroup.user.profilePicture || 'me.png';
-        const usernameEl = document.getElementById('story-username');
-        usernameEl.textContent = userGroup.user.username;
+        document.getElementById('story-username').textContent = userGroup.user.username;
         document.getElementById('story-time').textContent = formatTime(segment.createdAt);
         
-        // Mark as viewed on server
         markSegmentViewed(segment.storyId || userGroup.story._id, segment._id);
 
-        // Update Media (Surgical removal to preserve navigation overlays)
         const oldMedia = storyMediaContainer.querySelectorAll('img, video');
         oldMedia.forEach(m => m.remove());
 
@@ -459,7 +458,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 metadataLoaded = true;
                 startSegmentTimer(video.duration * 1000);
             };
-            // Safeguard timer: advance after 10s if video stalls
             setTimeout(() => {
                 if (!metadataLoaded) startSegmentTimer(10000);
             }, 5000);
@@ -472,10 +470,6 @@ document.addEventListener('DOMContentLoaded', () => {
             startSegmentTimer(5000);
         }
 
-        // Setup Progress Bars
-        renderProgressBars(userGroup.story.segments.length);
-        
-        // Initialize Interactions
         updateStoryInteractions();
     }
 
@@ -574,6 +568,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const fills = document.querySelectorAll('.story-progress-fill');
         const currentFill = fills[currentStorySegmentIndex];
         
+        if (!currentFill) return;
+
         currentFill.style.transition = 'none';
         currentFill.style.width = '0%';
         currentFill.offsetHeight; // reflow
