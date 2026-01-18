@@ -429,6 +429,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('story-user-pfp').src = userGroup.user.profilePicture || 'me.png';
         document.getElementById('story-username').textContent = userGroup.user.username;
         document.getElementById('story-time').textContent = formatTime(segment.createdAt);
+        
+        // Mark as viewed on server
+        markSegmentViewed(userGroup.story._id, segment._id);
 
         // Update Media
         storyMediaContainer.innerHTML = '';
