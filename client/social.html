@@ -3,211 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Socially | Experience the Connection</title>
+    <title>Socially | The Elite Connection</title>
     <link rel="stylesheet" href="social.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 </head>
 <body class="dark-mode">
-    <div id="app">
-        <!-- Top Header (Contextual) -->
-        <header id="main-header">
-            <h1 class="logo">Socially</h1>
-            <div class="header-actions">
-                <i class="fa-regular fa-heart" id="header-activity"></i>
-                <i class="fa-regular fa-paper-plane" id="header-messages"></i>
+    <div id="app-container">
+        <!-- LEFT SIDEBAR: NAVIGATION -->
+        <aside id="left-sidebar">
+            <div class="sidebar-top">
+                <h1 class="logo">S</h1>
+                <nav id="main-nav">
+                    <div class="nav-btn active" data-tab="home">
+                        <i class="fa-solid fa-house"></i> <span>Home</span>
+                    </div>
+                    <div class="nav-btn" data-tab="search">
+                        <i class="fa-solid fa-magnifying-glass"></i> <span>Explore</span>
+                    </div>
+                    <div class="nav-btn" data-tab="activity">
+                        <i class="fa-regular fa-heart"></i> <span>Notifications</span>
+                    </div>
+                    <div class="nav-btn" data-tab="messages">
+                        <i class="fa-regular fa-paper-plane"></i> <span>Messages</span>
+                    </div>
+                    <div class="nav-btn" data-tab="bookmarks">
+                        <i class="fa-regular fa-bookmark"></i> <span>Bookmarks</span>
+                    </div>
+                    <div class="nav-btn" data-tab="profile">
+                        <i class="fa-regular fa-user"></i> <span>Profile</span>
+                    </div>
+                    <div class="nav-btn" id="more-menu">
+                        <i class="fa-solid fa-ellipsis"></i> <span>More</span>
+                    </div>
+                </nav>
+                <button id="post-trigger-btn">Post</button>
             </div>
-        </header>
+            
+            <div class="sidebar-bottom">
+                <div class="current-user-pill" id="me-pill">
+                    <img src="me.png" alt="P" id="me-pfp">
+                    <div class="pill-info">
+                        <span id="me-fullname">Pralay</span>
+                        <span id="me-handle">@pralay</span>
+                    </div>
+                    <i class="fa-solid fa-ellipsis"></i>
+                </div>
+            </div>
+        </aside>
 
-        <!-- Main Content Area -->
-        <main id="content-area">
-            <!-- Home Section -->
-            <section id="home-section" class="tab-content active">
-                <div class="social-feed">
-                    <div class="coming-soon">
-                        <i class="fa-solid fa-house-chimney"></i>
-                        <h2>Your Feed</h2>
-                        <p>Stay tuned for updates from people you follow!</p>
+        <!-- CENTER CONTENT: FEED / PROFILE -->
+        <main id="main-center">
+            <header id="center-header">
+                <h2 id="view-title">Home Page</h2>
+            </header>
+
+            <div id="content-scroll">
+                <!-- Create Post Box (Only on Home) -->
+                <div id="create-post-container">
+                    <div class="create-post-input">
+                        <img src="me.png" class="mini-pfp">
+                        <textarea id="post-content" placeholder="What's happening?"></textarea>
+                    </div>
+                    <div class="create-post-actions">
+                        <div class="media-icons">
+                            <i class="fa-regular fa-image"></i>
+                            <i class="fa-solid fa-list-ul"></i>
+                            <i class="fa-regular fa-face-smile"></i>
+                            <i class="fa-regular fa-calendar"></i>
+                        </div>
+                        <button id="submit-post-btn" disabled>Post</button>
                     </div>
                 </div>
-            </section>
 
-            <!-- Search Section -->
-            <section id="search-section" class="tab-content">
-                <div class="search-container">
-                    <div class="search-bar-wrapper">
+                <!-- Tab Sections -->
+                <section id="home-section" class="tab-content active">
+                    <div id="feed-container">
+                        <!-- Posts will load here -->
+                    </div>
+                </section>
+
+                <section id="search-section" class="tab-content">
+                    <div class="search-wrap">
                         <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="search-input" placeholder="Search users...">
+                        <input type="text" id="search-input" placeholder="Search for people, topics, or keywords">
                     </div>
-                    <div id="search-results" class="user-list">
-                        <!-- Search results will appear here -->
-                        <div class="search-placeholder">
-                            <i class="fa-solid fa-users"></i>
-                            <p>Search for your friends and creators</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
+                    <div id="search-results-container"></div>
+                </section>
 
-            <!-- Reels Section -->
-            <section id="reels-section" class="tab-content">
-                <div class="reels-container">
-                    <div class="coming-soon">
-                        <i class="fa-solid fa-clapperboard"></i>
-                        <h2>Reels</h2>
-                        <p>Short, fun videos coming soon!</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Activity Section (Who like me) -->
-            <section id="activity-section" class="tab-content">
-                <div class="section-header">
-                    <h2>Activity</h2>
-                </div>
-                <div class="activity-list">
-                    <div class="empty-state">
-                        <i class="fa-regular fa-heart"></i>
-                        <p>No activity yet. When someone likes your posts, you'll see it here.</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Messages Section -->
-            <section id="messages-section" class="tab-content">
-                <div class="section-header">
-                    <h2>Messages</h2>
-                    <i class="fa-solid fa-lock-open" id="chat-lock-status"></i>
-                </div>
-                <div id="messages-container">
-                    <div class="chat-locked-overlay hidden" id="chat-locked-ui">
-                        <i class="fa-solid fa-lock"></i>
-                        <h3>Chats are Locked</h3>
-                        <p>Enter your 4-digit passcode to continue</p>
-                        <div class="passcode-input">
-                            <input type="password" maxlength="4" id="chat-passcode" placeholder="----">
-                        </div>
-                        <button class="btn btn-primary" id="unlock-chats-btn">Unlock</button>
-                    </div>
-                    <div class="messages-list" id="active-chats">
+                <section id="activity-section" class="tab-content">
+                    <div class="notifications-list">
                         <div class="empty-state">
-                            <i class="fa-regular fa-paper-plane"></i>
-                            <p>No messages yet. Start a conversation!</p>
+                            <i class="fa-regular fa-bell"></i>
+                            <p>No new notifications yet.</p>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            <!-- Profile Section -->
-            <section id="profile-section" class="tab-content">
-                <div id="profile-container">
-                    <!-- Profile header will be loaded here dynamically -->
-                </div>
-            </section>
+                <section id="messages-section" class="tab-content">
+                    <div class="messages-wrap">
+                        <div id="chat-locked-ui" class="hidden">
+                            <i class="fa-solid fa-lock"></i>
+                            <h3>Messages are Locked</h3>
+                            <input type="password" id="chat-passcode" placeholder="Enter Pin">
+                            <button id="unlock-btn">Unlock</button>
+                        </div>
+                        <div id="active-chats" class="empty-state">
+                            <i class="fa-regular fa-envelope"></i>
+                            <p>Select a message to start chatting.</p>
+                        </div>
+                    </div>
+                </section>
 
-            <!-- User Detail Section (For viewing others) -->
-            <section id="user-profile-section" class="tab-content">
-                <div class="back-button" id="back-to-search">
-                    <i class="fa-solid fa-arrow-left"></i>
-                    <span>Back</span>
-                </div>
-                <div id="user-profile-container">
-                    <!-- Other user's profile header will be loaded here -->
-                </div>
-            </section>
+                <section id="profile-section" class="tab-content">
+                    <div id="profile-display">
+                        <!-- Detailed profile will load here -->
+                    </div>
+                </section>
+                
+                <section id="user-profile-section" class="tab-content">
+                    <!-- Other user profile view -->
+                </section>
+            </div>
         </main>
 
-        <!-- Bottom Navigation Bar -->
-        <nav id="bottom-nav">
-            <div class="nav-item active" data-tab="home">
-                <i class="fa-solid fa-house"></i>
-                <span class="nav-label">Home</span>
-            </div>
-            <div class="nav-item" data-tab="search">
+        <!-- RIGHT SIDEBAR: EXPLORE / TRENDS -->
+        <aside id="right-sidebar">
+            <div class="search-bar-mini">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <span class="nav-label">Search</span>
+                <input type="text" placeholder="Search...">
             </div>
-            <div class="nav-item" data-tab="reels">
-                <i class="fa-solid fa-clapperboard"></i>
-                <span class="nav-label">Reels</span>
-            </div>
-            <div class="nav-item" data-tab="activity">
-                <i class="fa-regular fa-heart"></i>
-                <span class="nav-label">Activity</span>
-            </div>
-            <div class="nav-item" data-tab="messages">
-                <i class="fa-regular fa-paper-plane"></i>
-                <span class="nav-label">Messages</span>
-            </div>
-            <div class="nav-item" data-tab="profile">
-                <div class="profile-nav-icon">
-                    <img src="me.png" alt="P" id="nav-profile-pic">
+
+            <div class="sidebar-card">
+                <h3>Hot Topics</h3>
+                <div class="card-list" id="suggestions-list">
+                    <!-- Users to follow will load here -->
                 </div>
-                <span class="nav-label">Profile</span>
+                <span class="show-more">Show more</span>
             </div>
-        </nav>
+
+            <div class="sidebar-card">
+                <h3>Trends for you</h3>
+                <div class="card-list">
+                    <div class="trend-item">
+                        <span class="trend-meta">Trending in Technology</span>
+                        <p class="trend-name">#SuperSocially</p>
+                        <span class="trend-meta">2,543 Posts</span>
+                    </div>
+                    <div class="trend-item">
+                        <span class="trend-meta">Artificial Intelligence · Trending</span>
+                        <p class="trend-name">#AgenticAI</p>
+                        <span class="trend-meta">10.2K Posts</span>
+                    </div>
+                </div>
+                <span class="show-more">Show more</span>
+            </div>
+
+            <footer id="sidebar-footer">
+                <nav>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Cookie Policy</a>
+                </nav>
+                <p>© 2026 Socially Corp.</p>
+            </footer>
+        </aside>
     </div>
 
-    <!-- Settings Modal/Overlay -->
-    <div id="settings-overlay" class="hidden">
-        <div class="settings-content">
-            <div class="settings-header">
-                <i class="fa-solid fa-chevron-left" id="close-settings"></i>
-                <h2>Settings</h2>
-                <span id="save-settings">Done</span>
-            </div>
-            <div class="settings-body">
-                <div class="setting-group">
-                    <h3>Account Settings</h3>
-                    <div class="setting-item">
-                        <label>Full Name</label>
-                        <input type="text" id="setting-fullname" placeholder="Full Name">
-                    </div>
-                    <div class="setting-item">
-                        <label>Bio</label>
-                        <textarea id="setting-bio" placeholder="Bio"></textarea>
-                    </div>
-                    <div class="setting-item">
-                        <label>Profile Picture URL</label>
-                        <input type="text" id="setting-pfp" placeholder="Image URL">
-                    </div>
+    <!-- Modals -->
+    <div id="settings-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <header>
+                <i class="fa-solid fa-xmark" id="close-settings"></i>
+                <h3>Setings</h3>
+                <button id="save-settings-btn">Save</button>
+            </header>
+            <div class="modal-body">
+                <!-- Settings inputs -->
+                <div class="input-group">
+                    <label>Full Name</label>
+                    <input type="text" id="set-fullname">
                 </div>
-
-                <div class="setting-group">
-                    <h3>Privacy & Security</h3>
-                    <div class="setting-item">
-                        <span>Private Account</span>
-                        <label class="switch">
-                            <input type="checkbox" id="setting-private">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="setting-item">
-                        <span>Chat Lock</span>
-                        <label class="switch">
-                            <input type="checkbox" id="setting-chat-lock">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="setting-item hidden" id="chat-passcode-setup">
-                        <label>Set 4-Digit Passcode</label>
-                        <input type="password" id="setting-chat-passcode" maxlength="4" placeholder="----">
-                    </div>
+                <div class="input-group">
+                    <label>Bio</label>
+                    <textarea id="set-bio"></textarea>
                 </div>
-
-                <div class="setting-group">
-                    <button class="btn btn-danger" id="logout-btn">Log Out</button>
+                <div class="input-group">
+                    <label>Profile Picture URL</label>
+                    <input type="text" id="set-pfp">
+                </div>
+                <hr>
+                <div class="input-group horizontal">
+                    <label>Private Account</label>
+                    <label class="switch">
+                        <input type="checkbox" id="set-private">
+                        <span class="slider"></span>
+                    </label>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Loading / Overlay -->
-    <div id="loading-overlay" class="hidden">
-        <div class="loader"></div>
-    </div>
+    <div id="loading-bar"></div>
 
-    <!-- Scripts -->
     <script src="social.js"></script>
 </body>
 </html>

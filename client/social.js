@@ -1,343 +1,296 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // DOM Elements
-    const navItems = document.querySelectorAll('.nav-item');
+    // UI Elements
+    const navButtons = document.querySelectorAll('.nav-btn');
     const tabContents = document.querySelectorAll('.tab-content');
+    const viewTitle = document.getElementById('view-title');
+    const feedContainer = document.getElementById('feed-container');
+    const postContent = document.getElementById('post-content');
+    const submitPostBtn = document.getElementById('submit-post-btn');
     const searchInput = document.getElementById('search-input');
-    const searchResults = document.getElementById('search-results');
-    const profileContainer = document.getElementById('profile-container');
-    const userProfileContainer = document.getElementById('user-profile-container');
-    const backToSearch = document.getElementById('back-to-search');
-    const loadingOverlay = document.getElementById('loading-overlay');
+    const searchResults = document.getElementById('search-results-container');
+    const loadingBar = document.getElementById('loading-bar');
+    const mePfp = document.getElementById('me-pfp');
+    const meName = document.getElementById('me-fullname');
+    const meHandle = document.getElementById('me-handle');
+    const setModal = document.getElementById('settings-modal');
 
     let me = null;
-    let chatsUnlocked = false;
 
-    // --- TAB SWITCH FLOW ---
-    navItems.forEach(item => {
-        item.addEventListener('click', () => {
-            const tabId = item.getAttribute('data-tab');
-            switchTab(tabId);
-        });
-    });
-
-    function switchTab(tabId) {
-        navItems.forEach(n => n.classList.remove('active'));
-        const activeNav = document.querySelector(`[data-tab="${tabId}"]`);
-        if (activeNav) activeNav.classList.add('active');
-        
-        tabContents.forEach(content => content.classList.remove('active'));
-        const activeSection = document.getElementById(`${tabId}-section`);
-        if (activeSection) activeSection.classList.add('active');
-
-        // Logic triggers
-        if (tabId === 'profile') loadMyProfile();
-        if (tabId === 'messages') handleMessagesTab();
-    }
-
-    document.getElementById('header-activity').addEventListener('click', () => switchTab('activity'));
-    document.getElementById('header-messages').addEventListener('click', () => switchTab('messages'));
-
-    // --- LOADING HELPER ---
-    function showLoading(show) {
-        if (show) loadingOverlay.classList.remove('hidden');
-        else loadingOverlay.classList.add('hidden');
-    }
-
-    // --- CHAT LOCK LOGIC ---
-    function handleMessagesTab() {
-        if (me && me.isChatLocked && !chatsUnlocked) {
-            document.getElementById('chat-locked-ui').classList.remove('hidden');
-            document.getElementById('active-chats').classList.add('hidden');
-            document.getElementById('chat-lock-status').className = 'fa-solid fa-lock';
-        } else {
-            document.getElementById('chat-locked-ui').classList.add('hidden');
-            document.getElementById('active-chats').classList.remove('hidden');
-            document.getElementById('chat-lock-status').className = me && me.isChatLocked ? 'fa-solid fa-lock-open' : '';
-        }
-    }
-
-    document.getElementById('unlock-chats-btn').addEventListener('click', async () => {
-        const passcode = document.getElementById('chat-passcode').value;
+    // --- INITIALIZATION ---
+    async function init() {
+        showLoading(true);
         try {
-            const res = await fetch('/api/social/chat-lock', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ passcode, action: 'verify' })
-            });
-            const data = await res.json();
-            if (data.success) {
-                chatsUnlocked = true;
-                handleMessagesTab();
+            // Get current user profile
+            const res = await fetch('/api/user/profile');
+            if (res.ok) {
+                me = await res.json();
+                updateMeUI();
+                loadFeed(); // Default view
+                loadSuggestions();
             } else {
-                alert('Invalid Passcode');
+                window.location.href = '/';
             }
         } catch (err) {
             console.error(err);
-        }
-    });
-
-    // --- SETTINGS LOGIC ---
-    function openSettings() {
-        if (!me) return;
-        document.getElementById('setting-fullname').value = me.fullName || '';
-        document.getElementById('setting-bio').value = me.bio || '';
-        document.getElementById('setting-pfp').value = me.profilePicture || '';
-        document.getElementById('setting-private').checked = me.isPrivate;
-        document.getElementById('setting-chat-lock').checked = me.isChatLocked;
-        
-        if (me.isChatLocked) {
-            document.getElementById('chat-passcode-setup').classList.remove('hidden');
-        }
-
-        document.getElementById('settings-overlay').classList.remove('hidden');
-    }
-
-    document.getElementById('setting-chat-lock').addEventListener('change', (e) => {
-        const setup = document.getElementById('chat-passcode-setup');
-        if (e.target.checked) setup.classList.remove('hidden');
-        else setup.classList.add('hidden');
-    });
-
-    document.getElementById('close-settings').addEventListener('click', () => {
-        document.getElementById('settings-overlay').classList.add('hidden');
-    });
-
-    document.getElementById('save-settings').addEventListener('click', async () => {
-        const settings = {
-            fullName: document.getElementById('setting-fullname').value,
-            bio: document.getElementById('setting-bio').value,
-            profilePicture: document.getElementById('setting-pfp').value,
-            isPrivate: document.getElementById('setting-private').checked
-        };
-
-        showLoading(true);
-        try {
-            await fetch('/api/social/settings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(settings)
-            });
-
-            const chatLockChecked = document.getElementById('setting-chat-lock').checked;
-            const passcode = document.getElementById('setting-chat-passcode').value;
-
-            if (chatLockChecked && passcode) {
-                await fetch('/api/social/chat-lock', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ passcode, action: 'set' })
-                });
-            } else if (!chatLockChecked && me.isChatLocked) {
-                await fetch('/api/social/chat-lock', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'toggle' })
-                });
-            }
-
-            document.getElementById('settings-overlay').classList.add('hidden');
-            init(); // Refresh data
-        } catch (err) {
-            console.log(err);
         } finally {
             showLoading(false);
         }
+    }
+
+    function updateMeUI() {
+        mePfp.src = me.profilePicture || 'me.png';
+        document.querySelector('.mini-pfp').src = me.profilePicture || 'me.png';
+        meName.textContent = me.fullName || me.username;
+        meHandle.textContent = `@${me.username}`;
+    }
+
+    function showLoading(show) {
+        loadingBar.style.width = show ? '40%' : '100%';
+        if (!show) setTimeout(() => loadingBar.style.width = '0', 300);
+    }
+
+    // --- NAVIGATION ---
+    navButtons.forEach(btn => {
+        btn.onclick = () => {
+            const tabId = btn.getAttribute('data-tab');
+            if (tabId) switchTab(tabId);
+        };
     });
+
+    function switchTab(tabId) {
+        navButtons.forEach(b => b.classList.remove('active'));
+        const activeBtn = document.querySelector(`[data-tab="${tabId}"]`);
+        if (activeBtn) activeBtn.classList.add('active');
+
+        tabContents.forEach(c => c.classList.remove('active'));
+        document.getElementById(`${tabId}-section`).classList.add('active');
+
+        // Update Title & Content
+        viewTitle.textContent = tabId.charAt(0).toUpperCase() + tabId.slice(1);
+        if (tabId === 'home') {
+            loadFeed();
+            document.getElementById('create-post-container').classList.remove('hidden');
+        } else {
+            document.getElementById('create-post-container').classList.add('hidden');
+        }
+
+        if (tabId === 'profile') loadUserProfile(me.username, 'profile-display');
+    }
+
+    // --- FEED LOGIC ---
+    async function loadFeed() {
+        feedContainer.innerHTML = '<div class="empty-state"><p>Loading feed...</p></div>';
+        try {
+            const res = await fetch('/api/social/feed');
+            const posts = await res.json();
+            renderPosts(posts, feedContainer);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function renderPosts(posts, container) {
+        if (posts.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa-solid fa-wind"></i>
+                    <p>It's quiet here. Following more people to see what's happening!</p>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = '';
+        posts.forEach(post => {
+            const card = document.createElement('div');
+            card.className = 'post-card';
+            card.innerHTML = `
+                <img src="${post.user.profilePicture || 'me.png'}" class="post-pfp" onerror="this.src='me.png'">
+                <div class="post-body">
+                    <div class="post-header">
+                        <span class="post-name">${post.user.fullName || post.user.username}</span>
+                        <span class="post-handle">@${post.user.username}</span>
+                        <span class="post-time">· ${formatTime(post.createdAt)}</span>
+                    </div>
+                    <div class="post-content">${post.content}</div>
+                    ${post.image ? `<img src="${post.image}" class="post-image" onerror="this.style.display='none'">` : ''}
+                    <div class="post-actions">
+                        <div><i class="fa-regular fa-comment"></i> <span>0</span></div>
+                        <div><i class="fa-solid fa-retweet"></i> <span>0</span></div>
+                        <div class="like-btn" data-id="${post._id}"><i class="fa-regular fa-heart"></i> <span>${post.likes?.length || 0}</span></div>
+                        <div><i class="fa-solid fa-chart-simple"></i> <span>0</span></div>
+                        <div><i class="fa-regular fa-share-from-square"></i></div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function formatTime(date) {
+        const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+        if (seconds < 60) return `${seconds}s`;
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}m`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}h`;
+        return new Date(date).toLocaleDateString();
+    }
+
+    // --- POSTING LOGIC ---
+    postContent.oninput = () => {
+        submitPostBtn.disabled = !postContent.value.trim();
+        postContent.style.height = 'auto';
+        postContent.style.height = postContent.scrollHeight + 'px';
+    };
+
+    submitPostBtn.onclick = async () => {
+        const content = postContent.value.trim();
+        if (!content) return;
+
+        showLoading(true);
+        try {
+            const res = await fetch('/api/social/post', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content })
+            });
+
+            if (res.ok) {
+                postContent.value = '';
+                submitPostBtn.disabled = true;
+                loadFeed();
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            showLoading(false);
+        }
+    };
 
     // --- SEARCH LOGIC ---
     let searchTimeout;
-    searchInput.addEventListener('input', (e) => {
-        const query = e.target.value.trim();
+    searchInput.oninput = () => {
         clearTimeout(searchTimeout);
-        
-        if (query.length === 0) {
-            searchResults.innerHTML = '<div class="search-placeholder"><i class="fa-solid fa-users"></i><p>Search for your friends and creators</p></div>';
+        const q = searchInput.value.trim();
+        if (!q) {
+            searchResults.innerHTML = '';
             return;
         }
 
         searchTimeout = setTimeout(async () => {
-            try {
-                const res = await fetch(`/api/social/search?q=${query}`);
-                const users = await res.json();
-                renderSearchResults(users);
-            } catch (err) {
-                console.error("Search error:", err);
-            }
+            const res = await fetch(`/api/social/search?q=${q}`);
+            const users = await res.json();
+            renderSearchResults(users);
         }, 300);
-    });
+    };
 
     function renderSearchResults(users) {
-        if (users.length === 0) {
-            searchResults.innerHTML = '<p class="no-results">No users found</p>';
-            return;
-        }
-
         searchResults.innerHTML = '';
         users.forEach(user => {
-            const userCard = document.createElement('div');
-            userCard.className = 'user-item';
-            userCard.innerHTML = `
-                <div class="user-avatar">
-                    <img src="${user.profilePicture || 'me.png'}" alt="${user.username}" onerror="this.src='me.png'">
+            const item = document.createElement('div');
+            item.className = 'user-pill'; // We can add specific styling or reuse card-list items
+            item.innerHTML = `
+                <img src="${user.profilePicture || 'me.png'}" class="mini-pfp" onerror="this.src='me.png'">
+                <div class="pill-cnt">
+                    <p><b>${user.fullName || user.username}</b></p>
+                    <p>@${user.username}</p>
                 </div>
-                <div class="user-info">
-                    <h4>${user.username}</h4>
-                    <p>${user.fullName || 'Socially User'}</p>
-                </div>
+                <button class="follow-btn-mini">Follow</button>
             `;
-            userCard.onclick = () => viewUserProfile(user.username);
-            searchResults.appendChild(userCard);
+            item.onclick = (e) => {
+                if(e.target.tagName !== 'BUTTON') viewOtherProfile(user.username);
+            };
+            searchResults.appendChild(item);
         });
     }
 
-    // --- PROFILE FETCHING ---
-    async function loadMyProfile() {
-        showLoading(true);
-        try {
-            const res = await fetch(`/api/social/profile/${me.username}`);
-            const profile = await res.json();
-            renderProfile(profile, profileContainer, true);
-        } catch (err) {
-            console.error("Profile load error:", err);
-        } finally {
-            showLoading(false);
-        }
-    }
-
-    async function viewUserProfile(username) {
+    // --- PROFILE VIEWS ---
+    async function loadUserProfile(username, targetId) {
         showLoading(true);
         try {
             const res = await fetch(`/api/social/profile/${username}`);
             const profile = await res.json();
-            
-            tabContents.forEach(c => c.classList.remove('active'));
-            document.getElementById('user-profile-section').classList.add('active');
-            
-            renderProfile(profile, userProfileContainer, false);
+            renderProfileUI(profile, document.getElementById(targetId));
         } catch (err) {
-            console.error("User profile load error:", err);
+            console.error(err);
         } finally {
             showLoading(false);
         }
     }
 
-    function renderProfile(profile, container, isOwn) {
+    function renderProfileUI(profile, container) {
+        const isMe = profile.username === me.username;
         container.innerHTML = `
-            <div class="profile-header">
-                <div class="profile-top">
-                    <div class="profile-image-large">
-                        <img src="${profile.profilePicture || 'me.png'}" alt="${profile.username}" onerror="this.src='me.png'">
-                    </div>
-                    <div class="profile-stats">
-                        <div class="stat-item">
-                            <h3>0</h3>
-                            <p>Posts</p>
-                        </div>
-                        <div class="stat-item">
-                            <h3>${profile.followersCount}</h3>
-                            <p>Followers</p>
-                        </div>
-                        <div class="stat-item">
-                            <h3>${profile.followingCount}</h3>
-                            <p>Following</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="profile-bio">
-                    <h2>${profile.username}</h2>
-                    <p>${profile.fullName || '(No name set)'}</p>
-                    <p class="bio-text">${profile.bio || 'Welcome to my profile!'}</p>
-                </div>
-
-                <div class="profile-actions">
-                    ${isOwn ? `
-                        <button class="btn btn-secondary" id="edit-profile-btn">Edit Profile</button>
-                        <button class="btn btn-secondary">Share Profile</button>
-                    ` : `
-                        <button class="btn ${profile.isFollowing ? 'btn-secondary' : 'btn-primary'}" id="follow-btn">
-                            ${profile.isFollowing ? 'Following' : 'Follow'}
-                        </button>
-                        <button class="btn btn-secondary">Message</button>
-                    `}
+            <div class="profile-hero">
+                <div class="banner"></div>
+                <img src="${profile.profilePicture || 'me.png'}" class="p-image" onerror="this.src='me.png'">
+                ${isMe ? 
+                    `<button class="edit-prof-btn" onclick="document.getElementById('settings-modal').classList.remove('hidden')">Edit profile</button>` :
+                    `<button class="edit-prof-btn">${profile.isFollowing ? 'Following' : 'Follow'}</button>`
+                }
+            </div>
+            <div class="p-info">
+                <h1>${profile.fullName || profile.username}</h1>
+                <span>@${profile.username}</span>
+                <p class="p-bio">${profile.bio || 'Setting the trend for the high elite connection. 💎'}</p>
+                <div class="p-stats">
+                    <span><b>${profile.followingCount}</b> Following</span>
+                    <span><b>${profile.followersCount}</b> Followers</span>
                 </div>
             </div>
-
-            <div class="profile-content">
-                ${profile.isRestricted ? `
-                    <div class="private-account-message">
-                        <i class="fa-solid fa-lock"></i>
-                        <h3>This Account is Private</h3>
-                        <p>Follow to see their photos and videos.</p>
-                    </div>
-                ` : `
-                    <div class="no-posts-container">
-                        <div class="no-posts-icon">
-                            <i class="fa-solid fa-camera"></i>
-                        </div>
-                        <h2>No Posts Yet</h2>
-                        <p>When ${isOwn ? 'you share photos' : profile.username + ' shares photos'}, they will appear here.</p>
-                    </div>
-                `}
+            <div id="${profile.username}-posts">
+                <!-- User posts will load here -->
             </div>
         `;
-
-        if (isOwn) {
-            document.getElementById('edit-profile-btn').addEventListener('click', openSettings);
-        } else {
-            const followBtn = document.getElementById('follow-btn');
-            followBtn.addEventListener('click', () => handleFollow(profile, followBtn));
-        }
     }
 
-    async function handleFollow(profile, btn) {
+    function viewOtherProfile(username) {
+        switchTab('user-profile-section');
+        loadUserProfile(username, 'user-profile-section');
+    }
+
+    // --- SUGGESTIONS ---
+    async function loadSuggestions() {
+        const list = document.getElementById('suggestions-list');
         try {
-            const followRes = await fetch(`/api/social/follow/${profile.id}`, { method: 'POST' });
-            const data = await followRes.json();
-            
-            if (data.isFollowing) {
-                btn.textContent = 'Following';
-                btn.classList.remove('btn-primary');
-                btn.classList.add('btn-secondary');
-            } else {
-                btn.textContent = 'Follow';
-                btn.classList.add('btn-primary');
-                btn.classList.remove('btn-secondary');
-            }
-            
-            // Auto refresh profile stats
-            viewUserProfile(profile.username);
-        } catch (err) {
-            console.error("Follow error:", err);
-        }
+            const res = await fetch('/api/social/search?q=a'); // Just get some random users
+            const users = await res.json();
+            list.innerHTML = '';
+            users.slice(0, 3).forEach(u => {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                item.innerHTML = `
+                   <img src="${u.profilePicture || 'me.png'}" onerror="this.src='me.png'">
+                   <div class="s-info">
+                       <p><b>${u.fullName || u.username}</b></p>
+                       <p>@${u.username}</p>
+                   </div>
+                   <button>Follow</button>
+                `;
+                item.onclick = () => viewOtherProfile(u.username);
+                list.appendChild(item);
+            });
+        } catch (err) {}
     }
 
-    document.getElementById('back-to-search').addEventListener('click', () => {
-        switchTab('search');
-    });
-
-    document.getElementById('logout-btn').addEventListener('click', async () => {
-        await fetch('/api/logout', { method: 'POST' });
-        window.location.href = '/';
-    });
-
-    // Initial Load
-    async function init() {
+    // --- SETTINGS ---
+    document.getElementById('close-settings').onclick = () => setModal.classList.add('hidden');
+    document.getElementById('save-settings-btn').onclick = async () => {
+        const data = {
+            fullName: document.getElementById('set-fullname').value,
+            bio: document.getElementById('set-bio').value,
+            profilePicture: document.getElementById('set-pfp').value,
+            isPrivate: document.getElementById('set-private').checked
+        };
         showLoading(true);
-        try {
-            const res = await fetch('/api/user/profile');
-            if (res.ok) {
-                me = await res.json();
-                if (me.profilePicture) {
-                    document.getElementById('nav-profile-pic').src = me.profilePicture;
-                }
-            }
-        } catch (err) {
-            console.error("Init error:", err);
-        } finally {
-            showLoading(false);
-        }
-    }
+        await fetch('/api/social/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        setModal.classList.add('hidden');
+        init();
+    };
 
     init();
 });
