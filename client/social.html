@@ -176,6 +176,32 @@
         </div>
     </div>
 
+    <!-- Post Creation Modal -->
+    <div id="create-post-modal" class="hidden">
+        <div class="modal-card post-creation-card">
+            <header>
+                <i class="fa-solid fa-arrow-left" id="back-create-post"></i>
+                <h3>Create New Post</h3>
+                <button id="share-post-btn">Share</button>
+            </header>
+            <div class="modal-body post-modal-body">
+                <div class="media-preview-area" id="media-preview">
+                    <!-- Preview will be injected here -->
+                </div>
+                <div class="post-details-area">
+                    <div class="mini-profile-row">
+                        <img src="me.png" id="modal-me-pfp" alt="Pfp">
+                        <b id="modal-me-username">priya5</b>
+                    </div>
+                    <textarea id="post-caption" placeholder="Write a caption..."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden File Input -->
+    <input type="file" id="post-file-input" accept="image/*,video/*" class="hidden">
+
     <div id="loading-bar" style="position: fixed; top: 0; left: 0; height: 3px; background: var(--accent-gradient); width: 0; transition: 0.3s; z-index: 2000;"></div>
 
     <script src="social.js"></script>

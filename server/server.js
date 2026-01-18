@@ -12,7 +12,7 @@ const User = require('./models/User');
 const { protect } = require('./middleware/auth');
 const socialRoutes = require('./routes/social');
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 
 // --- 0. CONFIGURATION CHECK (DEBUG DEPLOYMENT) ---

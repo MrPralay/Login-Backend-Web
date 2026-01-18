@@ -11,10 +11,83 @@ document.addEventListener('DOMContentLoaded', () => {
     // Stats and Identifiers
     const mePostsCount = document.getElementById('prof-posts-count');
     const meFollowersCount = document.getElementById('prof-followers-count');
-    const meFollowingCount = document.getElementById('prof-following-count');
-    const feedView = document.getElementById('feed-view');
     const profileView = document.getElementById('profile-view');
     const profileContentArea = document.getElementById('profile-content-area');
+
+    const createPostModal = document.getElementById('create-post-modal');
+    const postFileInput = document.getElementById('post-file-input');
+    const mediaPreview = document.getElementById('media-preview');
+    const sharePostBtn = document.getElementById('share-post-btn');
+    const backCreatePost = document.getElementById('back-create-post');
+    const postCaption = document.getElementById('post-caption');
+
+    let selectedFileBase64 = null;
+
+    // --- POST CREATION LOGIC ---
+    postFileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            selectedFileBase64 = event.target.result;
+            mediaPreview.innerHTML = '';
+            if (file.type.startsWith('image/')) {
+                const img = document.createElement('img');
+                img.src = selectedFileBase64;
+                mediaPreview.appendChild(img);
+            } else if (file.type.startsWith('video/')) {
+                const video = document.createElement('video');
+                video.src = selectedFileBase64;
+                video.controls = true;
+                mediaPreview.appendChild(video);
+            }
+            // Update modal UI info
+            document.getElementById('modal-me-username').textContent = me.username;
+            document.getElementById('modal-me-pfp').src = me.profilePicture || 'me.png';
+            createPostModal.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    };
+
+    backCreatePost.onclick = () => {
+        createPostModal.classList.add('hidden');
+        postFileInput.value = '';
+    };
+
+    sharePostBtn.onclick = async () => {
+        if (!selectedFileBase64) return;
+        
+        showLoading(true);
+        try {
+            const res = await fetch('/api/social/post', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content: postCaption.value,
+                    image: selectedFileBase64 // Sending as base64
+                })
+            });
+
+            if (res.ok) {
+                createPostModal.classList.add('hidden');
+                postCaption.value = '';
+                postFileInput.value = '';
+                // Refresh data
+                await init(); 
+                // Ensure we are viewing profile if we share from there
+                if (!profileView.classList.contains('hidden')) {
+                    renderProfile();
+                }
+            } else {
+                alert('Failed to share post. Try a smaller file.');
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            showLoading(false);
+        }
+    };
 
     let me = null;
     let myPosts = [];
@@ -262,8 +335,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                             <h2>Share Photos</h2>
                             <p>When you share photos, they will appear here.</p>
+                            <a href="#" id="share-first-post-link" style="color: #0095f6; font-weight: 600; text-decoration: none; font-size: 0.9rem; margin-top: 10px;">Share your first post</a>
                         </div>
                     `;
+                    document.getElementById('share-first-post-link').onclick = (e) => {
+                        e.preventDefault();
+                        document.getElementById('post-file-input').click();
+                    };
                 } else {
                     profileContentArea.innerHTML = '<div class="post-grid-placeholder" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;"></div>';
                     const grid = profileContentArea.querySelector('.post-grid-placeholder');
