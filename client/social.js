@@ -607,7 +607,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Modal Open/Close
-    document.getElementById('close-settings').onclick = () => setModal.classList.add('hidden');
+    // Modal Open/Close
+    document.getElementById('close-settings').onclick = () => {
+        setModal.classList.add('hidden');
+        // Restore correct nav state
+        navItems.forEach(i => i.classList.remove('active'));
+        if (!profileView.classList.contains('hidden')) {
+            document.querySelector('.nav-item[data-tab="profile"]').classList.add('active');
+        } else {
+            document.querySelector('.nav-item[data-tab="home"]').classList.add('active');
+        }
+    };
     
     // Profile Picture Upload
     const settingsPfpInput = document.getElementById('settings-pfp-input');
