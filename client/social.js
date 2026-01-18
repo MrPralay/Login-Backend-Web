@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const requestsList = document.getElementById('follow-requests-list');
     const suggestionsList = document.getElementById('suggestions-list');
     const loadingBar = document.getElementById('loading-bar');
-    const setModal = document.getElementById('settings-modal');
+    // const setModal = document.getElementById('settings-modal'); 
 
     // Stats and Identifiers
     const mePostsCount = document.getElementById('prof-posts-count');
@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateMeUI() {
         // Updated for profile view
         document.getElementById('profile-pfp-large').src = me.profilePicture || 'me.png';
-        document.getElementById('profile-username').textContent = me.username;
+        document.getElementById('profile-username').innerHTML = `${me.username} ${me.isPrivate ? '<i class="fa-solid fa-lock" style="font-size: 0.9rem; margin-left: 5px;"></i>' : ''}`;
         document.getElementById('prof-fullname').textContent = me.fullName || me.username;
         document.getElementById('prof-bio').textContent = me.bio || 'Digital Creator | Explorer';
         
@@ -155,6 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
             item.classList.add('active');
             const tabId = item.getAttribute('data-tab');
             if (tabId === 'settings') {
+                populateSettings();
                 setModal.classList.remove('hidden');
             } else if (tabId === 'home') {
                 feedView.classList.remove('hidden');
@@ -574,22 +575,115 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- SETTINGS MGT ---
-    document.getElementById('close-settings').onclick = () => setModal.classList.add('hidden');
-    document.getElementById('save-settings-btn').onclick = async () => {
-        const data = {
-            fullName: document.getElementById('set-fullname').value,
-            bio: document.getElementById('set-bio').value,
-            profilePicture: document.getElementById('set-pfp').value
+    // --- SETTINGS LOGIC ---
+    const setModal = document.getElementById('settings-modal');
+    const setTabs = document.querySelectorAll('.set-tab');
+    const setContentBlocks = document.querySelectorAll('.set-content-block');
+    
+    // Tab Switching
+    setTabs.forEach(tab => {
+        tab.onclick = () => {
+            const tabId = tab.getAttribute('data-set-tab');
+            if (!tabId) return; // For logout or custom actions
+
+            setTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            setContentBlocks.forEach(block => block.classList.add('hidden'));
+            const content = document.getElementById(`set-content-${tabId}`);
+            if (content) content.classList.remove('hidden');
         };
+    });
+
+    // Populate Settings logic
+    function populateSettings() {
+        if (!me) return;
+        document.getElementById('edit-pfp-preview').src = me.profilePicture || 'me.png';
+        document.getElementById('edit-username-display').textContent = me.username;
+        document.getElementById('set-fullname').value = me.fullName || '';
+        document.getElementById('set-username').value = me.username;
+        document.getElementById('set-bio').value = me.bio || '';
+        document.getElementById('privacy-toggle').checked = me.isPrivate;
+    }
+
+    // Modal Open/Close
+    document.getElementById('close-settings').onclick = () => setModal.classList.add('hidden');
+    
+    // Profile Picture Upload
+    const settingsPfpInput = document.getElementById('settings-pfp-input');
+    const changePfpBtn = document.getElementById('change-pfp-btn');
+    const changePfpTextBtn = document.getElementById('change-pfp-text-btn');
+    
+    const triggerPfpInput = () => settingsPfpInput.click();
+    changePfpBtn.onclick = triggerPfpInput;
+    changePfpTextBtn.onclick = triggerPfpInput;
+
+    let newPfpBase64 = null;
+    settingsPfpInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            newPfpBase64 = ev.target.result;
+            document.getElementById('edit-pfp-preview').src = newPfpBase64;
+        };
+        reader.readAsDataURL(file);
+    };
+
+    // Save Profile
+    document.getElementById('save-profile-btn').onclick = async () => {
         showLoading(true);
-        await fetch('/api/social/settings', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        setModal.classList.add('hidden');
-        init();
+        try {
+            const data = {
+                fullName: document.getElementById('set-fullname').value,
+                username: document.getElementById('set-username').value,
+                bio: document.getElementById('set-bio').value
+            };
+            if (newPfpBase64) data.profilePicture = newPfpBase64;
+
+            const res = await fetch('/api/social/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                const updatedUser = await res.json(); // Assuming backend returns { message, user }
+                if (updatedUser.user) me = updatedUser.user;
+                updateMeUI();
+                alert('Profile saved!');
+            } else {
+                const err = await res.json();
+                alert(err.message || 'Failed to save');
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            showLoading(false);
+        }
+    };
+
+    // Privacy Toggle
+    document.getElementById('privacy-toggle').onchange = async (e) => {
+        const isPrivate = e.target.checked;
+        try {
+            const res = await fetch('/api/social/toggle-privacy', { method: 'POST' });
+            if (res.ok) {
+                const data = await res.json();
+                me.isPrivate = data.isPrivate;
+                updateMeUI(); // Updates lock icon
+            } else {
+                e.target.checked = !isPrivate; // Revert
+            }
+        } catch (err) {
+            e.target.checked = !isPrivate; // Revert
+        }
+    };
+
+    // Logout
+    document.getElementById('logout-btn').onclick = () => {
+        document.cookie = 'token=; Max-Age=0; path=/;';
+        window.location.href = '/';
     };
 
     init();

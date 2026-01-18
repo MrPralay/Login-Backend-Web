@@ -171,8 +171,16 @@ router.post('/toggle-privacy', protect, async (req, res) => {
 // --- UPDATE SETTINGS ---
 router.post('/settings', protect, async (req, res) => {
     try {
-        const { fullName, bio, profilePicture, isPrivate, notificationSettings } = req.body;
+        const { fullName, username, bio, profilePicture, isPrivate, notificationSettings } = req.body;
         const user = await User.findById(req.user._id);
+
+        if (username && username !== user.username) {
+            const existingUser = await User.findOne({ username });
+            if (existingUser) {
+                return res.status(400).json({ message: 'Username is already taken' });
+            }
+            user.username = username;
+        }
 
         if (fullName !== undefined) user.fullName = fullName;
         if (bio !== undefined) user.bio = bio;

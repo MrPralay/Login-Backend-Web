@@ -154,25 +154,85 @@
     </div>
 
     <!-- Modals -->
+    <!-- Professional Settings Modal -->
     <div id="settings-modal" class="hidden">
-        <div class="modal-card">
-            <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3>Edit Profile</h3>
-                <i class="fa-solid fa-xmark" id="close-settings" style="cursor: pointer;"></i>
-            </header>
-            <div class="input-group">
-                <label>Full Name</label>
-                <input type="text" id="set-fullname" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-top: 5px;">
+        <div class="modal-card settings-cards-wrapper">
+            <div class="settings-sidebar">
+                <h3>Settings</h3>
+                <div class="set-tab active" data-set-tab="edit-profile">Edit Profile</div>
+                <div class="set-tab" data-set-tab="privacy">Privacy & Security</div>
+                <div class="set-tab" data-set-tab="notifications">Notifications</div>
+                <div class="set-tab logout-tab" id="logout-btn">Log Out</div>
             </div>
-            <div class="input-group" style="margin-top: 15px;">
-                <label>Bio</label>
-                <textarea id="set-bio" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-top: 5px;"></textarea>
+            
+            <div class="settings-content">
+                <!-- Tab: Edit Profile -->
+                <div id="set-content-edit-profile" class="set-content-block">
+                    <header>
+                        <h3>Edit Profile</h3>
+                    </header>
+                    
+                    <div class="edit-pfp-section">
+                        <div class="pfp-wrapper">
+                            <img src="me.png" id="edit-pfp-preview" alt="Profile">
+                            <div class="pfp-overlay" id="change-pfp-btn">
+                                <i class="fa-solid fa-camera"></i>
+                            </div>
+                        </div>
+                        <div class="pfp-text">
+                            <span id="edit-username-display">priya5</span>
+                            <button class="change-photo-text" id="change-pfp-text-btn">Change Profile Photo</button>
+                            <input type="file" id="settings-pfp-input" class="hidden" accept="image/*">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" id="set-fullname" placeholder="Name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="set-username" placeholder="Username">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Bio</label>
+                        <textarea id="set-bio" placeholder="Bio" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button id="save-profile-btn" class="btn-primary">Submit</button>
+                    </div>
+                </div>
+
+                <!-- Tab: Privacy -->
+                <div id="set-content-privacy" class="set-content-block hidden">
+                    <header>
+                        <h3>Privacy & Security</h3>
+                    </header>
+                    
+                    <div class="privacy-item">
+                        <div class="privacy-text">
+                            <h4>Private Account</h4>
+                            <p>When your account is private, only people you approve can see your photos and videos. Your existing followers won't be affected.</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="privacy-toggle">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Tab: Notifications -->
+                <div id="set-content-notifications" class="set-content-block hidden">
+                    <header>
+                        <h3>Notifications</h3>
+                    </header>
+                    <p style="color: var(--text-muted);">Notification settings coming soon.</p>
+                </div>
             </div>
-            <div class="input-group" style="margin-top: 15px;">
-                <label>Profile Picture URL</label>
-                <input type="text" id="set-pfp" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-top: 5px;">
-            </div>
-            <button id="save-settings-btn" style="width: 100%; margin-top: 20px; padding: 12px; background: var(--accent-gradient); color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Save Changes</button>
+            <i class="fa-solid fa-xmark close-detail-modal" id="close-settings" style="color: var(--text-main); top: 15px; right: 20px;"></i>
         </div>
     </div>
 
