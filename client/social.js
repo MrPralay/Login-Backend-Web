@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Stats and Identifiers
     const mePostsCount = document.getElementById('prof-posts-count');
     const meFollowersCount = document.getElementById('prof-followers-count');
+    const meFollowingCount = document.getElementById('prof-following-count');
+    const feedView = document.getElementById('feed-view');
     const profileView = document.getElementById('profile-view');
     const profileContentArea = document.getElementById('profile-content-area');
 
