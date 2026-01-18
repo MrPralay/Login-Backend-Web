@@ -336,16 +336,17 @@ aside {
 }
 
 .empty-state-prof h2 {
-    font-size: 2rem;
-    font-weight: 800; /* Extra bold for "Share photos" */
+    font-size: 1.8rem;
+    font-weight: 700;
     color: #000;
+    margin-top: 10px;
 }
 
 .empty-state-prof p {
     color: #262626;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     line-height: 1.4;
-    margin-bottom: 15px;
+    margin-top: 5px;
 }
 
 .empty-state-prof a {
