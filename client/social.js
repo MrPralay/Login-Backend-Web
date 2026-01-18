@@ -552,7 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         newShareBtn.onclick = (e) => {
             e.stopPropagation();
-            openShareModal(segment);
+            openShareModal({ type: 'story', data: segment });
         };
     }
 
@@ -769,34 +769,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- STORY SHARE MODAL LOGIC ---
+    // --- STORY SHARE MODAL LOGIC (UNIFIED) ---
     let selectedShareUsers = new Set();
-    let currentShareSegment = null;
-    let allFriends = [];
+    let currentShareObject = null; // { type: 'story'|'post', data: ... }
+    let allShareFriends = [];
 
-    async function openShareModal(segment) {
-        if (storyTimer) clearTimeout(storyTimer); // Pause story
+    async function openShareModal(contentObj) {
+        if (storyTimer) clearTimeout(storyTimer); // Pause story if active
         
-        currentShareSegment = segment;
+        currentShareObject = contentObj;
         selectedShareUsers.clear();
         document.getElementById('story-share-modal').classList.remove('hidden');
         document.getElementById('confirm-share-btn').disabled = true;
         
         const listContainer = document.getElementById('share-users-list');
-        listContainer.innerHTML = '<p>Loading friends...</p>';
+        listContainer.innerHTML = '<p style="padding: 10px;">Loading connections...</p>';
 
         try {
-            // Fetch users I follow (Instagram style share list)
-            const res = await fetch('/api/user/profile');
-            const myProfile = await res.json();
+            // Fetch everyone I know (followers + following)
+            const res = await fetch('/api/social/suggested'); // For now, use suggested + followers
+            let users = await res.json();
             
-            // For a real app, we'd have an /api/social/following endpoint
-            // Here we'll fetch my followers-following info or search users
-            const fRes = await fetch('/api/social/suggested'); // Using suggested for demo if following is empty
-            const suggested = await fRes.json();
-            
-            allFriends = suggested;
-            renderShareList(allFriends);
+            // Filter out duplicates and me
+            allShareFriends = users.filter(u => u._id !== me._id);
+            renderShareList(allShareFriends);
         } catch (err) {
             console.error(err);
         }
@@ -806,71 +802,118 @@ document.addEventListener('DOMContentLoaded', () => {
         const listContainer = document.getElementById('share-users-list');
         listContainer.innerHTML = '';
         
+        if (users.length === 0) {
+            listContainer.innerHTML = '<p style="padding: 20px; text-align: center; color: #8e8e8e;">No people found.</p>';
+            return;
+        }
+
         users.forEach(user => {
             const div = document.createElement('div');
             div.className = `share-user-item ${selectedShareUsers.has(user._id) ? 'selected' : ''}`;
             div.innerHTML = `
                 <div class="share-user-info">
                     <img src="${user.profilePicture || 'me.png'}">
-                    <b>${user.username}</b>
+                    <div>
+                        <b>${user.username}</b>
+                        <div style="font-size: 0.75rem; color: #8e8e8e;">${user.fullName || ''}</div>
+                    </div>
                 </div>
                 <div class="share-check"></div>
             `;
             div.onclick = () => {
                 if (selectedShareUsers.has(user._id)) {
                     selectedShareUsers.delete(user._id);
+                    div.classList.remove('selected');
                 } else {
                     selectedShareUsers.add(user._id);
+                    div.classList.add('selected');
                 }
-                div.classList.toggle('selected');
                 document.getElementById('confirm-share-btn').disabled = selectedShareUsers.size === 0;
             };
             listContainer.appendChild(div);
         });
     }
 
+    let shareSearchTimeout = null;
     document.getElementById('share-user-search').oninput = (e) => {
         const query = e.target.value.toLowerCase();
-        const filtered = allFriends.filter(u => u.username.toLowerCase().includes(query));
+        
+        // Local Filter
+        const filtered = allShareFriends.filter(u => 
+            u.username.toLowerCase().includes(query) || 
+            (u.fullName && u.fullName.toLowerCase().includes(query))
+        );
         renderShareList(filtered);
+
+        // Global Search fallback (debounced)
+        if (shareSearchTimeout) clearTimeout(shareSearchTimeout);
+        if (query.length > 1) {
+            shareSearchTimeout = setTimeout(async () => {
+                try {
+                    const res = await fetch(`/api/social/search?q=${query}`);
+                    const globalUsers = await res.json();
+                    
+                    // Merge global results into the local view if not already there
+                    const currentIds = new Set(filtered.map(u => u._id));
+                    const extras = globalUsers.filter(u => !currentIds.has(u._id) && u._id !== me._id);
+                    
+                    if (extras.length > 0) {
+                        renderShareList([...filtered, ...extras]);
+                    }
+                } catch (err) {}
+            }, 500);
+        }
     };
 
     document.getElementById('close-share-btn').onclick = () => {
         document.getElementById('story-share-modal').classList.add('hidden');
-        openStoryViewer(); // Resume
+        if (currentShareObject.type === 'story') {
+            openStoryViewer(); // Resume only if story
+        }
     };
 
     document.getElementById('confirm-share-btn').onclick = async () => {
         const btn = document.getElementById('confirm-share-btn');
+        const originalText = btn.textContent;
         btn.disabled = true;
         btn.textContent = 'Sending...';
 
         try {
-            const storyId = currentShareSegment.storyId;
-            const sharedStory = {
-                story: storyId,
-                segmentId: currentShareSegment._id,
-                media: currentShareSegment.media,
-                mediaType: currentShareSegment.mediaType
-            };
+            const isStory = currentShareObject.type === 'story';
+            const content = currentShareObject.data;
+            
+            const sharedStory = isStory ? {
+                storyId: content.storyId,
+                segmentId: content._id,
+                imageUrl: content.image,
+                isVideo: (content.image.includes('data:video') || content.image.endsWith('.mp4'))
+            } : null;
 
-            const promises = Array.from(selectedShareUsers).map(userId => 
-                fetch('/api/messaging/send', {
+            const text = isStory ? '' : `Shared a post: ${content.title || ''}`;
+            // If it's a post, we might want to handle it differently in the future
+            // For now, let's just send the text/data
+
+            for (const userId of selectedShareUsers) {
+                await fetch('/api/messaging/send', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ recipientId: userId, sharedStory })
-                })
-            );
+                    body: JSON.stringify({
+                        recipientId: userId,
+                        text: text,
+                        sharedStory: sharedStory
+                    })
+                });
+            }
 
-            await Promise.all(promises);
-            showToast(`Shared with ${selectedShareUsers.size} friends!`, 'success');
+            showToast('Shared successfully!', 'success');
             document.getElementById('story-share-modal').classList.add('hidden');
-            openStoryViewer();
+            if (isStory) openStoryViewer(); 
         } catch (err) {
             console.error(err);
             showToast('Failed to share', 'error');
         } finally {
-            btn.textContent = 'Send';
+            btn.disabled = false;
+            btn.textContent = originalText;
         }
     };
 
@@ -1197,6 +1240,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             <i class="fa-regular fa-comment"></i>
                             <span>${post.comments?.length || '0'}</span>
                         </div>
+                        <div class="share-btn" data-id="${post._id}" style="cursor: pointer;">
+                            <i class="fa-regular fa-paper-plane"></i>
+                        </div>
                     </div>
                     <div class="save-btn" data-id="${post._id}" style="cursor: pointer;">
                         <i class="fa-regular fa-bookmark"></i>
@@ -1212,6 +1258,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const isSaved = me.savedPosts && me.savedPosts.includes(post._id);
             updateSaveBtnUI(saveBtn.querySelector('i'), isSaved);
             saveBtn.onclick = () => toggleSavePost(post._id, saveBtn);
+
+            const shareBtn = card.querySelector('.share-btn');
+            shareBtn.onclick = () => openShareModal({ type: 'post', data: post });
         });
     }
 
