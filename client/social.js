@@ -787,7 +787,8 @@ document.addEventListener('DOMContentLoaded', () => {
         container.appendChild(div);
     }
     
-    document.getElementById('close-detail-btn').onclick = () => {
+    // Close Detail Modal (Header Button)
+    document.getElementById('close-detail-btn-header').onclick = () => {
         detailModal.classList.add('hidden');
     };
 
