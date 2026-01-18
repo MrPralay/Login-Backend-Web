@@ -1030,6 +1030,58 @@ aside {
     text-align: left;
 }
 
+/* Meta Inputs (Title, Location, Hashtags) */
+.create-meta-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Better spacing */
+    margin-top: 20px !important;
+    width: 100%;
+}
+
+.meta-field {
+    position: relative;
+    width: 100%;
+}
+
+.meta-field i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 1rem;
+    pointer-events: none;
+    transition: color 0.3s;
+}
+
+.meta-field input {
+    width: 100%;
+    padding: 12px 12px 12px 42px; /* ample space for icon */
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px; /* Softer corners */
+    color: var(--text-main);
+    font-size: 0.95rem; /* Readable size */
+    transition: all 0.3s ease;
+    height: 48px; /* Fixed height for consistency */
+}
+
+.meta-field input:focus {
+    border-color: #e1306c; /* Instagram-like focus color or use accent */
+    background: var(--bg-main);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(225, 48, 108, 0.1);
+}
+
+.meta-field input:focus + i {
+    color: #e1306c;
+}
+
+.create-meta-inputs input::placeholder {
+    color: var(--text-muted);
+    font-weight: 500;
+}
 .form-group {
     padding: 0 40px;
     margin-bottom: 25px;
