@@ -97,6 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- INITIALIZATION ---
     async function init() {
         showLoading(true);
+        loadStories(); // Start loading stories
         try {
             const [pRes, postsRes] = await Promise.all([
                 fetch('/api/user/profile'),
@@ -151,12 +152,31 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- NAVIGATION ---
     navItems.forEach(item => {
         item.onclick = () => {
-            navItems.forEach(i => i.classList.remove('active'));
-            item.classList.add('active');
             const tabId = item.getAttribute('data-tab');
+
+            // Action-only items (don't switch view)
+            if (tabId === 'create') {
+                postFileInput.click();
+                return;
+            }
             if (tabId === 'settings') {
                 populateSettings();
                 setModal.classList.remove('hidden');
+                // We keep the underlying view active (feed or profile)
+                // But we highlight 'settings' icon to show where we are?
+                // User requested previously: "after quiting setting it will show nothing clicked" -> "show nothing clicked" meaning revert to previous.
+                // Actually user said: "when we clicks setting it shows as orage ... but when cross it ... still orange ... if i make that after quiting setting it will show nothing clicked"
+                // My fix for that was to restore state on close.
+                // So here we CAN set 'active' on settings, because close handler restores it.
+            }
+
+            // Normal Navigation
+            navItems.forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            
+            if (tabId === 'settings') {
+                // Already handled opening above, but we still want it 'active'
+                return; 
             } else if (tabId === 'home') {
                 feedView.classList.remove('hidden');
                 profileView.classList.add('hidden');
@@ -742,14 +762,147 @@ document.addEventListener('DOMContentLoaded', () => {
             if (res.ok) {
                 const data = await res.json();
                 me.isPrivate = data.isPrivate;
-                updateMeUI(); // Updates lock icon
+                updateMeUI();
+                alert(data.message);
             } else {
-                e.target.checked = !isPrivate; // Revert
+                e.target.checked = !isPrivate;
             }
-        } catch (err) {
-            e.target.checked = !isPrivate; // Revert
-        }
+        } catch (err) { console.error(err); }
     };
+
+    // --- STORIES LOGIC ---
+    const storyViewerModal = document.getElementById('story-viewer-modal');
+    const storyProgress = document.getElementById('story-progress');
+    const closeStoryBtn = document.getElementById('close-story-btn');
+    const storyFileInput = document.getElementById('story-file-input');
+    let currentStoryTimer = null;
+
+    closeStoryBtn.onclick = () => {
+        storyViewerModal.classList.add('hidden');
+        if (currentStoryTimer) clearTimeout(currentStoryTimer);
+        storyProgress.style.width = '0';
+    };
+
+    async function loadStories() {
+        try {
+            const res = await fetch('/api/social/stories');
+            if (!res.ok) return;
+            const stories = await res.json();
+            
+            // Group stories by user
+            const groupedStories = {};
+            stories.forEach(s => {
+                if (!groupedStories[s.user._id]) {
+                    groupedStories[s.user._id] = { user: s.user, items: [] };
+                }
+                groupedStories[s.user._id].items.push(s);
+            });
+
+            const container = document.getElementById('stories-container');
+            // Keep the first child (Add Story)
+            const addStoryBtn = container.querySelector('.add-story');
+            container.innerHTML = '';
+            if (addStoryBtn) {
+                container.appendChild(addStoryBtn);
+                addStoryBtn.onclick = () => storyFileInput.click();
+            }
+
+            Object.values(groupedStories).forEach(group => {
+                const div = document.createElement('div');
+                div.className = 'story-circle';
+                // Highlight ring if unseen? For now always ring
+                div.style.background = 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)';
+                div.innerHTML = `
+                    <div class="story-img">
+                        <img src="${group.user.profilePicture || 'me.png'}">
+                    </div>
+                    <span>${group.user.username}</span>
+                `;
+                div.onclick = () => openStoryViewer(group.items, 0);
+                container.appendChild(div);
+            });
+
+        } catch (err) { console.error(err); }
+    }
+
+    // Add Story Upload
+    storyFileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            const base64 = ev.target.result;
+            showLoading(true);
+            try {
+                await fetch('/api/social/story', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: base64 })
+                });
+                loadStories(); // Refresh
+                alert('Story added!');
+            } catch (err) { console.error(err); }
+            finally { showLoading(false); }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    function openStoryViewer(stories, index) {
+        if (index >= stories.length) {
+            storyViewerModal.classList.add('hidden');
+            if (currentStoryTimer) clearTimeout(currentStoryTimer);
+            return;
+        }
+        const story = stories[index];
+        storyViewerModal.classList.remove('hidden');
+        
+        // Update UI
+        document.getElementById('story-user-pfp').src = story.user.profilePicture || 'me.png';
+        document.getElementById('story-username').textContent = story.user.username;
+        
+        // Time diff
+        const diff = Math.floor((new Date() - new Date(story.createdAt)) / 1000 / 60); // minutes
+        const timeStr = diff < 60 ? `${diff}m` : `${Math.floor(diff/60)}h`;
+        document.getElementById('story-time').textContent = timeStr;
+
+        const mediaContainer = document.getElementById('story-media-container');
+        mediaContainer.innerHTML = '';
+        
+        if (story.type === 'video') {
+            const vid = document.createElement('video');
+            vid.src = story.image;
+            vid.autoplay = true;
+            vid.playsInline = true;
+            // vid.muted = false; // Policies might block
+            mediaContainer.appendChild(vid);
+            
+            vid.onloadedmetadata = () => {
+                startStoryTimer(vid.duration * 1000, stories, index);
+            };
+        } else {
+            const img = document.createElement('img');
+            img.src = story.image;
+            mediaContainer.appendChild(img);
+            startStoryTimer(5000, stories, index);
+        }
+    }
+
+    function startStoryTimer(duration, stories, index) {
+        if (currentStoryTimer) clearTimeout(currentStoryTimer);
+        storyProgress.style.transition = 'none';
+        storyProgress.style.width = '0%';
+        
+        // Force reflow
+        storyProgress.offsetHeight; 
+        
+        storyProgress.style.transition = `width ${duration}ms linear`;
+        storyProgress.style.width = '100%';
+
+        currentStoryTimer = setTimeout(() => {
+            openStoryViewer(stories, index + 1);
+        }, duration);
+    }
 
     // Logout
     document.getElementById('logout-btn').onclick = () => {

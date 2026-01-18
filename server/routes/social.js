@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const Post = require('../models/Post');
+const Story = require('../models/Story');
 const { protect } = require('../middleware/auth');
 const mongoose = require('mongoose');
 
@@ -387,6 +388,44 @@ router.post('/seed', protect, async (req, res) => {
         }
 
         res.json({ message: "Demo posts created for your profile!" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- STORIES ---
+router.post('/story', protect, async (req, res) => {
+    try {
+        const { image } = req.body;
+        const isVideo = image.includes('data:video') || image.startsWith('http') && image.endsWith('.mp4'); // Simple check
+        const newStory = new Story({
+            user: req.user._id,
+            image,
+            type: isVideo ? 'video' : 'image'
+        });
+        await newStory.save();
+        res.status(201).json(newStory);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+router.get('/stories', protect, async (req, res) => {
+    try {
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        
+        // Get stories from self and following
+        const user = await User.findById(req.user._id);
+        const followingIds = [...user.following, req.user._id];
+
+        const stories = await Story.find({
+            user: { $in: followingIds },
+            createdAt: { $gte: twentyFourHoursAgo }
+        })
+        .populate('user', 'username profilePicture')
+        .sort({ createdAt: 1 }); // Oldest first for viewing sequence? Or newest? Usually chronological per user.
+
+        res.json(stories);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

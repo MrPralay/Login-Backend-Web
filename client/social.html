@@ -316,6 +316,28 @@
 
     <!-- Hidden File Input -->
     <input type="file" id="post-file-input" accept="image/*,video/*" class="hidden">
+    <input type="file" id="story-file-input" accept="image/*,video/*" class="hidden">
+
+    <!-- Story Viewer Modal -->
+    <div id="story-viewer-modal" class="hidden">
+        <div class="story-viewer-content">
+            <div class="story-progress-bar-container">
+                <div class="story-progress-bar" id="story-progress"></div>
+            </div>
+            <header class="story-header">
+                <div class="user-info-detail">
+                    <img src="me.png" id="story-user-pfp" alt="Pfp">
+                    <b id="story-username" style="color: #fff;">priya5</b>
+                    <span id="story-time">12h</span>
+                </div>
+                <!-- <i class="fa-solid fa-ellipsis" style="color: #fff;"></i> -->
+                <i class="fa-solid fa-xmark" id="close-story-btn" style="color: #fff; font-size: 1.5rem; cursor: pointer;"></i>
+            </header>
+            <div class="story-media-container" id="story-media-container">
+                <!-- Media Injected -->
+            </div>
+        </div>
+    </div>
 
     <div id="loading-bar" style="position: fixed; top: 0; left: 0; height: 3px; background: var(--accent-gradient); width: 0; transition: 0.3s; z-index: 2000;"></div>
 
