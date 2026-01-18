@@ -687,10 +687,10 @@ router.delete('/story/:storyId/segment/:segmentId', protect, async (req, res) =>
         }
 
         // Remove the segment
-        const segment = story.segments.id(req.params.segmentId);
         if (!segment) return res.status(404).json({ message: 'Segment not found' });
 
-        segment.remove();
+        // Remove the segment using pull
+        story.segments.pull({ _id: req.params.segmentId });
 
         // If no segments left, delete the entire story document
         if (story.segments.length === 0) {

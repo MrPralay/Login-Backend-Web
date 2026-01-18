@@ -883,10 +883,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const content = currentShareObject.data;
             
             const sharedStory = isStory ? {
-                storyId: content.storyId,
+                story: content.storyId,
                 segmentId: content._id,
-                imageUrl: content.image,
-                isVideo: (content.image.includes('data:video') || content.image.endsWith('.mp4'))
+                media: content.media,
+                mediaType: content.mediaType
             } : null;
 
             const text = isStory ? '' : `Shared a post: ${content.title || ''}`;
