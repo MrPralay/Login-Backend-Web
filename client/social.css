@@ -176,19 +176,41 @@ aside {
     overflow-y: auto;
 }
 
-/* SIDEBAR CENTERING */
 #left-sidebar {
+    width: var(--sidebar-width);
     display: flex;
     flex-direction: column;
     justify-content: center;
     border-right: 1px solid rgba(0,0,0,0.05);
 }
 
-.nav-menu-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+#right-sidebar {
+    width: var(--right-sidebar-width);
+    border-left: 1px solid rgba(0,0,0,0.05);
 }
+
+.nav-menu { list-style: none; }
+.nav-item {
+    padding: 12px 16px;
+    margin-bottom: 4px;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: 0.2s;
+    color: var(--text-muted);
+}
+
+.nav-item i { font-size: 1.3rem; width: 25px; }
+.nav-item.active {
+    background: #fff;
+    color: #ff7e5f;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    font-weight: 700;
+}
+.nav-item.active i { color: #ff7e5f; }
+.nav-item:hover { background: #fff; }
 
 /* PROFILE VIEW ELITE */
 .profile-header-elite {
@@ -196,11 +218,15 @@ aside {
     gap: 60px;
     padding: 30px 20px;
     margin-bottom: 40px;
+    max-width: 935px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .pfp-large-wrap {
     width: 150px;
     height: 150px;
+    flex-shrink: 0;
 }
 
 .pfp-large-wrap img {
@@ -214,6 +240,7 @@ aside {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    flex: 1;
 }
 
 .profile-username-row {
@@ -224,7 +251,7 @@ aside {
 
 .profile-username-row h2 {
     font-size: 1.5rem;
-    font-weight: 400;
+    font-weight: 300;
 }
 
 .btn-edit-profile {
@@ -249,6 +276,7 @@ aside {
 .profile-bio-elite b {
     display: block;
     margin-bottom: 5px;
+    font-weight: 600;
 }
 
 .profile-posts-tabs {
@@ -258,6 +286,9 @@ aside {
     border-top: 1px solid #dbdbdb;
     padding-top: 15px;
     margin-bottom: 30px;
+    max-width: 935px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .p-tab {
@@ -269,6 +300,7 @@ aside {
     align-items: center;
     gap: 5px;
     padding-top: 5px;
+    letter-spacing: 1px;
 }
 
 .p-tab.active {
@@ -286,6 +318,8 @@ aside {
     flex-direction: column;
     align-items: center;
     gap: 15px;
+    max-width: 400px;
+    margin: 0 auto;
 }
 
 .empty-icon-wrap {
@@ -296,7 +330,7 @@ aside {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
+    font-size: 1.8rem;
     margin-bottom: 10px;
 }
 

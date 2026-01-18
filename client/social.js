@@ -9,12 +9,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const setModal = document.getElementById('settings-modal');
 
     // Stats and Identifiers
-    const mePfp = document.getElementById('me-pfp');
-    const meName = document.getElementById('me-fullname');
-    const meLoc = document.getElementById('me-location');
-    const mePostsCount = document.getElementById('me-posts-count');
-    const meFollowersCount = document.getElementById('me-followers-count');
-    const meFollowingCount = document.getElementById('me-following-count');
+    const mePostsCount = document.getElementById('prof-posts-count');
+    const meFollowersCount = document.getElementById('prof-followers-count');
+    const meFollowingCount = document.getElementById('prof-following-count');
+    const feedView = document.getElementById('feed-view');
+    const profileView = document.getElementById('profile-view');
+    const profileContentArea = document.getElementById('profile-content-area');
 
     let me = null;
 
@@ -41,13 +41,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateMeUI() {
-        mePfp.src = me.profilePicture || 'me.png';
-        meName.textContent = me.fullName || me.username;
-        meLoc.textContent = me.location || 'New York, USA';
-        mePostsCount.textContent = '245'; // Placeholder for total posts
+        // Updated for profile view
+        document.getElementById('profile-pfp-large').src = me.profilePicture || 'me.png';
+        document.getElementById('profile-username').textContent = me.username;
+        document.getElementById('prof-fullname').textContent = me.fullName || me.username;
+        document.getElementById('prof-bio').textContent = me.bio || 'Digital Creator | Explorer';
+        
+        mePostsCount.textContent = '0'; // We'll update this based on actual posts
         meFollowersCount.textContent = formatStat(me.followersCount);
         meFollowingCount.textContent = formatStat(me.followingCount);
+        
         document.getElementById('total-followers-text').textContent = formatStat(me.followersCount);
+        renderProfile();
     }
 
     function formatStat(num) {
@@ -70,15 +75,19 @@ document.addEventListener('DOMContentLoaded', () => {
             if (tabId === 'settings') {
                 setModal.classList.remove('hidden');
             } else if (tabId === 'home') {
+                feedView.classList.remove('hidden');
+                profileView.classList.add('hidden');
                 loadFeed();
             } else if (tabId === 'profile') {
-                // For now, settings modal can act as "edit profile" or we can show a profile view
-                setModal.classList.remove('hidden');
+                feedView.classList.add('hidden');
+                profileView.classList.remove('hidden');
+                renderProfile();
             } else if (tabId === 'create') {
-                // Logic for creating a post could go here or open a modal
                 alert('Create post functionality coming soon!');
             } else if (tabId === 'search') {
                 alert('Search functionality coming soon!');
+            } else if (tabId === 'messenger') {
+                alert('Messenger coming soon!');
             }
         };
     });
@@ -225,6 +234,47 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             feedContainer.appendChild(card);
         });
+    }
+
+    async function renderProfile() {
+        profileContentArea.innerHTML = '<div class="empty-state"><p>Loading profile...</p></div>';
+        try {
+            // Fetch only current user's posts
+            const res = await fetch('/api/social/my-posts'); // Assuming this endpoint exists or we filter feed
+            let posts = [];
+            if (res.ok) {
+                posts = await res.json();
+            }
+            
+            mePostsCount.textContent = posts.length;
+
+            if (posts.length === 0) {
+                profileContentArea.innerHTML = `
+                    <div class="empty-state-prof">
+                        <div class="empty-icon-wrap">
+                            <i class="fa-solid fa-camera"></i>
+                        </div>
+                        <h2>No Posts Yet</h2>
+                        <p>When you share photos, they will appear on your profile.</p>
+                        <a href="#" style="color: #0095f6; font-weight: 600; text-decoration: none; margin-top: 10px;">Share your first photo</a>
+                    </div>
+                `;
+            } else {
+                // Render grid (placeholder logic for now)
+                profileContentArea.innerHTML = '<div class="post-grid-placeholder" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;"></div>';
+                const grid = profileContentArea.querySelector('.post-grid-placeholder');
+                posts.forEach(post => {
+                    const img = document.createElement('img');
+                    img.src = post.image || 'peg.png';
+                    img.style.width = '100%';
+                    img.style.aspectRatio = '1/1';
+                    img.style.objectFit = 'cover';
+                    grid.appendChild(img);
+                });
+            }
+        } catch (err) {
+            console.error(err);
+        }
     }
 
     function formatTime(date) {
