@@ -26,6 +26,27 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedFileBase64 = null;
 
     // --- POST CREATION LOGIC ---
+    // --- TOAST NOTIFICATION LOGIC ---
+    function showToast(message, type = 'normal') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast-notification ${type}`;
+        
+        let icon = 'fa-circle-info';
+        if (type === 'success') icon = 'fa-check-circle';
+        if (type === 'error') icon = 'fa-triangle-exclamation';
+
+        toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+        
+        container.appendChild(toast);
+
+        // Remove after 3s
+        setTimeout(() => {
+            toast.style.animation = 'slideOut 0.3s forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
     // --- POST CREATION LOGIC ---
     // New Inputs
     const postTitle = document.getElementById('post-title');
@@ -34,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const postLockToggle = document.getElementById('post-lock-toggle');
     const postPasscode = document.getElementById('post-passcode');
     const postLockInputArea = document.getElementById('post-lock-input-area');
+    const closeCreatePostBtn = document.getElementById('close-create-post-btn');
 
     // Toggle Lock UI
     postLockToggle.onchange = (e) => {
@@ -74,12 +96,14 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsDataURL(file);
     };
 
-    backCreatePost.onclick = () => {
+    // Both buttons close logic
+    const closeCreateLogic = () => {
         createPostModal.classList.add('hidden');
         postFileInput.value = ''; 
-        // Reset fields? Maybe better to keep draft or reset. Let's reset for now.
         resetPostForm();
     };
+    backCreatePost.onclick = closeCreateLogic;
+    closeCreatePostBtn.onclick = closeCreateLogic;
 
     function resetPostForm() {
         postCaption.value = '';
@@ -99,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isLocked = postLockToggle.checked;
         const passcode = postPasscode.value.trim();
         if (isLocked && passcode.length !== 4) {
-            alert('Please set a 4-digit passcode for locked posts.');
+            showToast('Please set a 4-digit passcode for locked posts', 'error');
             return;
         }
 
@@ -123,14 +147,14 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (res.ok) {
-                createPostModal.classList.add('hidden');
-                resetPostForm();
+                closeCreateLogic();
+                showToast('Post shared successfully!', 'success');
                 // Refresh data
                 await init(); 
                 if (!profileView.classList.contains('hidden')) renderProfile();
                 if (!feedView.classList.contains('hidden')) loadFeed();
             } else {
-                alert('Failed to share post. Try a smaller file.');
+                showToast('Failed to share post', 'error');
             }
         } catch (err) {
             console.error(err);
@@ -433,6 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (res.ok) {
                 const data = await res.json();
+                showToast('Content unlocked!', 'success');
                 // Replace content
                 const isVideo = (data.image.includes('data:video') || data.image.endsWith('.mp4'));
                 element.outerHTML = `
@@ -442,7 +467,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             : `<img src="${data.image}">`}
                     </div>`;
             } else {
-                alert('Incorrect passcode!');
+                showToast('Incorrect passcode', 'error');
             }
         } catch (err) {
             console.error(err);

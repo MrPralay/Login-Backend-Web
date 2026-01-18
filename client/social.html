@@ -295,9 +295,14 @@
     <div id="create-post-modal" class="hidden">
         <div class="modal-card post-creation-card professional-create">
             <header>
-                <i class="fa-solid fa-arrow-left" id="back-create-post"></i>
-                <h3>Create New Post</h3>
-                <button id="share-post-btn">Share</button>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <i class="fa-solid fa-arrow-left" id="back-create-post"></i>
+                    <h3>Create New Post</h3>
+                </div>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <button id="share-post-btn">Share</button>
+                    <i class="fa-solid fa-xmark" id="close-create-post-btn" style="font-size: 1.5rem; cursor: pointer;"></i>
+                </div>
             </header>
             <div class="modal-body post-modal-body split-view">
                 <div class="create-media-pane" id="media-preview">
@@ -359,6 +364,9 @@
     </div>
 
     <div id="loading-bar" style="position: fixed; top: 0; left: 0; height: 3px; background: var(--accent-gradient); width: 0; transition: 0.3s; z-index: 2000;"></div>
+    
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
 
     <script src="social.js"></script>
 </body>

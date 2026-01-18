@@ -1332,21 +1332,83 @@ input:checked + .slider:before {
 .locked-overlay {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.7);
+    background: rgba(255, 255, 255, 0.95); /* White as requested */
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    color: #fff;
+    color: #000; /* Dark text */
     gap: 10px;
     backdrop-filter: blur(5px);
+    cursor: pointer;
 }
 
 .locked-overlay i {
     font-size: 2rem;
+    color: #000;
 }
 
 .locked-overlay span {
     font-size: 0.9rem;
     font-weight: 600;
+}
+
+/* Fix Profile Row in Create Modal */
+.mini-profile-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.mini-profile-row img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.mini-profile-row b {
+    font-size: 0.95rem;
+}
+
+/* TOAST NOTIFICATIONS */
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 5000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast-notification {
+    background: #fff;
+    border-left: 4px solid #333;
+    padding: 15px 20px;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 250px;
+    transform: translateX(100%);
+    animation: slideIn 0.3s forwards;
+    font-size: 0.95rem;
+    color: var(--text-main);
+}
+
+.toast-notification.success { border-left-color: #28a745; }
+.toast-notification.error { border-left-color: #dc3545; }
+.toast-notification i { font-size: 1.2rem; }
+.toast-notification.success i { color: #28a745; }
+.toast-notification.error i { color: #dc3545; }
+
+@keyframes slideIn {
+    to { transform: translateX(0); }
+}
+
+@keyframes slideOut {
+    to { transform: translateX(120%); opacity: 0; }
 }
