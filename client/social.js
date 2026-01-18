@@ -345,13 +345,36 @@ document.addEventListener('DOMContentLoaded', () => {
                         document.getElementById('post-file-input').click();
                     };
                 } else {
-                    profileContentArea.innerHTML = '<div class="post-grid-placeholder" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;"></div>';
-                    const grid = profileContentArea.querySelector('.post-grid-placeholder');
+                    // ELITE GRID RENDER
+                    profileContentArea.innerHTML = '<div class="grid-container"></div>';
+                    const grid = profileContentArea.querySelector('.grid-container');
+                    
                     posts.forEach(post => {
-                        const img = document.createElement('img');
-                        img.src = post.image || 'peg.png';
-                        img.className = 'grid-img';
-                        grid.appendChild(img);
+                        const div = document.createElement('div');
+                        div.className = 'profile-grid-item';
+                        
+                        // Check if video
+                        const isVideo = post.image && (post.image.includes('data:video') || post.image.endsWith('.mp4'));
+                        
+                        let mediaHtml = isVideo 
+                            ? `<video src="${post.image}" muted></video>` 
+                            : `<img src="${post.image || 'peg.png'}">`;
+
+                        div.innerHTML = `
+                            ${mediaHtml}
+                            <div class="grid-overlay">
+                                <div class="grid-stat">
+                                    <i class="fa-solid fa-heart"></i> ${formatStat(post.likes.length)}
+                                </div>
+                                <div class="grid-stat">
+                                    <i class="fa-solid fa-comment"></i> ${formatStat(post.comments.length)}
+                                </div>
+                            </div>
+                            ${isVideo ? '<i class="fa-solid fa-video grid-type-icon"></i>' : ''}
+                        `;
+                        
+                        div.onclick = () => openPostDetail(post._id);
+                        grid.appendChild(div);
                     });
                 }
             } else if (currentProfileTab === 'reels') {
@@ -379,6 +402,136 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(err);
         }
     }
+
+    // --- POST DETAIL LOGIC ---
+    const detailModal = document.getElementById('post-detail-modal');
+    async function openPostDetail(postId) {
+        showLoading(true);
+        try {
+            const res = await fetch(`/api/social/post/${postId}`);
+            if (!res.ok) throw new Error('Post not found');
+            const post = await res.json();
+            
+            // Populate Modal
+            const container = document.getElementById('detail-media-container');
+            container.innerHTML = '';
+            
+            const isVideo = post.image && (post.image.includes('data:video') || post.image.endsWith('.mp4'));
+            if (isVideo) {
+                const vid = document.createElement('video');
+                vid.src = post.image;
+                vid.controls = true;
+                vid.autoplay = true;
+                container.appendChild(vid);
+            } else {
+                const img = document.createElement('img');
+                img.src = post.image;
+                container.appendChild(img);
+            }
+
+            // User Info
+            document.getElementById('detail-user-pfp').src = post.user.profilePicture || 'me.png';
+            document.getElementById('detail-username').textContent = post.user.username;
+            document.getElementById('detail-likes-text').textContent = `${formatStat(post.likes.length)} likes`;
+            document.getElementById('detail-post-time').textContent = formatTime(post.createdAt).toUpperCase();
+
+            // Setup Actions
+            const likeBtn = document.getElementById('detail-like-btn');
+            // Check if WE liked it (need our ID from 'me' variable)
+            const isLiked = post.likes.includes(me.id || me._id);
+            updateLikeBtnUI(likeBtn, isLiked);
+
+            likeBtn.onclick = async () => {
+                const lRes = await fetch(`/api/social/post/${post._id}/like`, { method: 'POST' });
+                const lData = await lRes.json();
+                document.getElementById('detail-likes-text').textContent = `${formatStat(lData.likesCount)} likes`;
+                updateLikeBtnUI(likeBtn, lData.isLiked);
+                // Refresh grid stats in background
+                init(); 
+            };
+            
+            // Download
+            document.getElementById('detail-download-btn').onclick = () => {
+                const link = document.createElement('a');
+                link.href = post.image;
+                link.download = `post_${post._id}`;
+                link.click();
+            };
+
+            // Comments
+            const commentsList = document.getElementById('detail-comments-list');
+            commentsList.innerHTML = '';
+            // Add Caption as first comment if exists
+            if (post.content) {
+                renderCommentRow(commentsList, post.user, post.content, post.createdAt);
+            }
+            post.comments.forEach(c => {
+                renderCommentRow(commentsList, c.user, c.text, c.createdAt);
+            });
+
+            // Add Comment Logic
+            const commentInput = document.getElementById('detail-comment-input');
+            const postCommentBtn = document.getElementById('post-comment-btn');
+            
+            postCommentBtn.onclick = async () => {
+                if (!commentInput.value.trim()) return;
+                const text = commentInput.value;
+                commentInput.value = '';
+                
+                const cRes = await fetch(`/api/social/post/${post._id}/comment`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ text })
+                });
+                const updatedComments = await cRes.json();
+                
+                // Re-render comments to show new one (or just append)
+                // For simplicity, re-rendering last one is okay, but let's just append the new one
+                const newComment = updatedComments[updatedComments.length - 1];
+                // We need the full user object for the new comment. 
+                // Since the API returns populated comments, we can just use that.
+                renderCommentRow(commentsList, newComment.user, newComment.text, newComment.createdAt);
+                
+                // Scroll to bottom
+                commentsList.scrollTop = commentsList.scrollHeight;
+                 // Refresh grid stats in background
+                init(); 
+            };
+
+            detailModal.classList.remove('hidden');
+        } catch (err) {
+            console.error(err);
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    function updateLikeBtnUI(btn, isLiked) {
+        if (isLiked) {
+            btn.classList.remove('fa-regular');
+            btn.classList.add('fa-solid', 'liked');
+        } else {
+            btn.classList.remove('fa-solid', 'liked');
+            btn.classList.add('fa-regular');
+        }
+    }
+
+    function renderCommentRow(container, user, text, date) {
+        const div = document.createElement('div');
+        div.className = 'comment-row';
+        div.innerHTML = `
+            <img src="${user.profilePicture || 'me.png'}" class="comment-pfp">
+            <div class="comment-content">
+                <span><b>${user.username}</b> ${text}</span>
+                <span class="comment-time">${formatTime(date)}</span>
+            </div>
+        `;
+        container.appendChild(div);
+    }
+    
+    document.getElementById('close-detail-btn').onclick = () => {
+        detailModal.classList.add('hidden');
+    };
 
     // Add profile tab switching listeners
     const profileTabs = document.querySelectorAll('.p-tab');

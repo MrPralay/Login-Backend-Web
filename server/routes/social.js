@@ -246,6 +246,63 @@ router.get('/my-posts', protect, async (req, res) => {
     }
 });
 
+// --- GET SINGLE POST ---
+router.get('/post/:id', protect, async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id)
+            .populate('user', 'username fullName profilePicture')
+            .populate('comments.user', 'username profilePicture');
+        if (!post) return res.status(404).json({ message: 'Post not found' });
+        res.json(post);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- LIKE / UNLIKE POST ---
+router.post('/post/:id/like', protect, async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) return res.status(404).json({ message: 'Post not found' });
+
+        const likeIndex = post.likes.indexOf(req.user._id);
+        if (likeIndex > -1) {
+            post.likes.splice(likeIndex, 1);
+        } else {
+            post.likes.push(req.user._id);
+        }
+
+        await post.save();
+        res.json({ likesCount: post.likes.length, isLiked: post.likes.includes(req.user._id) });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- ADD COMMENT ---
+router.post('/post/:id/comment', protect, async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) return res.status(404).json({ message: 'Post not found' });
+
+        const newComment = {
+            user: req.user._id,
+            text: req.body.text
+        };
+
+        post.comments.push(newComment);
+        await post.save();
+
+        // Return the populated post to update UI
+        const updatedPost = await Post.findById(req.params.id)
+            .populate('comments.user', 'username profilePicture');
+        
+        res.json(updatedPost.comments);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // --- GET GLOBAL FEED ---
 router.get('/feed', protect, async (req, res) => {
     try {

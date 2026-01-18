@@ -176,6 +176,51 @@
         </div>
     </div>
 
+    <!-- Post Detail Modal (Elite Split View) -->
+    <div id="post-detail-modal" class="hidden">
+        <div class="detail-modal-card">
+            <div class="detail-left-pane" id="detail-media-container">
+                <!-- Media will be injected here -->
+            </div>
+            <div class="detail-right-pane">
+                <header class="detail-header">
+                    <div class="user-info-detail">
+                        <img src="me.png" id="detail-user-pfp" alt="Pfp">
+                        <b id="detail-username">priya5</b>
+                    </div>
+                    <i class="fa-solid fa-ellipsis" style="cursor: pointer;"></i>
+                </header>
+
+                <div class="detail-comments-area" id="detail-comments-list">
+                    <!-- Comments dynamic -->
+                </div>
+
+                <footer class="detail-footer">
+                    <div class="detail-actions">
+                        <div class="left-actions">
+                            <i class="fa-regular fa-heart" id="detail-like-btn"></i>
+                            <i class="fa-regular fa-comment"></i>
+                            <i class="fa-regular fa-paper-plane" id="detail-share-btn"></i>
+                        </div>
+                        <i class="fa-solid fa-download" id="detail-download-btn" title="Download Media"></i>
+                    </div>
+                    <div class="detail-likes-count">
+                        <b id="detail-likes-text">0 likes</b>
+                    </div>
+                    <div class="detail-time">
+                        <small id="detail-post-time">2 HOURS AGO</small>
+                    </div>
+                    <div class="detail-comment-input-wrap">
+                        <i class="fa-regular fa-face-smile"></i>
+                        <input type="text" id="detail-comment-input" placeholder="Add a comment...">
+                        <button id="post-comment-btn">Post</button>
+                    </div>
+                </footer>
+            </div>
+            <i class="fa-solid fa-xmark close-detail-modal" id="close-detail-btn"></i>
+        </div>
+    </div>
+
     <!-- Post Creation Modal -->
     <div id="create-post-modal" class="hidden">
         <div class="modal-card post-creation-card">
