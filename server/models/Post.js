@@ -32,10 +32,7 @@ const postSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
-    },
-    // Shared Stories support
-    isSharedStory: { type: Boolean, default: false },
-    originalStory: { type: mongoose.Schema.Types.ObjectId, ref: 'Story' }
+    }
 });
 
 module.exports = mongoose.model('Post', postSchema);

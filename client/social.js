@@ -211,6 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- INITIALIZATION ---
     async function init() {
         showLoading(true);
+        loadStories(); // Start loading stories
         try {
             const [pRes, postsRes] = await Promise.all([
                 fetch('/api/user/profile'),
@@ -308,298 +309,29 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     });
 
-    // ===== STORIES LOGIC =====
-    
-    const storyFileInput = document.getElementById('story-file-input');
-    const storyUploadModal = document.getElementById('story-upload-modal');
-    const storyUploadPreview = document.getElementById('story-upload-preview');
-    const uploadStoryBtn = document.getElementById('upload-story-btn');
-    const closeStoryUpload = document.getElementById('close-story-upload');
-    
-    const storyViewerModal = document.getElementById('story-viewer-modal');
-    const storyMediaContainer = document.getElementById('story-media-container');
-    const storyProgressBars = document.getElementById('story-progress-bars');
-    const closeStoryViewer = document.getElementById('close-story-viewer');
-    const storyNavLeft = document.getElementById('story-nav-left');
-    const storyNavRight = document.getElementById('story-nav-right');
-    const storyLikeBtn = document.getElementById('story-like-btn');
-    const storyShareBtn = document.getElementById('story-share-btn');
-    
-    let currentStoryData = null;
-    let currentSegmentIndex = 0;
-    let storyTimer = null;
-    let selectedStoryFile = null;
-
-    // Load and render story circles
+    // --- STORIES ---
     async function loadStories() {
-        if (!me) return; // Safety check
-        
         try {
-            const res = await fetch('/api/social/stories');
-            const stories = await res.json();
-            
-            storiesRow.innerHTML = '';
-            
-            // Your Story Circle (always first)
-            const yourStory = stories.find(s => s.user._id === me._id);
-            const yourStoryDiv = document.createElement('div');
-            yourStoryDiv.className = 'story-circle your-story-circle';
-            
-            if (yourStory) {
-                // Has story - show preview
-                const firstSegment = yourStory.story.segments[0];
-                yourStoryDiv.innerHTML = `
-                    <img src="${me.profilePicture || 'me.png'}" alt="Your Story">
-                    <div class="story-plus-icon"><i class="fa-solid fa-plus"></i></div>
-                `;
-                yourStoryDiv.onclick = () => openStoryViewer(me._id);
-            } else {
-                // No story - show + to create
-                yourStoryDiv.innerHTML = `
-                    <img src="${me.profilePicture || 'me.png'}" alt="Your Story">
-                    <div class="story-plus-icon"><i class="fa-solid fa-plus"></i></div>
-                `;
-                yourStoryDiv.querySelector('.story-plus-icon').onclick = (e) => {
-                    e.stopPropagation();
-                    storyFileInput.click();
-                };
-            }
-            
-            storiesRow.appendChild(yourStoryDiv);
-            
-            // Follower Stories
-            stories.forEach(storyData => {
-                if (storyData.user._id === me._id) return; // Skip own story
-                
-                const div = document.createElement('div');
-                div.className = `story-circle ${storyData.hasUnviewed ? '' : 'viewed'}`;
-                div.innerHTML = `<img src="${storyData.user.profilePicture || 'me.png'}" alt="${storyData.user.username}">`;
-                div.onclick = () => openStoryViewer(storyData.user._id);
-                storiesRow.appendChild(div);
+            storiesRow.innerHTML = `
+                <div class="story-circle add-story">
+                    <div class="story-img"><i class="fa-solid fa-plus"></i></div>
+                    <span>Add Story</span>
+                </div>`;
+            const res = await fetch('/api/social/suggestions'); // Using suggest logic to find users with stories
+            const users = await res.json();
+            users.forEach(u => {
+                if (u.profilePicture) {
+                    const div = document.createElement('div');
+                    div.className = 'story-circle';
+                    div.innerHTML = `
+                        <div class="story-img"><img src="${u.profilePicture}" onerror="this.src='me.png'"></div>
+                        <span>${u.username}</span>
+                    `;
+                    storiesRow.appendChild(div);
+                }
             });
-        } catch (err) {
-            console.error('Failed to load stories:', err);
-        }
+        } catch (err) {}
     }
-
-    // Story Upload Handler
-    storyFileInput.onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            selectedStoryFile = event.target.result;
-            storyUploadPreview.innerHTML = '';
-            
-            if (file.type.startsWith('image/')) {
-                const img = document.createElement('img');
-                img.src = selectedStoryFile;
-                storyUploadPreview.appendChild(img);
-            } else if (file.type.startsWith('video/')) {
-                const video = document.createElement('video');
-                video.src = selectedStoryFile;
-                video.controls = true;
-                storyUploadPreview.appendChild(video);
-            }
-            
-            storyFileInput.value = '';
-            storyUploadModal.classList.remove('hidden');
-        };
-        reader.readAsDataURL(file);
-    };
-
-    closeStoryUpload.onclick = () => {
-        storyUploadModal.classList.add('hidden');
-        selectedStoryFile = null;
-    };
-
-    uploadStoryBtn.onclick = async () => {
-        if (!selectedStoryFile) return;
-        
-        showLoading(true);
-        try {
-            const mediaType = selectedStoryFile.startsWith('data:image') ? 'image' : 'video';
-            const res = await fetch('/api/social/story', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    media: selectedStoryFile,
-                    mediaType
-                })
-            });
-
-            if (res.ok) {
-                storyUploadModal.classList.add('hidden');
-                selectedStoryFile = null;
-                showToast('Story added!', 'success');
-                await loadStories();
-                const errorData = await res.json();
-                showToast(errorData.error || 'Failed to upload story', 'error');
-            }
-        } catch (err) {
-            console.error(err);
-            showToast('Upload failed', 'error');
-        } finally {
-            showLoading(false);
-        }
-    };
-
-    // Open Story Viewer
-    async function openStoryViewer(userId) {
-        try {
-            const res = await fetch(`/api/social/story/${userId}`);
-            if (!res.ok) {
-                showToast('No active story', 'error');
-                return;
-            }
-
-            currentStoryData = await res.json();
-            currentSegmentIndex = 0;
-            
-            // Setup UI
-            document.getElementById('story-viewer-username').textContent = currentStoryData.user.username;
-            document.getElementById('story-viewer-pfp').src = currentStoryData.user.profilePicture || 'me.png';
-            
-            // Create progress bars
-            storyProgressBars.innerHTML = '';
-            currentStoryData.segments.forEach((_, i) => {
-                const bar = document.createElement('div');
-                bar.className = 'story-progress-bar';
-                bar.innerHTML = '<div class="story-progress-fill"></div>';
-                storyProgressBars.appendChild(bar);
-            });
-            
-            storyViewerModal.classList.remove('hidden');
-            showSegment(0);
-        } catch (err) {
-            console.error(err);
-            showToast('Failed to load story', 'error');
-        }
-    }
-
-    // Show specific segment
-    async function showSegment(index) {
-        if (!currentStoryData || index < 0 || index >= currentStoryData.segments.length) {
-            closeStoryViewer.click();
-            return;
-        }
-
-        currentSegmentIndex = index;
-        const segment = currentStoryData.segments[index];
-        
-        // Update media
-        storyMediaContainer.innerHTML = '';
-        if (segment.mediaType === 'image') {
-            const img = document.createElement('img');
-            img.src = segment.media;
-            storyMediaContainer.appendChild(img);
-        } else {
-            const video = document.createElement('video');
-            video.src = segment.media;
-            video.autoplay = true;
-            video.muted = false;
-            storyMediaContainer.appendChild(video);
-        }
-        
-        // Update progress bars
-        const bars = storyProgressBars.querySelectorAll('.story-progress-bar');
-        bars.forEach((bar, i) => {
-            bar.classList.remove('active');
-            const fill = bar.querySelector('.story-progress-fill');
-            if (i < index) {
-                fill.style.width = '100%';
-            } else if (i === index) {
-                fill.style.width = '0%';
-                bar.classList.add('active');
-            } else {
-                fill.style.width = '0%';
-            }
-        });
-        
-        // Update like button state
-        const isLiked = segment.likes.some(l => l._id === me._id || l === me._id);
-        storyLikeBtn.className = isLiked ? 'fa-solid fa-heart story-like-btn liked' : 'fa-regular fa-heart story-like-btn';
-        
-        // Track view
-        await trackView(currentStoryData._id, segment._id);
-        
-        // Auto-advance timer
-        clearTimeout(storyTimer);
-        const duration = segment.mediaType === 'video' ? 15000 : 5000; // 15s for video, 5s for image
-        storyTimer = setTimeout(() => {
-            showSegment(index + 1);
-        }, duration);
-    }
-
-    // Track view
-    async function trackView(storyId, segmentId) {
-        try {
-            await fetch(`/api/social/story/${storyId}/segment/${segmentId}/view`, {
-                method: 'POST'
-            });
-        } catch (err) {
-            console.error('Failed to track view:', err);
-        }
-    }
-
-    // Navigation
-    storyNavLeft.onclick = () => {
-        clearTimeout(storyTimer);
-        showSegment(currentSegmentIndex - 1);
-    };
-
-    storyNavRight.onclick = () => {
-        clearTimeout(storyTimer);
-        showSegment(currentSegmentIndex + 1);
-    };
-
-    // Like Story
-    storyLikeBtn.onclick = async () => {
-        if (!currentStoryData) return;
-        
-        const segment = currentStoryData.segments[currentSegmentIndex];
-        try {
-            const res = await fetch(`/api/social/story/${currentStoryData._id}/segment/${segment._id}/like`, {
-                method: 'POST'
-            });
-            
-            if (res.ok) {
-                const data = await res.json();
-                storyLikeBtn.className = data.liked ? 'fa-solid fa-heart story-like-btn liked' : 'fa-regular fa-heart story-like-btn';
-            }
-        } catch (err) {
-            console.error('Failed to like story:', err);
-        }
-    };
-
-    // Share Story
-    storyShareBtn.onclick = async () => {
-        if (!currentStoryData) return;
-        
-        const segment = currentStoryData.segments[currentSegmentIndex];
-        try {
-            const res = await fetch(`/api/social/story/${currentStoryData._id}/segment/${segment._id}/share`, {
-                method: 'POST'
-            });
-            
-            if (res.ok) {
-                showToast('Story shared to your feed!', 'success');
-            } else {
-                showToast('Failed to share story', 'error');
-            }
-        } catch (err) {
-            console.error('Failed to share story:', err);
-        }
-    };
-
-    // Close Story Viewer
-    closeStoryViewer.onclick = () => {
-        clearTimeout(storyTimer);
-        storyViewerModal.classList.add('hidden');
-        currentStoryData = null;
-        currentSegmentIndex = 0;
-    };
 
     // --- REQUESTS ---
     async function loadRequests() {
@@ -1215,6 +947,140 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (err) { console.error(err); }
     };
+
+    // --- STORIES LOGIC ---
+    const storyViewerModal = document.getElementById('story-viewer-modal');
+    const storyProgress = document.getElementById('story-progress');
+    const closeStoryBtn = document.getElementById('close-story-btn');
+    const storyFileInput = document.getElementById('story-file-input');
+    let currentStoryTimer = null;
+
+    closeStoryBtn.onclick = () => {
+        storyViewerModal.classList.add('hidden');
+        if (currentStoryTimer) clearTimeout(currentStoryTimer);
+        storyProgress.style.width = '0';
+    };
+
+    async function loadStories() {
+        try {
+            const res = await fetch('/api/social/stories');
+            if (!res.ok) return;
+            const stories = await res.json();
+            
+            // Group stories by user
+            const groupedStories = {};
+            stories.forEach(s => {
+                if (!groupedStories[s.user._id]) {
+                    groupedStories[s.user._id] = { user: s.user, items: [] };
+                }
+                groupedStories[s.user._id].items.push(s);
+            });
+
+            const container = document.getElementById('stories-container');
+            // Keep the first child (Add Story)
+            const addStoryBtn = container.querySelector('.add-story');
+            container.innerHTML = '';
+            if (addStoryBtn) {
+                container.appendChild(addStoryBtn);
+                addStoryBtn.onclick = () => storyFileInput.click();
+            }
+
+            Object.values(groupedStories).forEach(group => {
+                const div = document.createElement('div');
+                div.className = 'story-circle';
+                // Highlight ring if unseen? For now always ring
+                div.style.background = 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)';
+                div.innerHTML = `
+                    <div class="story-img">
+                        <img src="${group.user.profilePicture || 'me.png'}">
+                    </div>
+                    <span>${group.user.username}</span>
+                `;
+                div.onclick = () => openStoryViewer(group.items, 0);
+                container.appendChild(div);
+            });
+
+        } catch (err) { console.error(err); }
+    }
+
+    // Add Story Upload
+    storyFileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            const base64 = ev.target.result;
+            showLoading(true);
+            try {
+                await fetch('/api/social/story', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: base64 })
+                });
+                loadStories(); // Refresh
+                alert('Story added!');
+            } catch (err) { console.error(err); }
+            finally { showLoading(false); }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    function openStoryViewer(stories, index) {
+        if (index >= stories.length) {
+            storyViewerModal.classList.add('hidden');
+            if (currentStoryTimer) clearTimeout(currentStoryTimer);
+            return;
+        }
+        const story = stories[index];
+        storyViewerModal.classList.remove('hidden');
+        
+        // Update UI
+        document.getElementById('story-user-pfp').src = story.user.profilePicture || 'me.png';
+        document.getElementById('story-username').textContent = story.user.username;
+        
+        // Time diff
+        const diff = Math.floor((new Date() - new Date(story.createdAt)) / 1000 / 60); // minutes
+        const timeStr = diff < 60 ? `${diff}m` : `${Math.floor(diff/60)}h`;
+        document.getElementById('story-time').textContent = timeStr;
+
+        const mediaContainer = document.getElementById('story-media-container');
+        mediaContainer.innerHTML = '';
+        
+        if (story.type === 'video') {
+            const vid = document.createElement('video');
+            vid.src = story.image;
+            vid.autoplay = true;
+            vid.playsInline = true;
+            // vid.muted = false; // Policies might block
+            mediaContainer.appendChild(vid);
+            
+            vid.onloadedmetadata = () => {
+                startStoryTimer(vid.duration * 1000, stories, index);
+            };
+        } else {
+            const img = document.createElement('img');
+            img.src = story.image;
+            mediaContainer.appendChild(img);
+            startStoryTimer(5000, stories, index);
+        }
+    }
+
+    function startStoryTimer(duration, stories, index) {
+        if (currentStoryTimer) clearTimeout(currentStoryTimer);
+        storyProgress.style.transition = 'none';
+        storyProgress.style.width = '0%';
+        
+        // Force reflow
+        storyProgress.offsetHeight; 
+        
+        storyProgress.style.transition = `width ${duration}ms linear`;
+        storyProgress.style.width = '100%';
+
+        currentStoryTimer = setTimeout(() => {
+            openStoryViewer(stories, index + 1);
+        }, duration);
+    }
 
     // Logout
     document.getElementById('logout-btn').onclick = () => {

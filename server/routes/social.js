@@ -434,22 +434,34 @@ router.post('/seed', protect, async (req, res) => {
     }
 });
 
-// ===== STORIES API =====
+// --- STORIES ---
+router.post('/story', protect, async (req, res) => {
+    try {
+        const { image } = req.body;
+        const isVideo = image.includes('data:video') || image.startsWith('http') && image.endsWith('.mp4'); // Simple check
+        const newStory = new Story({
+            user: req.user._id,
+            image,
+            type: isVideo ? 'video' : 'image'
+        });
+        await newStory.save();
+        res.status(201).json(newStory);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
+// ===== STORIES API =====
 
 // Create new story or add segment to existing story
 router.post('/story', protect, async (req, res) => {
     try {
         const { media, mediaType } = req.body;
         
-        if (!media || !mediaType) {
-            return res.status(400).json({ error: "Media data and type are required" });
-        }
-        
         // Check if user has an active story (not expired)
         let story = await Story.findOne({
             user: req.user._id,
-            expiresAt: { $gt: new Date() }
+            expiresAt: { $gt: Date.now() }
         });
 
         if (story) {
@@ -457,19 +469,17 @@ router.post('/story', protect, async (req, res) => {
             story.segments.push({ media, mediaType });
             await story.save();
         } else {
-            // Create new story with explicit expiry
+            // Create new story
             story = new Story({
                 user: req.user._id,
-                segments: [{ media, mediaType }],
-                expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+                segments: [{ media, mediaType }]
             });
             await story.save();
         }
 
         res.status(201).json(story);
     } catch (err) {
-        console.error("❌ STORY UPLOAD CRASH:", err);
-        res.status(500).json({ error: "Story update failed: " + err.message });
+        res.status(500).json({ error: err.message });
     }
 });
 
