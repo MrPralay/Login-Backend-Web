@@ -236,46 +236,79 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    async function renderProfile() {
-        profileContentArea.innerHTML = '<div class="empty-state"><p>Loading profile...</p></div>';
-        try {
-            // Fetch only current user's posts
-            const res = await fetch('/api/social/my-posts'); // Assuming this endpoint exists or we filter feed
-            let posts = [];
-            if (res.ok) {
-                posts = await res.json();
-            }
-            
-            mePostsCount.textContent = posts.length;
+    let currentProfileTab = 'posts';
 
-            if (posts.length === 0) {
+    async function renderProfile() {
+        // Remove loading text as requested
+        profileContentArea.innerHTML = '';
+        
+        try {
+            if (currentProfileTab === 'posts') {
+                const res = await fetch('/api/social/my-posts'); 
+                let posts = [];
+                if (res.ok) {
+                    posts = await res.json();
+                }
+                
+                mePostsCount.textContent = posts.length;
+
+                if (posts.length === 0) {
+                    profileContentArea.innerHTML = `
+                        <div class="empty-state-prof">
+                            <div class="empty-icon-wrap" style="border: 1px solid #000; width: 80px; height: 80px;">
+                                <i class="fa-solid fa-camera"></i>
+                            </div>
+                            <h2 style="font-weight: 300; font-size: 2.2rem; margin-bottom: 5px;">Share photos</h2>
+                            <p style="color: #262626; font-size: 1rem; margin-bottom: 20px;">When you share photos, they will appear on your profile.</p>
+                            <a href="#" style="color: #0095f6; font-weight: 600; text-decoration: none; font-size: 0.9rem;">Share your first photo</a>
+                        </div>
+                    `;
+                } else {
+                    profileContentArea.innerHTML = '<div class="post-grid-placeholder" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;"></div>';
+                    const grid = profileContentArea.querySelector('.post-grid-placeholder');
+                    posts.forEach(post => {
+                        const img = document.createElement('img');
+                        img.src = post.image || 'peg.png';
+                        img.className = 'grid-img';
+                        grid.appendChild(img);
+                    });
+                }
+            } else if (currentProfileTab === 'reels') {
                 profileContentArea.innerHTML = `
                     <div class="empty-state-prof">
-                        <div class="empty-icon-wrap">
-                            <i class="fa-solid fa-camera"></i>
+                        <div class="empty-icon-wrap" style="border: 1px solid #000; width: 80px; height: 80px;">
+                            <i class="fa-solid fa-clapperboard"></i>
                         </div>
-                        <h2>No Posts Yet</h2>
-                        <p>When you share photos, they will appear on your profile.</p>
-                        <a href="#" style="color: #0095f6; font-weight: 600; text-decoration: none; margin-top: 10px;">Share your first photo</a>
+                        <h2 style="font-weight: 300; font-size: 2.2rem; margin-bottom: 5px;">Reels</h2>
+                        <p style="color: #262626; font-size: 1rem; margin-bottom: 20px;">Reels help you grow your audience.</p>
                     </div>
                 `;
-            } else {
-                // Render grid (placeholder logic for now)
-                profileContentArea.innerHTML = '<div class="post-grid-placeholder" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;"></div>';
-                const grid = profileContentArea.querySelector('.post-grid-placeholder');
-                posts.forEach(post => {
-                    const img = document.createElement('img');
-                    img.src = post.image || 'peg.png';
-                    img.style.width = '100%';
-                    img.style.aspectRatio = '1/1';
-                    img.style.objectFit = 'cover';
-                    grid.appendChild(img);
-                });
+            } else if (currentProfileTab === 'tagged') {
+                profileContentArea.innerHTML = `
+                    <div class="empty-state-prof">
+                        <div class="empty-icon-wrap" style="border: 1px solid #000; width: 80px; height: 80px;">
+                            <i class="fa-solid fa-id-card"></i>
+                        </div>
+                        <h2 style="font-weight: 300; font-size: 2.2rem; margin-bottom: 5px;">Photos of you</h2>
+                        <p style="color: #262626; font-size: 1rem; margin-bottom: 20px;">When people tag you in photos, they'll appear here.</p>
+                    </div>
+                `;
             }
         } catch (err) {
             console.error(err);
         }
     }
+
+    // Add profile tab switching listeners
+    const profileTabs = document.querySelectorAll('.p-tab');
+    profileTabs.forEach(tab => {
+        tab.onclick = () => {
+            profileTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentProfileTab = tab.getAttribute('data-tab');
+            renderProfile();
+        };
+    });
 
     function formatTime(date) {
         const seconds = Math.floor((new Date() - new Date(date)) / 1000);
