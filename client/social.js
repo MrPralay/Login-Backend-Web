@@ -547,6 +547,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function prevStorySegment() {
+        if (currentStorySegmentIndex > 0) {
+            currentStorySegmentIndex--;
+            openStoryViewer();
+        } else if (currentStoryUserIndex > 0) {
+            currentStoryUserIndex--;
+            // Go to the LAST segment of the previous user
+            const prevUserGroup = activeStories[currentStoryUserIndex];
+            currentStorySegmentIndex = prevUserGroup.story.segments.length - 1;
+            openStoryViewer();
+        } else {
+            // Restart current segment if at the very beginning
+            openStoryViewer();
+        }
+    }
+
+    document.getElementById('story-next-btn').onclick = (e) => {
+        e.stopPropagation();
+        nextStorySegment();
+    };
+    document.getElementById('story-prev-btn').onclick = (e) => {
+        e.stopPropagation();
+        prevStorySegment();
+    };
+
     function closeStoryViewer() {
         if (storyTimer) clearTimeout(storyTimer);
         storyViewerModal.classList.add('hidden');
