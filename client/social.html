@@ -248,7 +248,17 @@
                         <img src="me.png" id="detail-user-pfp" alt="Pfp">
                         <b id="detail-username">priya5</b>
                     </div>
-                    <i class="fa-solid fa-ellipsis" style="cursor: pointer;"></i>
+                    <div class="detail-header-actions">
+                        <i class="fa-solid fa-ellipsis" id="post-options-btn" style="cursor: pointer;"></i>
+                        <i class="fa-solid fa-xmark" id="close-detail-btn-header" style="cursor: pointer; font-size: 1.2rem;"></i>
+                    </div>
+                    
+                    <!-- Options Menu Dropdown -->
+                    <div class="post-options-menu hidden" id="post-options-menu">
+                        <div class="option-item delete-option hidden" id="option-delete">Delete</div>
+                        <div class="option-item" id="option-copy-link">Copy Link</div>
+                        <div class="option-item cancel-option" id="option-cancel">Cancel</div>
+                    </div>
                 </header>
 
                 <div class="detail-comments-area" id="detail-comments-list">

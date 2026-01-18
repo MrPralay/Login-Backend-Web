@@ -254,14 +254,45 @@ router.get('/my-posts', protect, async (req, res) => {
     }
 });
 
-// --- GET SINGLE POST ---
+// --- GET SINGLE POST (With Privacy) ---
 router.get('/post/:id', protect, async (req, res) => {
     try {
         const post = await Post.findById(req.params.id)
-            .populate('user', 'username fullName profilePicture')
-            .populate('comments.user', 'username profilePicture');
+            .populate('user', 'username profilePicture isPrivate followers') // Need followers/isPrivate for check
+            .populate({
+                path: 'comments',
+                populate: { path: 'user', select: 'username profilePicture' }
+            });
+
         if (!post) return res.status(404).json({ message: 'Post not found' });
+
+        // Privacy Check
+        const isOwner = post.user._id.toString() === req.user._id.toString();
+        const isPublic = !post.user.isPrivate;
+        const isFollowing = post.user.followers.includes(req.user._id);
+
+        if (!isPublic && !isFollowing && !isOwner) {
+            return res.status(403).json({ message: 'This account is private' });
+        }
+
         res.json(post);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- DELETE POST ---
+router.delete('/post/:id', protect, async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) return res.status(404).json({ message: 'Post not found' });
+
+        if (post.user.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Not authorized to delete this post' });
+        }
+
+        await post.deleteOne();
+        res.json({ message: 'Post deleted successfully' });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

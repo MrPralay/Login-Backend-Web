@@ -438,7 +438,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Setup Actions
             const likeBtn = document.getElementById('detail-like-btn');
-            // Check if WE liked it (need our ID from 'me' variable)
             const isLiked = post.likes.includes(me.id || me._id);
             updateLikeBtnUI(likeBtn, isLiked);
 
@@ -457,6 +456,67 @@ document.addEventListener('DOMContentLoaded', () => {
                 link.href = post.image;
                 link.download = `post_${post._id}`;
                 link.click();
+            };
+
+            // --- HEADER ACTIONS ---
+            // Close Button
+            document.getElementById('close-detail-btn-header').onclick = () => {
+                detailModal.classList.add('hidden');
+            };
+
+            // Options Menu logic
+            const optionsBtn = document.getElementById('post-options-btn');
+            const optionsMenu = document.getElementById('post-options-menu');
+            const deleteOption = document.getElementById('option-delete');
+            const copyLinkOption = document.getElementById('option-copy-link');
+            const cancelOption = document.getElementById('option-cancel');
+
+            // Reset menu state
+            optionsMenu.classList.add('hidden');
+
+            const isOwner = post.user._id === (me.id || me._id);
+            if (isOwner) {
+                deleteOption.classList.remove('hidden');
+            } else {
+                deleteOption.classList.add('hidden');
+            }
+
+            optionsBtn.onclick = (e) => {
+                e.stopPropagation();
+                optionsMenu.classList.toggle('hidden');
+            };
+
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!optionsMenu.contains(e.target) && e.target !== optionsBtn) {
+                    optionsMenu.classList.add('hidden');
+                }
+            });
+
+            cancelOption.onclick = () => optionsMenu.classList.add('hidden');
+
+            copyLinkOption.onclick = () => {
+                const url = `${window.location.origin}/?post=${post._id}`;
+                navigator.clipboard.writeText(url).then(() => {
+                    alert('Link copied to clipboard!');
+                    optionsMenu.classList.add('hidden');
+                });
+            };
+
+            deleteOption.onclick = async () => {
+                if (!confirm('Are you sure you want to delete this post?')) return;
+                
+                try {
+                    const res = await fetch(`/api/social/post/${post._id}`, { method: 'DELETE' });
+                    if (res.ok) {
+                        detailModal.classList.add('hidden');
+                        init(); // Refresh feed/profile
+                    } else {
+                        alert('Failed to delete post');
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
             };
 
             // Comments
