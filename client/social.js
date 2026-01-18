@@ -420,6 +420,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const storyProgressBarContainer = document.querySelector('.story-progress-bar-container');
 
     function openStoryViewer() {
+        if (!me) {
+            // Lazy load 'me' if it's missing (safeguard)
+            fetch('/api/user/profile').then(res => res.json()).then(data => {
+                me = data;
+                openStoryViewer(); // Retry once loaded
+            });
+            return;
+        }
+
         const userGroup = activeStories[currentStoryUserIndex];
         const segment = userGroup.story.segments[currentStorySegmentIndex];
         
@@ -427,10 +436,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Update User Info
         document.getElementById('story-user-pfp').src = userGroup.user.profilePicture || 'me.png';
-        document.getElementById('story-username').textContent = userGroup.user.username;
+        const usernameEl = document.getElementById('story-username');
+        usernameEl.textContent = userGroup.user.username;
         document.getElementById('story-time').textContent = formatTime(segment.createdAt);
         
-        // Mark as viewed on server (Use segment.storyId)
+        // Mark as viewed on server
         markSegmentViewed(segment.storyId || userGroup.story._id, segment._id);
 
         // Update Media (Surgical removal to preserve navigation overlays)
@@ -442,15 +452,17 @@ document.addEventListener('DOMContentLoaded', () => {
             video.src = segment.media;
             video.autoplay = true;
             video.muted = false;
-            // Safeguard: Start timer after 10s if metadata fails
+            video.playsInline = true;
+
             let metadataLoaded = false;
             video.onloadedmetadata = () => {
                 metadataLoaded = true;
                 startSegmentTimer(video.duration * 1000);
             };
+            // Safeguard timer: advance after 10s if video stalls
             setTimeout(() => {
-                if (!metadataLoaded) startSegmentTimer(10000); // 10s fallback
-            }, 5000); 
+                if (!metadataLoaded) startSegmentTimer(10000);
+            }, 5000);
 
             storyMediaContainer.appendChild(video);
         } else {
@@ -468,6 +480,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateStoryInteractions() {
+        if (!me) return;
+
         const userGroup = activeStories[currentStoryUserIndex];
         const segment = userGroup.story.segments[currentStorySegmentIndex];
         const myId = me.id || me._id;
@@ -476,25 +490,28 @@ document.addEventListener('DOMContentLoaded', () => {
         // Setup Action Buttons
         const likeBtn = document.getElementById('story-like-btn');
         const isLiked = segment.likes.some(v => (v._id || v) === myId);
+        
         likeBtn.className = isLiked ? 'fa-solid fa-heart liked' : 'fa-regular fa-heart';
         likeBtn.style.color = isLiked ? '#ed4956' : '#fff';
         
-        likeBtn.onclick = async (e) => {
+        // Clear previous event listeners if any (by cloning)
+        const newLikeBtn = likeBtn.cloneNode(true);
+        likeBtn.parentNode.replaceChild(newLikeBtn, likeBtn);
+
+        newLikeBtn.onclick = async (e) => {
             e.stopPropagation();
-            // Animation
-            likeBtn.classList.add('heart-pop');
-            setTimeout(() => likeBtn.classList.remove('heart-pop'), 300);
+            newLikeBtn.classList.add('heart-pop');
+            setTimeout(() => newLikeBtn.classList.remove('heart-pop'), 400);
 
             const res = await fetch(`/api/social/story/${storyId}/segment/${segment._id}/like`, { method: 'POST' });
             const data = await res.json();
             
-            // Update local state
             if (data.liked) {
                 if (!segment.likes.some(v => (v._id || v) === myId)) segment.likes.push(myId);
             } else {
                 segment.likes = segment.likes.filter(v => (v._id || v) !== myId);
             }
-            updateStoryInteractions(); // Refresh ONLY buttons
+            updateStoryInteractions(); // Update UI state
         };
 
         // Viewer List Logic
@@ -512,32 +529,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Share Story Logic
         const shareBtn = document.getElementById('story-share-btn');
-        shareBtn.onclick = async (e) => {
+        const newShareBtn = shareBtn.cloneNode(true);
+        shareBtn.parentNode.replaceChild(newShareBtn, shareBtn);
+        
+        newShareBtn.onclick = async (e) => {
             e.stopPropagation();
-            showToast('Sharing to Feed...', 'normal');
+            showToast('Sharing story...', 'normal');
             try {
                 const res = await fetch(`/api/social/story/${storyId}/segment/${segment._id}/share`, { method: 'POST' });
                 if (res.ok) {
-                    showToast('Shared successfully!', 'success');
+                    showToast('Shared to your feed!', 'success');
                 } else {
                     showToast('Failed to share', 'error');
                 }
-            } catch (err) {
-                console.error(err);
-            }
+            } catch (err) { console.error(err); }
         };
     }
 
     function renderProgressBars(count) {
-        storyProgressBarContainer.innerHTML = '';
+        const container = document.querySelector('.story-progress-bar-container');
+        if (!container) return;
+        
+        container.innerHTML = '';
         for (let i = 0; i < count; i++) {
             const segment = document.createElement('div');
             segment.className = 'story-progress-segment';
             const fill = document.createElement('div');
             fill.className = 'story-progress-fill';
-            if (i < currentStorySegmentIndex) fill.style.width = '100%';
+            
+            if (i < currentStorySegmentIndex) {
+                fill.style.width = '100%';
+            } else {
+                fill.style.width = '0%';
+            }
+            
             segment.appendChild(fill);
-            storyProgressBarContainer.appendChild(segment);
+            container.appendChild(segment);
         }
     }
 
