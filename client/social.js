@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // UI Elements
     const navItems = document.querySelectorAll('.nav-item');
     const feedContainer = document.getElementById('feed-container');
-    const searchInput = document.getElementById('search-input');
     const storiesRow = document.getElementById('stories-container');
     const requestsList = document.getElementById('follow-requests-list');
     const suggestionsList = document.getElementById('suggestions-list');
@@ -31,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadStories();
                 loadRequests();
                 loadSuggestions();
-                loadContacts();
             } else {
                 window.location.href = '/';
             }
@@ -73,6 +71,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 setModal.classList.remove('hidden');
             } else if (tabId === 'home') {
                 loadFeed();
+            } else if (tabId === 'profile') {
+                // For now, settings modal can act as "edit profile" or we can show a profile view
+                setModal.classList.remove('hidden');
+            } else if (tabId === 'create') {
+                // Logic for creating a post could go here or open a modal
+                alert('Create post functionality coming soon!');
+            } else if (tabId === 'search') {
+                alert('Search functionality coming soon!');
             }
         };
     });

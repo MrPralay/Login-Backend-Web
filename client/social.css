@@ -246,16 +246,6 @@ aside {
 .nav-item.active i { color: #ff7e5f; }
 .nav-item:hover { background: #fff; }
 
-.sidebar-label {
-    display: block;
-    margin: 25px 0 10px 16px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
 /* CENTER CONTENT */
 #main-center {
     flex: 1;
