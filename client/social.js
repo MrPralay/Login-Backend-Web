@@ -320,25 +320,50 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const addStoryBtn = document.getElementById('add-story-btn');
             const addStoryPfp = document.getElementById('add-story-pfp');
+            const plusIcon = addStoryBtn.querySelector('.plus-icon');
+            
             if (me) addStoryPfp.src = me.profilePicture || 'me.png';
             
-            addStoryBtn.onclick = () => storyFileInput.click();
+            // Standard Add logic for the plus icon
+            plusIcon.onclick = (e) => {
+                e.stopPropagation();
+                storyFileInput.click();
+            };
 
             const res = await fetch('/api/social/stories');
             activeStories = await res.json();
             
+            // UNIFY: Find 'me' in activeStories
+            const myStoryIndex = activeStories.findIndex(group => group.user.username === me.username);
+            
+            if (myStoryIndex !== -1) {
+                const myGroup = activeStories[myStoryIndex];
+                // Update 'Your Story' circle with glow/faded state
+                addStoryBtn.className = `story-circle add-story ${myGroup.hasUnviewed ? 'unviewed' : 'viewed'}`;
+                addStoryBtn.onclick = () => startViewingStories(myStoryIndex);
+                
+                // We'll keep 'activeStories' as is, but we will FILTER it for the dynamic rendering
+            } else {
+                // Default Add Story state
+                addStoryBtn.className = 'story-circle add-story';
+                addStoryBtn.onclick = () => storyFileInput.click();
+            }
+
             // Clear dynamic stories (keep Add Story)
             const dynamicStories = storiesRow.querySelectorAll('.story-circle:not(.add-story)');
             dynamicStories.forEach(s => s.remove());
 
+            // Render others' stories (filter out 'me' to avoid duplicates)
             activeStories.forEach((group, index) => {
+                if (group.user.username === me.username) return; // Skip 'me' as it's handled by the static circle
+
                 const div = document.createElement('div');
                 div.className = `story-circle ${group.hasUnviewed ? 'unviewed' : 'viewed'}`;
                 div.innerHTML = `
                     <div class="story-img">
                         <img src="${group.user.profilePicture || 'me.png'}" onerror="this.src='me.png'">
                     </div>
-                    <span>${group.user.username === me.username ? 'Your Story' : group.user.username}</span>
+                    <span>${group.user.username}</span>
                 `;
                 div.onclick = () => startViewingStories(index);
                 storiesRow.appendChild(div);
@@ -428,20 +453,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Setup Action Buttons
         const likeBtn = document.getElementById('story-like-btn');
-        const isLiked = segment.likes.some(v => (v._id || v) === me._id);
+        const myId = me.id || me._id;
+        const isLiked = segment.likes.some(v => (v._id || v) === myId);
         likeBtn.className = isLiked ? 'fa-solid fa-heart liked' : 'fa-regular fa-heart';
         likeBtn.style.color = isLiked ? '#ed4956' : '#fff';
         
         likeBtn.onclick = async () => {
             const res = await fetch(`/api/social/story/${userGroup.story._id}/segment/${segment._id}/like`, { method: 'POST' });
             const data = await res.json();
-            segment.likes = data.liked ? [...segment.likes, me._id] : segment.likes.filter(id => id !== me._id);
+            // Update local state
+            if (data.liked) {
+                if (!segment.likes.some(v => (v._id || v) === myId)) segment.likes.push(myId);
+            } else {
+                segment.likes = segment.likes.filter(v => (v._id || v) !== myId);
+            }
             openStoryViewer(); // Refresh UI
         };
 
         // Viewer List Logic
         const viewersBtn = document.getElementById('story-viewers-btn');
-        if (userGroup.user._id === me._id) {
+        if (userGroup.user._id === myId) {
             viewersBtn.classList.remove('hidden');
             document.getElementById('story-viewers-count').textContent = `${segment.views.length} viewers`;
             viewersBtn.onclick = () => showViewersOverlay(userGroup.story._id);
@@ -450,19 +481,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Share Story Logic
-        document.getElementById('story-share-btn').onclick = async () => {
+        const shareBtn = document.getElementById('story-share-btn');
+        shareBtn.onclick = async () => {
             if (storyTimer) clearTimeout(storyTimer); // Pause
-            if (confirm('Share this story to your feed?')) {
-                try {
-                    const res = await fetch(`/api/social/story/${userGroup.story._id}/segment/${segment._id}/share`, { method: 'POST' });
-                    if (res.ok) {
-                        showToast('Story shared to your feed!', 'success');
-                    } else {
-                        showToast('Failed to share story', 'error');
-                    }
-                } catch (err) {
-                    console.error(err);
+            
+            showToast('Sharing to feed...', 'normal');
+            try {
+                const res = await fetch(`/api/social/story/${userGroup.story._id}/segment/${segment._id}/share`, { method: 'POST' });
+                if (res.ok) {
+                    showToast('Story shared to your feed!', 'success');
+                } else {
+                    showToast('Failed to share story', 'error');
                 }
+            } catch (err) {
+                console.error(err);
             }
             openStoryViewer(); // Resume/Restart
         };
