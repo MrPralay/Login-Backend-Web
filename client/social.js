@@ -17,14 +17,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileContentArea = document.getElementById('profile-content-area');
 
     let me = null;
+    let myPosts = [];
 
     // --- INITIALIZATION ---
     async function init() {
         showLoading(true);
         try {
-            const res = await fetch('/api/user/profile');
-            if (res.ok) {
-                me = await res.json();
+            const [pRes, postsRes] = await Promise.all([
+                fetch('/api/user/profile'),
+                fetch('/api/social/my-posts')
+            ]);
+
+            if (pRes.ok) {
+                me = await pRes.json();
+                if (postsRes.ok) myPosts = await postsRes.json();
+                
                 updateMeUI();
                 loadFeed();
                 loadStories();
@@ -239,17 +246,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentProfileTab = 'posts';
 
     async function renderProfile() {
-        // Remove loading text as requested
+        // Use cached data to avoid delay
         profileContentArea.innerHTML = '';
         
         try {
             if (currentProfileTab === 'posts') {
-                const res = await fetch('/api/social/my-posts'); 
-                let posts = [];
-                if (res.ok) {
-                    posts = await res.json();
-                }
-                
+                const posts = myPosts;
                 mePostsCount.textContent = posts.length;
 
                 if (posts.length === 0) {
