@@ -291,24 +291,43 @@
         </div>
     </div>
 
-    <!-- Post Creation Modal -->
+    <!-- Post Creation Modal (Professional) -->
     <div id="create-post-modal" class="hidden">
-        <div class="modal-card post-creation-card">
+        <div class="modal-card post-creation-card professional-create">
             <header>
                 <i class="fa-solid fa-arrow-left" id="back-create-post"></i>
                 <h3>Create New Post</h3>
                 <button id="share-post-btn">Share</button>
             </header>
-            <div class="modal-body post-modal-body">
-                <div class="media-preview-area" id="media-preview">
+            <div class="modal-body post-modal-body split-view">
+                <div class="create-media-pane" id="media-preview">
                     <!-- Preview will be injected here -->
                 </div>
-                <div class="post-details-area">
+                <div class="create-details-pane">
                     <div class="mini-profile-row">
                         <img src="me.png" id="modal-me-pfp" alt="Pfp">
                         <b id="modal-me-username">priya5</b>
                     </div>
                     <textarea id="post-caption" placeholder="Write a caption..."></textarea>
+                    
+                    <div class="create-fields">
+                        <div class="field-row"><i class="fa-solid fa-heading"></i><input type="text" id="post-title" placeholder="Add Title"></div>
+                        <div class="field-row"><i class="fa-solid fa-location-dot"></i><input type="text" id="post-location" placeholder="Add Location"></div>
+                        <div class="field-row"><i class="fa-solid fa-hashtag"></i><input type="text" id="post-hashtags" placeholder="Hashtags"></div>
+                    </div>
+
+                    <div class="create-security-section">
+                        <div class="security-header">
+                            <div class="sec-label"><i class="fa-solid fa-lock"></i> Locked Content</div>
+                            <label class="switch">
+                                <input type="checkbox" id="post-lock-toggle">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div id="post-lock-input-area" class="hidden" style="margin-top: 10px;">
+                            <input type="password" id="post-passcode" placeholder="Set 4-digit Passcode" maxlength="4" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px;">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

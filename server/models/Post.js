@@ -15,6 +15,11 @@ const postSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
+    title: { type: String, trim: true },
+    location: { type: String, trim: true },
+    hashtags: [{ type: String }],
+    isLocked: { type: Boolean, default: false },
+    passcode: { type: String, default: null },
     likes: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'

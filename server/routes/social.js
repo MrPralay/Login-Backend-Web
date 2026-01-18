@@ -228,13 +228,19 @@ router.post('/chat-lock', protect, async (req, res) => {
 });
 
 // --- CREATE POST ---
+// --- CREATE POST ---
 router.post('/post', protect, async (req, res) => {
     try {
-        const { content, image } = req.body;
+        const { content, image, title, location, hashtags, isLocked, passcode } = req.body;
         const newPost = new Post({
             user: req.user._id,
             content,
-            image
+            image,
+            title,
+            location,
+            hashtags,
+            isLocked,
+            passcode
         });
         await newPost.save();
         res.status(201).json(newPost);
@@ -276,7 +282,32 @@ router.get('/post/:id', protect, async (req, res) => {
             return res.status(403).json({ message: 'This account is private' });
         }
 
+        // Locked Content Check
+        if (post.isLocked && !isOwner) {
+            post.image = null; // Redact image
+            // We keep title/content visible? Plan said "Locked Content placeholder". 
+            // Usually we hide the image but maybe show minimal info.
+            // Let's redact image. The frontend handles the "Locked" overlay using isLocked flag.
+        }
+
         res.json(post);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- UNLOCK POST ---
+router.post('/post/:id/unlock', protect, async (req, res) => {
+    try {
+        const { passcode } = req.body;
+        const post = await Post.findById(req.params.id);
+        if (!post) return res.status(404).json({ message: 'Post not found' });
+
+        if (post.passcode === passcode) {
+            return res.json({ success: true, image: post.image });
+        } else {
+            return res.status(401).json({ success: false, message: 'Incorrect passcode' });
+        }
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -344,12 +375,22 @@ router.post('/post/:id/comment', protect, async (req, res) => {
 });
 
 // --- GET GLOBAL FEED ---
+// --- GET GLOBAL FEED ---
 router.get('/feed', protect, async (req, res) => {
     try {
-        const posts = await Post.find()
+        let posts = await Post.find()
             .populate('user', 'username fullName profilePicture')
             .sort({ createdAt: -1 })
             .limit(50);
+        
+        // Redact locked posts
+        posts = posts.map(post => {
+            if (post.isLocked && post.user._id.toString() !== req.user._id.toString()) {
+                post.image = null; 
+            }
+            return post;
+        });
+
         res.json(posts);
     } catch (err) {
         res.status(500).json({ error: err.message });

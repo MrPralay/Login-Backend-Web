@@ -1222,10 +1222,131 @@ input:checked + .slider:before {
     z-index: 10;
     overflow: hidden;
 }
+/* Professional Create Post Modal */
+.post-creation-card.professional-create {
+    width: 900px; /* Same as detail view */
+    max-width: 95vw;
+    height: 80vh;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+}
 
-.story-progress-bar {
-    height: 100%;
+.post-modal-body.split-view {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    padding: 0; /* Remove default padding */
+}
+
+.create-media-pane {
+    flex: 1.5;
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-right: 1px solid var(--border);
+}
+
+.create-media-pane img, .create-media-pane video {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* Controlled size */
+}
+
+.create-details-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
     background: #fff;
-    width: 0;
-    transition: width 0.1s linear;
+    overflow-y: auto;
+}
+
+.create-details-pane #post-caption {
+    width: 100%;
+    border: none;
+    resize: none;
+    font-size: 1rem;
+    outline: none;
+    flex: 0 0 auto;
+    min-height: 100px;
+    margin-bottom: 20px;
+}
+
+.create-fields {
+    border-top: 1px solid var(--border);
+    padding-top: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.field-row {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    padding: 10px 0;
+}
+
+.field-row i {
+    width: 30px;
+    color: var(--text-dim);
+    font-size: 1.1rem;
+}
+
+.field-row input {
+    border: none;
+    outline: none;
+    font-size: 0.95rem;
+    flex: 1;
+    color: var(--text-main);
+}
+
+/* Security Section */
+.create-security-section {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border);
+}
+
+.security-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sec-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+/* Locked Post Placeholder in Grid */
+.has-lock-overlay {
+    position: relative;
+    /* ensure parent has relative */
+}
+
+.locked-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    gap: 10px;
+    backdrop-filter: blur(5px);
+}
+
+.locked-overlay i {
+    font-size: 2rem;
+}
+
+.locked-overlay span {
+    font-size: 0.9rem;
+    font-weight: 600;
 }

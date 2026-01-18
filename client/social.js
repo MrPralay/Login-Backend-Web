@@ -26,6 +26,24 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedFileBase64 = null;
 
     // --- POST CREATION LOGIC ---
+    // --- POST CREATION LOGIC ---
+    // New Inputs
+    const postTitle = document.getElementById('post-title');
+    const postLocation = document.getElementById('post-location');
+    const postHashtags = document.getElementById('post-hashtags');
+    const postLockToggle = document.getElementById('post-lock-toggle');
+    const postPasscode = document.getElementById('post-passcode');
+    const postLockInputArea = document.getElementById('post-lock-input-area');
+
+    // Toggle Lock UI
+    postLockToggle.onchange = (e) => {
+        if (e.target.checked) {
+            postLockInputArea.classList.remove('hidden');
+        } else {
+            postLockInputArea.classList.add('hidden');
+        }
+    };
+
     postFileInput.onchange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -47,6 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Update modal UI info
             document.getElementById('modal-me-username').textContent = me.username;
             document.getElementById('modal-me-pfp').src = me.profilePicture || 'me.png';
+            
+            // Allow clicking again
+            postFileInput.value = ''; 
+            
             createPostModal.classList.remove('hidden');
         };
         reader.readAsDataURL(file);
@@ -54,33 +76,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
     backCreatePost.onclick = () => {
         createPostModal.classList.add('hidden');
-        postFileInput.value = '';
+        postFileInput.value = ''; 
+        // Reset fields? Maybe better to keep draft or reset. Let's reset for now.
+        resetPostForm();
     };
+
+    function resetPostForm() {
+        postCaption.value = '';
+        postTitle.value = '';
+        postLocation.value = '';
+        postHashtags.value = '';
+        postPasscode.value = '';
+        postLockToggle.checked = false;
+        postLockInputArea.classList.add('hidden');
+        selectedFileBase64 = null;
+    }
 
     sharePostBtn.onclick = async () => {
         if (!selectedFileBase64) return;
         
+        // Validation for Locked
+        const isLocked = postLockToggle.checked;
+        const passcode = postPasscode.value.trim();
+        if (isLocked && passcode.length !== 4) {
+            alert('Please set a 4-digit passcode for locked posts.');
+            return;
+        }
+
         showLoading(true);
         try {
+            // Process Hashtags
+            const tags = postHashtags.value.split(/[\s,]+/).filter(t => t.trim().length > 0);
+
             const res = await fetch('/api/social/post', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     content: postCaption.value,
-                    image: selectedFileBase64 // Sending as base64
+                    image: selectedFileBase64,
+                    title: postTitle.value,
+                    location: postLocation.value,
+                    hashtags: tags,
+                    isLocked,
+                    passcode: isLocked ? passcode : null
                 })
             });
 
             if (res.ok) {
                 createPostModal.classList.add('hidden');
-                postCaption.value = '';
-                postFileInput.value = '';
+                resetPostForm();
                 // Refresh data
                 await init(); 
-                // Ensure we are viewing profile if we share from there
-                if (!profileView.classList.contains('hidden')) {
-                    renderProfile();
-                }
+                if (!profileView.classList.contains('hidden')) renderProfile();
+                if (!feedView.classList.contains('hidden')) loadFeed();
             } else {
                 alert('Failed to share post. Try a smaller file.');
             }
@@ -308,36 +356,98 @@ document.addEventListener('DOMContentLoaded', () => {
         posts.forEach(post => {
             const card = document.createElement('div');
             card.className = 'post-card';
+            
+            let mediaContent = '';
+            
+            // Locked Content Logic
+            if (post.isLocked && !post.image) {
+                mediaContent = `
+                    <div class="post-image-grid has-lock-overlay" onclick="unlockPost('${post._id}', this)">
+                        <div class="locked-overlay">
+                            <i class="fa-solid fa-lock"></i>
+                            <span>Private Content</span>
+                            <small>Tap to Unlock</small>
+                        </div>
+                        <div style="height: 300px; background: #000;"></div>
+                    </div>`;
+            } else if (post.image) {
+                // Video check
+                const isVideo = (post.image.includes('data:video') || post.image.endsWith('.mp4'));
+                mediaContent = `
+                    <div class="post-image-grid">
+                        ${isVideo 
+                            ? `<video src="${post.image}" controls></video>` 
+                            : `<img src="${post.image}">`}
+                    </div>`;
+            }
+
             card.innerHTML = `
                 <div class="post-user">
                     <img src="${post.user.profilePicture || 'me.png'}" onerror="this.src='me.png'">
                     <div class="post-user-info">
                         <b>${post.user.fullName || post.user.username}</b>
                         <span>@${post.user.username} · ${formatTime(post.createdAt)}</span>
+                        ${post.location ? `<div style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-solid fa-location-dot"></i> ${post.location}</div>` : ''}
                     </div>
                     <i class="fa-solid fa-ellipsis" style="margin-left: auto; color: #ccc; cursor: pointer;"></i>
                 </div>
-                <div class="post-content">${post.content}</div>
-                ${post.image ? `<div class="post-image-grid"><img src="${post.image}"></div>` : ''}
+                <div class="post-content">
+                    ${post.title ? `<strong>${post.title}</strong><br>` : ''}
+                    ${post.content}
+                    ${post.hashtags && post.hashtags.length > 0 ? `<br><small style="color:#0095f6;">${post.hashtags.map(t=>'#'+t).join(' ')}</small>` : ''}
+                </div>
+                ${mediaContent}
                 <div class="post-actions-elite">
                     <div class="like-btn" data-id="${post._id}">
                         <i class="fa-regular fa-heart"></i>
-                        <span>${post.likes?.length || '4.5K'}</span>
+                        <span>${post.likes?.length || '0'}</span>
                     </div>
                     <div>
                         <i class="fa-regular fa-comment"></i>
-                        <span>${post.comments?.length || '2.1K'}</span>
+                        <span>${post.comments?.length || '0'}</span>
                     </div>
-                    <div>
-                        <i class="fa-solid fa-share-nodes"></i>
-                        <span>1.7K</span>
-                    </div>
-                    <i class="fa-regular fa-bookmark" style="margin-left: auto;"></i>
                 </div>
             `;
             feedContainer.appendChild(card);
+            
+            // Events
+            const likeBtn = card.querySelector('.like-btn');
+            const isLiked = post.likes && post.likes.includes(me._id);
+            updateLikeBtnUI(likeBtn.querySelector('i'), isLiked);
+            
+            likeBtn.onclick = () => toggleLike(post._id, likeBtn);
         });
     }
+
+    // Expose unlock function to global scope (hacky but works for onclick string)
+    window.unlockPost = async (postId, element) => {
+        const passcode = prompt('Enter 4-digit passcode to unlock:');
+        if (!passcode) return;
+
+        try {
+            const res = await fetch(`/api/social/post/${postId}/unlock`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ passcode })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                // Replace content
+                const isVideo = (data.image.includes('data:video') || data.image.endsWith('.mp4'));
+                element.outerHTML = `
+                    <div class="post-image-grid">
+                        ${isVideo 
+                            ? `<video src="${data.image}" controls autoplay></video>` 
+                            : `<img src="${data.image}">`}
+                    </div>`;
+            } else {
+                alert('Incorrect passcode!');
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     let currentProfileTab = 'posts';
 
