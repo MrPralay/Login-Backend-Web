@@ -369,7 +369,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     showToast('Story added successfully!', 'success');
                     loadStories(); // Refresh
                 } else {
-                    showToast('Failed to upload story', 'error');
+                    const errorData = await res.json();
+                    showToast(errorData.error || errorData.message || 'Failed to upload story', 'error');
                 }
             } catch (err) { 
                 console.error(err); 
