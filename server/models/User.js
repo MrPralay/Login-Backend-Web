@@ -61,6 +61,21 @@ const userSchema = new mongoose.Schema({
   followRequests: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
-  }]
+  }],
+  // --- SETTINGS & SECURITY ---
+  chatLockPasscode: {
+    type: String,
+    default: null
+  },
+  isChatLocked: {
+    type: Boolean,
+    default: false
+  },
+  notificationSettings: {
+    likes: { type: Boolean, default: true },
+    comments: { type: Boolean, default: true },
+    newFollowers: { type: Boolean, default: true },
+    messages: { type: Boolean, default: true }
+  }
 });
 module.exports = mongoose.model('User', userSchema);

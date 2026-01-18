@@ -14,8 +14,8 @@
         <header id="main-header">
             <h1 class="logo">Socially</h1>
             <div class="header-actions">
-                <i class="fa-regular fa-heart"></i>
-                <i class="fa-regular fa-paper-plane"></i>
+                <i class="fa-regular fa-heart" id="header-activity"></i>
+                <i class="fa-regular fa-paper-plane" id="header-messages"></i>
             </div>
         </header>
 
@@ -60,6 +60,44 @@
                 </div>
             </section>
 
+            <!-- Activity Section (Who like me) -->
+            <section id="activity-section" class="tab-content">
+                <div class="section-header">
+                    <h2>Activity</h2>
+                </div>
+                <div class="activity-list">
+                    <div class="empty-state">
+                        <i class="fa-regular fa-heart"></i>
+                        <p>No activity yet. When someone likes your posts, you'll see it here.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Messages Section -->
+            <section id="messages-section" class="tab-content">
+                <div class="section-header">
+                    <h2>Messages</h2>
+                    <i class="fa-solid fa-lock-open" id="chat-lock-status"></i>
+                </div>
+                <div id="messages-container">
+                    <div class="chat-locked-overlay hidden" id="chat-locked-ui">
+                        <i class="fa-solid fa-lock"></i>
+                        <h3>Chats are Locked</h3>
+                        <p>Enter your 4-digit passcode to continue</p>
+                        <div class="passcode-input">
+                            <input type="password" maxlength="4" id="chat-passcode" placeholder="----">
+                        </div>
+                        <button class="btn btn-primary" id="unlock-chats-btn">Unlock</button>
+                    </div>
+                    <div class="messages-list" id="active-chats">
+                        <div class="empty-state">
+                            <i class="fa-regular fa-paper-plane"></i>
+                            <p>No messages yet. Start a conversation!</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Profile Section -->
             <section id="profile-section" class="tab-content">
                 <div id="profile-container">
@@ -93,6 +131,14 @@
                 <i class="fa-solid fa-clapperboard"></i>
                 <span class="nav-label">Reels</span>
             </div>
+            <div class="nav-item" data-tab="activity">
+                <i class="fa-regular fa-heart"></i>
+                <span class="nav-label">Activity</span>
+            </div>
+            <div class="nav-item" data-tab="messages">
+                <i class="fa-regular fa-paper-plane"></i>
+                <span class="nav-label">Messages</span>
+            </div>
             <div class="nav-item" data-tab="profile">
                 <div class="profile-nav-icon">
                     <img src="me.png" alt="P" id="nav-profile-pic">
@@ -102,7 +148,61 @@
         </nav>
     </div>
 
-    <!-- Modals / Overlays -->
+    <!-- Settings Modal/Overlay -->
+    <div id="settings-overlay" class="hidden">
+        <div class="settings-content">
+            <div class="settings-header">
+                <i class="fa-solid fa-chevron-left" id="close-settings"></i>
+                <h2>Settings</h2>
+                <span id="save-settings">Done</span>
+            </div>
+            <div class="settings-body">
+                <div class="setting-group">
+                    <h3>Account Settings</h3>
+                    <div class="setting-item">
+                        <label>Full Name</label>
+                        <input type="text" id="setting-fullname" placeholder="Full Name">
+                    </div>
+                    <div class="setting-item">
+                        <label>Bio</label>
+                        <textarea id="setting-bio" placeholder="Bio"></textarea>
+                    </div>
+                    <div class="setting-item">
+                        <label>Profile Picture URL</label>
+                        <input type="text" id="setting-pfp" placeholder="Image URL">
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <h3>Privacy & Security</h3>
+                    <div class="setting-item">
+                        <span>Private Account</span>
+                        <label class="switch">
+                            <input type="checkbox" id="setting-private">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <span>Chat Lock</span>
+                        <label class="switch">
+                            <input type="checkbox" id="setting-chat-lock">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item hidden" id="chat-passcode-setup">
+                        <label>Set 4-Digit Passcode</label>
+                        <input type="password" id="setting-chat-passcode" maxlength="4" placeholder="----">
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <button class="btn btn-danger" id="logout-btn">Log Out</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading / Overlay -->
     <div id="loading-overlay" class="hidden">
         <div class="loader"></div>
     </div>
