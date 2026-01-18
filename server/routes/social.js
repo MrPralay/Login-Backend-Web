@@ -434,24 +434,8 @@ router.post('/seed', protect, async (req, res) => {
     }
 });
 
-// --- STORIES ---
-router.post('/story', protect, async (req, res) => {
-    try {
-        const { image } = req.body;
-        const isVideo = image.includes('data:video') || image.startsWith('http') && image.endsWith('.mp4'); // Simple check
-        const newStory = new Story({
-            user: req.user._id,
-            image,
-            type: isVideo ? 'video' : 'image'
-        });
-        await newStory.save();
-        res.status(201).json(newStory);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
 // ===== STORIES API =====
+
 
 // Create new story or add segment to existing story
 router.post('/story', protect, async (req, res) => {
