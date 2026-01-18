@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sharePostBtn = document.getElementById('share-post-btn');
     const backCreatePost = document.getElementById('back-create-post');
     const postCaption = document.getElementById('post-caption');
+    const storyFileInput = document.getElementById('story-file-input');
 
     let selectedFileBase64 = null;
 
@@ -300,11 +301,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 profileView.classList.remove('hidden');
                 renderProfile();
             } else if (tabId === 'create') {
-                alert('Create post functionality coming soon!');
+                showToast('Create post functionality coming soon!');
             } else if (tabId === 'search') {
-                alert('Search functionality coming soon!');
+                showToast('Search functionality coming soon!');
             } else if (tabId === 'messenger') {
-                alert('Messenger coming soon!');
+                showToast('Messenger coming soon!');
             }
         };
     });
@@ -346,6 +347,40 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error loading stories:', err);
         }
     }
+
+    storyFileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            const base64 = ev.target.result;
+            const mediaType = file.type.startsWith('video/') ? 'video' : 'image';
+            
+            showLoading(true);
+            try {
+                const res = await fetch('/api/social/story', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ media: base64, mediaType })
+                });
+                
+                if (res.ok) {
+                    showToast('Story added successfully!', 'success');
+                    loadStories(); // Refresh
+                } else {
+                    showToast('Failed to upload story', 'error');
+                }
+            } catch (err) { 
+                console.error(err); 
+                showToast('Error uploading story', 'error');
+            } finally { 
+                showLoading(false); 
+                storyFileInput.value = ''; // Reset
+            }
+        };
+        reader.readAsDataURL(file);
+    };
 
     function startViewingStories(userIndex) {
         currentStoryUserIndex = userIndex;
@@ -891,7 +926,7 @@ document.addEventListener('DOMContentLoaded', () => {
             copyLinkOption.onclick = () => {
                 const url = `${window.location.origin}/?post=${post._id}`;
                 navigator.clipboard.writeText(url).then(() => {
-                    alert('Link copied to clipboard!');
+                    showToast('Link copied to clipboard!', 'success');
                     optionsMenu.classList.add('hidden');
                 });
             };
@@ -905,7 +940,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         detailModal.classList.add('hidden');
                         init(); // Refresh feed/profile
                     } else {
-                        alert('Failed to delete post');
+                        showToast('Failed to delete post', 'error');
                     }
                 } catch (err) {
                     console.error(err);
