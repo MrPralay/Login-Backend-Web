@@ -151,9 +151,20 @@ app.get('/private/:fileName', protectRedirect, (req, res) => {
 });
 
 app.get('/api/user/profile', protect, (req, res) => {
+    // --- REAL PROFILE UPDATE ---
+    // Returning all fields required by the Elite UI to prevent undefined errors
     res.json({
+        id: req.user._id,
         username: req.user.username,
-        bio: req.user.bio || ""
+        fullName: req.user.fullName || "",
+        bio: req.user.bio || "",
+        profilePicture: req.user.profilePicture || "",
+        location: req.user.location || "New York, USA",
+        onlineStatus: req.user.onlineStatus || "offline",
+        isPrivate: req.user.isPrivate,
+        followersCount: req.user.followers.length,
+        followingCount: req.user.following.length,
+        stories: req.user.stories || []
     });
 });
 

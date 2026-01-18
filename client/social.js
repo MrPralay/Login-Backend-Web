@@ -1,18 +1,21 @@
 document.addEventListener('DOMContentLoaded', () => {
     // UI Elements
-    const navButtons = document.querySelectorAll('.nav-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
-    const viewTitle = document.getElementById('view-title');
+    const navItems = document.querySelectorAll('.nav-item');
     const feedContainer = document.getElementById('feed-container');
-    const postContent = document.getElementById('post-content');
-    const submitPostBtn = document.getElementById('submit-post-btn');
     const searchInput = document.getElementById('search-input');
-    const searchResults = document.getElementById('search-results-container');
+    const storiesRow = document.getElementById('stories-container');
+    const requestsList = document.getElementById('follow-requests-list');
+    const suggestionsList = document.getElementById('suggestions-list');
     const loadingBar = document.getElementById('loading-bar');
+    const setModal = document.getElementById('settings-modal');
+
+    // Stats and Identifiers
     const mePfp = document.getElementById('me-pfp');
     const meName = document.getElementById('me-fullname');
-    const meHandle = document.getElementById('me-handle');
-    const setModal = document.getElementById('settings-modal');
+    const meLoc = document.getElementById('me-location');
+    const mePostsCount = document.getElementById('me-posts-count');
+    const meFollowersCount = document.getElementById('me-followers-count');
+    const meFollowingCount = document.getElementById('me-following-count');
 
     let me = null;
 
@@ -20,13 +23,15 @@ document.addEventListener('DOMContentLoaded', () => {
     async function init() {
         showLoading(true);
         try {
-            // Get current user profile
             const res = await fetch('/api/user/profile');
             if (res.ok) {
                 me = await res.json();
                 updateMeUI();
-                loadFeed(); // Default view
+                loadFeed();
+                loadStories();
+                loadRequests();
                 loadSuggestions();
+                loadContacts();
             } else {
                 window.location.href = '/';
             }
@@ -39,9 +44,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateMeUI() {
         mePfp.src = me.profilePicture || 'me.png';
-        document.querySelector('.mini-pfp').src = me.profilePicture || 'me.png';
         meName.textContent = me.fullName || me.username;
-        meHandle.textContent = `@${me.username}`;
+        meLoc.textContent = me.location || 'New York, USA';
+        mePostsCount.textContent = '245'; // Placeholder for total posts
+        meFollowersCount.textContent = formatStat(me.followersCount);
+        meFollowingCount.textContent = formatStat(me.followingCount);
+        document.getElementById('total-followers-text').textContent = formatStat(me.followersCount);
+    }
+
+    function formatStat(num) {
+        if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+        if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+        return num;
     }
 
     function showLoading(show) {
@@ -50,79 +64,160 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- NAVIGATION ---
-    navButtons.forEach(btn => {
-        btn.onclick = () => {
-            const tabId = btn.getAttribute('data-tab');
-            if (tabId) switchTab(tabId);
+    navItems.forEach(item => {
+        item.onclick = () => {
+            navItems.forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            const tabId = item.getAttribute('data-tab');
+            if (tabId === 'settings') {
+                setModal.classList.remove('hidden');
+            } else if (tabId === 'home') {
+                loadFeed();
+            }
         };
     });
 
-    function switchTab(tabId) {
-        navButtons.forEach(b => b.classList.remove('active'));
-        const activeBtn = document.querySelector(`[data-tab="${tabId}"]`);
-        if (activeBtn) activeBtn.classList.add('active');
+    // --- STORIES ---
+    async function loadStories() {
+        try {
+            storiesRow.innerHTML = `
+                <div class="story-circle add-story">
+                    <div class="story-img"><i class="fa-solid fa-plus"></i></div>
+                    <span>Add Story</span>
+                </div>`;
+            const res = await fetch('/api/social/suggestions'); // Using suggest logic to find users with stories
+            const users = await res.json();
+            users.forEach(u => {
+                if (u.profilePicture) {
+                    const div = document.createElement('div');
+                    div.className = 'story-circle';
+                    div.innerHTML = `
+                        <div class="story-img"><img src="${u.profilePicture}" onerror="this.src='me.png'"></div>
+                        <span>${u.username}</span>
+                    `;
+                    storiesRow.appendChild(div);
+                }
+            });
+        } catch (err) {}
+    }
 
-        tabContents.forEach(c => c.classList.remove('active'));
-        document.getElementById(`${tabId}-section`).classList.add('active');
+    // --- REQUESTS ---
+    async function loadRequests() {
+        try {
+            const res = await fetch('/api/social/requests');
+            const requests = await res.json();
+            document.getElementById('request-badge').textContent = requests.length;
+            requestsList.innerHTML = '';
+            requests.forEach(req => {
+                const item = document.createElement('div');
+                item.className = 'user-item-mini';
+                item.innerHTML = `
+                    <img src="${req.profilePicture || 'me.png'}">
+                    <div class="user-info-text">
+                        <b>${req.fullName || req.username}</b>
+                        <span>${req.location || 'NYC'} wants to add you</span>
+                        <div class="request-actions">
+                            <button class="btn-accept" data-id="${req._id}">Accept</button>
+                            <button class="btn-decline" data-id="${req._id}">Decline</button>
+                        </div>
+                    </div>
+                `;
+                requestsList.appendChild(item);
+            });
 
-        // Update Title & Content
-        viewTitle.textContent = tabId.charAt(0).toUpperCase() + tabId.slice(1);
-        if (tabId === 'home') {
-            loadFeed();
-            document.getElementById('create-post-container').classList.remove('hidden');
-        } else {
-            document.getElementById('create-post-container').classList.add('hidden');
-        }
+            // Action listeners
+            requestsList.querySelectorAll('button').forEach(btn => {
+                btn.onclick = async () => {
+                    const action = btn.classList.contains('btn-accept') ? 'accept' : 'decline';
+                    const id = btn.getAttribute('data-id');
+                    await fetch(`/api/social/requests/${id}/${action}`, { method: 'POST' });
+                    loadRequests();
+                    init(); // Refresh following counts
+                };
+            });
+        } catch (err) {}
+    }
 
-        if (tabId === 'profile') loadUserProfile(me.username, 'profile-display');
+    // --- SUGGESTIONS ---
+    async function loadSuggestions() {
+        try {
+            const res = await fetch('/api/social/suggestions');
+            const users = await res.json();
+            suggestionsList.innerHTML = '';
+            users.slice(0, 5).forEach(u => {
+                const div = document.createElement('div');
+                div.className = 'user-item-mini';
+                div.innerHTML = `
+                    <img src="${u.profilePicture || 'me.png'}">
+                    <div class="user-info-text">
+                        <b>${u.fullName || u.username}</b>
+                        <span>${u.location || 'USA'}</span>
+                    </div>
+                    <i class="fa-solid fa-plus btn-follow-add" data-id="${u._id}"></i>
+                `;
+                suggestionsList.appendChild(div);
+            });
+
+            suggestionsList.querySelectorAll('.btn-follow-add').forEach(btn => {
+                btn.onclick = async () => {
+                    const id = btn.getAttribute('data-id');
+                    await fetch(`/api/social/follow/${id}`, { method: 'POST' });
+                    loadSuggestions();
+                };
+            });
+        } catch (err) {}
     }
 
     // --- FEED LOGIC ---
     async function loadFeed() {
-        feedContainer.innerHTML = '<div class="empty-state"><p>Loading feed...</p></div>';
+        feedContainer.innerHTML = '<div class="empty-state"><p>Loading elite feed...</p></div>';
         try {
             const res = await fetch('/api/social/feed');
             const posts = await res.json();
-            renderPosts(posts, feedContainer);
+            renderPostsElite(posts);
         } catch (err) {
             console.error(err);
         }
     }
 
-    function renderPosts(posts, container) {
+    function renderPostsElite(posts) {
         if (posts.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <i class="fa-solid fa-wind"></i>
-                    <p>It's quiet here. Following more people to see what's happening!</p>
-                </div>`;
+            feedContainer.innerHTML = '<div class="empty-state"><p>No posts to show.</p></div>';
             return;
         }
 
-        container.innerHTML = '';
+        feedContainer.innerHTML = '';
         posts.forEach(post => {
             const card = document.createElement('div');
             card.className = 'post-card';
             card.innerHTML = `
-                <img src="${post.user.profilePicture || 'me.png'}" class="post-pfp" onerror="this.src='me.png'">
-                <div class="post-body">
-                    <div class="post-header">
-                        <span class="post-name">${post.user.fullName || post.user.username}</span>
-                        <span class="post-handle">@${post.user.username}</span>
-                        <span class="post-time">· ${formatTime(post.createdAt)}</span>
+                <div class="post-user">
+                    <img src="${post.user.profilePicture || 'me.png'}" onerror="this.src='me.png'">
+                    <div class="post-user-info">
+                        <b>${post.user.fullName || post.user.username}</b>
+                        <span>@${post.user.username} · ${formatTime(post.createdAt)}</span>
                     </div>
-                    <div class="post-content">${post.content}</div>
-                    ${post.image ? `<img src="${post.image}" class="post-image" onerror="this.style.display='none'">` : ''}
-                    <div class="post-actions">
-                        <div><i class="fa-regular fa-comment"></i> <span>0</span></div>
-                        <div><i class="fa-solid fa-retweet"></i> <span>0</span></div>
-                        <div class="like-btn" data-id="${post._id}"><i class="fa-regular fa-heart"></i> <span>${post.likes?.length || 0}</span></div>
-                        <div><i class="fa-solid fa-chart-simple"></i> <span>0</span></div>
-                        <div><i class="fa-regular fa-share-from-square"></i></div>
+                    <i class="fa-solid fa-ellipsis" style="margin-left: auto; color: #ccc; cursor: pointer;"></i>
+                </div>
+                <div class="post-content">${post.content}</div>
+                ${post.image ? `<div class="post-image-grid"><img src="${post.image}"></div>` : ''}
+                <div class="post-actions-elite">
+                    <div class="like-btn" data-id="${post._id}">
+                        <i class="fa-regular fa-heart"></i>
+                        <span>${post.likes?.length || '4.5K'}</span>
                     </div>
+                    <div>
+                        <i class="fa-regular fa-comment"></i>
+                        <span>${post.comments?.length || '2.1K'}</span>
+                    </div>
+                    <div>
+                        <i class="fa-solid fa-share-nodes"></i>
+                        <span>1.7K</span>
+                    </div>
+                    <i class="fa-regular fa-bookmark" style="margin-left: auto;"></i>
                 </div>
             `;
-            container.appendChild(card);
+            feedContainer.appendChild(card);
         });
     }
 
@@ -136,151 +231,33 @@ document.addEventListener('DOMContentLoaded', () => {
         return new Date(date).toLocaleDateString();
     }
 
-    // --- POSTING LOGIC ---
-    postContent.oninput = () => {
-        submitPostBtn.disabled = !postContent.value.trim();
-        postContent.style.height = 'auto';
-        postContent.style.height = postContent.scrollHeight + 'px';
-    };
-
-    submitPostBtn.onclick = async () => {
-        const content = postContent.value.trim();
-        if (!content) return;
-
-        showLoading(true);
-        try {
-            const res = await fetch('/api/social/post', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content })
-            });
-
-            if (res.ok) {
-                postContent.value = '';
-                submitPostBtn.disabled = true;
-                loadFeed();
-            }
-        } catch (err) {
-            console.error(err);
-        } finally {
-            showLoading(false);
-        }
-    };
-
-    // --- SEARCH LOGIC ---
-    let searchTimeout;
-    searchInput.oninput = () => {
-        clearTimeout(searchTimeout);
-        const q = searchInput.value.trim();
-        if (!q) {
-            searchResults.innerHTML = '';
-            return;
-        }
-
-        searchTimeout = setTimeout(async () => {
-            const res = await fetch(`/api/social/search?q=${q}`);
-            const users = await res.json();
-            renderSearchResults(users);
-        }, 300);
-    };
-
-    function renderSearchResults(users) {
-        searchResults.innerHTML = '';
-        users.forEach(user => {
-            const item = document.createElement('div');
-            item.className = 'user-pill'; // We can add specific styling or reuse card-list items
-            item.innerHTML = `
-                <img src="${user.profilePicture || 'me.png'}" class="mini-pfp" onerror="this.src='me.png'">
-                <div class="pill-cnt">
-                    <p><b>${user.fullName || user.username}</b></p>
-                    <p>@${user.username}</p>
-                </div>
-                <button class="follow-btn-mini">Follow</button>
+    // --- CONTACTS ---
+    function loadContacts() {
+        const contactsList = document.getElementById('contacts-list');
+        const demoContacts = [
+            { name: 'Libby Katti', loc: 'Bowling Green, KY', img: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100' },
+            { name: 'Chris Manning', loc: 'Austin, Texas', img: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100' }
+        ];
+        contactsList.innerHTML = '';
+        demoContacts.forEach(c => {
+            const div = document.createElement('div');
+            div.className = 'user-item-mini';
+            div.innerHTML = `
+                <img src="${c.img}">
+                <div class="user-info-text"><b>${c.name}</b><span>${c.loc}</span></div>
+                <i class="fa-regular fa-comment-dots" style="color: #ff7e5f;"></i>
             `;
-            item.onclick = (e) => {
-                if(e.target.tagName !== 'BUTTON') viewOtherProfile(user.username);
-            };
-            searchResults.appendChild(item);
+            contactsList.appendChild(div);
         });
     }
 
-    // --- PROFILE VIEWS ---
-    async function loadUserProfile(username, targetId) {
-        showLoading(true);
-        try {
-            const res = await fetch(`/api/social/profile/${username}`);
-            const profile = await res.json();
-            renderProfileUI(profile, document.getElementById(targetId));
-        } catch (err) {
-            console.error(err);
-        } finally {
-            showLoading(false);
-        }
-    }
-
-    function renderProfileUI(profile, container) {
-        const isMe = profile.username === me.username;
-        container.innerHTML = `
-            <div class="profile-hero">
-                <div class="banner"></div>
-                <img src="${profile.profilePicture || 'me.png'}" class="p-image" onerror="this.src='me.png'">
-                ${isMe ? 
-                    `<button class="edit-prof-btn" onclick="document.getElementById('settings-modal').classList.remove('hidden')">Edit profile</button>` :
-                    `<button class="edit-prof-btn">${profile.isFollowing ? 'Following' : 'Follow'}</button>`
-                }
-            </div>
-            <div class="p-info">
-                <h1>${profile.fullName || profile.username}</h1>
-                <span>@${profile.username}</span>
-                <p class="p-bio">${profile.bio || 'Setting the trend for the high elite connection. 💎'}</p>
-                <div class="p-stats">
-                    <span><b>${profile.followingCount}</b> Following</span>
-                    <span><b>${profile.followersCount}</b> Followers</span>
-                </div>
-            </div>
-            <div id="${profile.username}-posts">
-                <!-- User posts will load here -->
-            </div>
-        `;
-    }
-
-    function viewOtherProfile(username) {
-        switchTab('user-profile-section');
-        loadUserProfile(username, 'user-profile-section');
-    }
-
-    // --- SUGGESTIONS ---
-    async function loadSuggestions() {
-        const list = document.getElementById('suggestions-list');
-        try {
-            const res = await fetch('/api/social/search?q=a'); // Just get some random users
-            const users = await res.json();
-            list.innerHTML = '';
-            users.slice(0, 3).forEach(u => {
-                const item = document.createElement('div');
-                item.className = 'suggestion-item';
-                item.innerHTML = `
-                   <img src="${u.profilePicture || 'me.png'}" onerror="this.src='me.png'">
-                   <div class="s-info">
-                       <p><b>${u.fullName || u.username}</b></p>
-                       <p>@${u.username}</p>
-                   </div>
-                   <button>Follow</button>
-                `;
-                item.onclick = () => viewOtherProfile(u.username);
-                list.appendChild(item);
-            });
-        } catch (err) {}
-    }
-
-    // --- SETTINGS ---
+    // --- SETTINGS MGT ---
     document.getElementById('close-settings').onclick = () => setModal.classList.add('hidden');
     document.getElementById('save-settings-btn').onclick = async () => {
         const data = {
             fullName: document.getElementById('set-fullname').value,
             bio: document.getElementById('set-bio').value,
-            profilePicture: document.getElementById('set-pfp').value,
-            isPrivate: document.getElementById('set-private').checked
+            profilePicture: document.getElementById('set-pfp').value
         };
         showLoading(true);
         await fetch('/api/social/settings', {
