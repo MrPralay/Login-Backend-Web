@@ -50,16 +50,19 @@
         <main id="main-center">
             <div id="feed-view">
                 <div class="section-header">
-                    <h2>Storise</h2>
+                    <h2>Stories</h2>
                     <a href="#">Watch All</a>
                 </div>
 
                 <div class="stories-row" id="stories-container">
-                    <div class="story-circle add-story">
+                    <div class="story-circle add-story" id="add-story-btn">
                         <div class="story-img">
-                            <i class="fa-solid fa-plus"></i>
+                            <img src="me.png" id="add-story-pfp" alt="Me">
+                            <div class="plus-icon">
+                                <i class="fa-solid fa-plus"></i>
+                            </div>
                         </div>
-                        <span>Add Story</span>
+                        <span>Your Story</span>
                     </div>
                     <!-- Dynamic stories go here -->
                 </div>
@@ -387,6 +390,35 @@
             </header>
             <div class="story-media-container" id="story-media-container">
                 <!-- Media Injected -->
+            </div>
+            
+            <footer class="story-footer">
+                <div class="story-actions-row">
+                    <div class="story-input-wrap">
+                        <input type="text" placeholder="Send message..." id="story-reply-input">
+                    </div>
+                    <div class="story-action-btns">
+                        <i class="fa-regular fa-heart" id="story-like-btn"></i>
+                        <i class="fa-regular fa-paper-plane" id="story-share-btn"></i>
+                    </div>
+                </div>
+                <div class="story-viewers-summary hidden" id="story-viewers-btn">
+                    <i class="fa-solid fa-eye"></i>
+                    <span id="story-viewers-count">0 viewers</span>
+                </div>
+            </footer>
+
+            <!-- Viewers List Overlay -->
+            <div id="story-viewers-overlay" class="hidden">
+                <div class="viewers-card">
+                    <header>
+                        <h3>Viewers</h3>
+                        <i class="fa-solid fa-xmark" id="close-viewers-btn"></i>
+                    </header>
+                    <div class="viewers-list" id="story-viewers-list">
+                        <!-- Viewers injected here -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -430,26 +430,77 @@ aside {
 .story-circle {
     min-width: 65px;
     text-align: center;
-}
-
-.story-img {
-    width: 65px;
-    height: 65px;
-    border-radius: 50%;
-    padding: 3px;
-    border: 2px solid #ff7e5f;
     cursor: pointer;
 }
 
-.story-img img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-.story-circle span { font-size: 0.75rem; display: block; margin-top: 5px; color: var(--text-muted); }
-
-.story-circle.add-story .story-img {
-    border: 2px dashed #ccc;
+.story-img {
+    width: 66px;
+    height: 66px;
+    border-radius: 50%;
+    position: relative;
+    padding: 3px;
+    background: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #999;
+    margin: 0 auto;
+}
+
+/* Instagram-like Glowing Border */
+.story-circle.unviewed .story-img {
+    background: linear-gradient(#fff, #fff) padding-box,
+                linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%) border-box;
+    border: 3px solid transparent;
+}
+
+.story-circle.viewed .story-img {
+    background: #fff padding-box, #dbdbdb border-box;
+    border: 2px solid transparent;
+}
+
+.story-img img { 
+    width: 100%; 
+    height: 100%; 
+    border-radius: 50%; 
+    object-fit: cover; 
+    border: 2px solid #fff;
+}
+
+.story-circle span { 
+    font-size: 0.7rem; 
+    display: block; 
+    margin-top: 5px; 
+    color: var(--text-main);
+    max-width: 75px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Add Story Plus Icon at 5 o'clock */
+.story-circle.add-story .story-img {
+    border: none;
+    padding: 0;
+}
+
+.story-circle.add-story .plus-icon {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: #0095f6;
+    color: #fff;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    border: 2px solid #fff;
+}
+
+.story-circle.add-story .story-img img {
+    border: none;
 }
 
 /* FEED TABS */
@@ -1496,4 +1547,146 @@ input:checked + .slider:before {
 
 @keyframes slideOut {
     to { transform: translateX(120%); opacity: 0; }
+}
+
+/* --- STORY VIEWER ENHANCEMENTS --- */
+#story-viewer-modal {
+    background: rgba(0,0,0,0.95);
+    z-index: 3000;
+}
+
+.story-viewer-content {
+    max-width: 450px;
+    height: 95vh;
+    margin: 2.5vh auto;
+    background: #000;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.story-progress-bar-container {
+    padding: 10px;
+    display: flex;
+    gap: 4px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10;
+}
+
+.story-progress-segment {
+    flex: 1;
+    height: 2px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.story-progress-fill {
+    height: 100%;
+    background: #fff;
+    width: 0%;
+}
+
+.story-header {
+    background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
+    padding: 20px 15px;
+}
+
+.story-footer {
+    padding: 15px;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
+
+.story-actions-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.story-input-wrap {
+    flex: 1;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.5);
+    border-radius: 25px;
+    padding: 8px 15px;
+}
+
+.story-input-wrap input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #fff;
+    width: 100%;
+    font-size: 0.9rem;
+}
+
+.story-action-btns {
+    display: flex;
+    gap: 15px;
+    color: #fff;
+    font-size: 1.4rem;
+}
+
+.story-viewers-summary {
+    margin-top: 15px;
+    color: #fff;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+/* Viewers Overlay */
+#story-viewers-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 100;
+    display: flex;
+    align-items: flex-end;
+}
+
+.viewers-card {
+    width: 100%;
+    background: #fff;
+    border-radius: 15px 15px 0 0;
+    padding: 20px;
+    color: #000;
+    max-height: 60%;
+    overflow-y: auto;
+}
+
+.viewers-card header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.viewers-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.viewer-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.viewer-item img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
 }
