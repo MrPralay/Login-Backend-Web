@@ -1405,6 +1405,39 @@ input:checked + .slider:before {
 .toast-notification.success i { color: #28a745; }
 .toast-notification.error i { color: #dc3545; }
 
+/* Create Modal Footer */
+.create-actions-footer {
+    margin-top: auto; /* Push to bottom */
+    padding-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn-cancel {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 16px;
+    font-size: 0.95rem;
+}
+.btn-cancel:hover {
+    color: var(--text-muted);
+}
+
+.btn-share {
+    background: var(--accent-gradient);
+    color: white;
+    border: none;
+    padding: 8px 24px;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
 @keyframes slideIn {
     to { transform: translateX(0); }
 }

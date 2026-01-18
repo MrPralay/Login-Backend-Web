@@ -299,10 +299,7 @@
                     <i class="fa-solid fa-arrow-left" id="back-create-post"></i>
                     <h3>Create New Post</h3>
                 </div>
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <button id="share-post-btn">Share</button>
-                    <i class="fa-solid fa-xmark" id="close-create-post-btn" style="font-size: 1.5rem; cursor: pointer;"></i>
-                </div>
+                <!-- Buttons moved to footer -->
             </header>
             <div class="modal-body post-modal-body split-view">
                 <div class="create-media-pane" id="media-preview">
@@ -310,29 +307,61 @@
                 </div>
                 <div class="create-details-pane">
                     <div class="mini-profile-row">
-                        <img src="me.png" id="modal-me-pfp" alt="Pfp">
-                        <b id="modal-me-username">priya5</b>
+                        <img id="modal-me-pfp" src="me.png">
+                        <b id="modal-me-username">username</b>
                     </div>
+                    
                     <textarea id="post-caption" placeholder="Write a caption..."></textarea>
                     
-                    <div class="create-fields">
-                        <div class="field-row"><i class="fa-solid fa-heading"></i><input type="text" id="post-title" placeholder="Add Title"></div>
-                        <div class="field-row"><i class="fa-solid fa-location-dot"></i><input type="text" id="post-location" placeholder="Add Location"></div>
-                        <div class="field-row"><i class="fa-solid fa-hashtag"></i><input type="text" id="post-hashtags" placeholder="Hashtags"></div>
+                    <div class="create-meta-inputs">
+                        <div class="meta-field">
+                            <i class="fa-solid fa-heading"></i>
+                            <input type="text" id="post-title" placeholder="Add Title">
+                        </div>
+                        <div class="meta-field">
+                            <i class="fa-solid fa-location-dot"></i>
+                            <input type="text" id="post-location" placeholder="Add Location">
+                        </div>
+                        <div class="meta-field">
+                            <i class="fa-solid fa-hashtag"></i>
+                            <input type="text" id="post-hashtags" placeholder="Hashtags">
+                        </div>
                     </div>
 
+                    <!-- Security Section -->
                     <div class="create-security-section">
                         <div class="security-header">
-                            <div class="sec-label"><i class="fa-solid fa-lock"></i> Locked Content</div>
+                            <div class="sec-label">
+                                <i class="fa-solid fa-lock"></i> Locked Content
+                            </div>
                             <label class="switch">
                                 <input type="checkbox" id="post-lock-toggle">
                                 <span class="slider round"></span>
                             </label>
                         </div>
-                        <div id="post-lock-input-area" class="hidden" style="margin-top: 10px;">
-                            <input type="password" id="post-passcode" placeholder="Set 4-digit Passcode" maxlength="4" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px;">
+                        
+                        <div id="post-lock-input-area" class="hidden" style="margin-top: 15px;">
+                            <!-- Input State -->
+                            <div id="passcode-input-group" style="display: flex; gap: 10px;">
+                                <input type="number" id="post-passcode" placeholder="Set 4-digit code" 
+                                    style="flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-secondary); color: var(--text-main);">
+                                <button id="btn-set-passcode" style="padding: 0 15px; border-radius: 4px; background: var(--accent-gradient); color: white; border: none; cursor: pointer;">Set</button>
+                            </div>
+                            
+                            <!-- Set State (Hidden by default) -->
+                            <div id="passcode-set-display" class="hidden" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(40,167,69,0.1); border-radius: 4px; border: 1px solid #28a745;">
+                                <span style="color: #28a745; font-weight: 500;"><i class="fa-solid fa-check-circle"></i> Passcode Set</span>
+                                <button id="btn-change-passcode" style="background: none; border: none; color: var(--text-muted); text-decoration: underline; cursor: pointer; font-size: 0.85rem;">Change</button>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Footer Actions -->
+                    <div class="create-actions-footer">
+                        <button id="close-footer-btn" class="btn-cancel">Cancel</button>
+                        <button id="share-footer-btn" class="btn-share">Share</button>
+                    </div>
+
                 </div>
             </div>
         </div>

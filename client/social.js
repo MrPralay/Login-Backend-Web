@@ -53,9 +53,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const postLocation = document.getElementById('post-location');
     const postHashtags = document.getElementById('post-hashtags');
     const postLockToggle = document.getElementById('post-lock-toggle');
+    
+    // Passcode Logic Elements
     const postPasscode = document.getElementById('post-passcode');
     const postLockInputArea = document.getElementById('post-lock-input-area');
-    const closeCreatePostBtn = document.getElementById('close-create-post-btn');
+    const btnSetPasscode = document.getElementById('btn-set-passcode');
+    const btnChangePasscode = document.getElementById('btn-change-passcode');
+    const passcodeSetDisplay = document.getElementById('passcode-set-display');
+    const passcodeInputGroup = document.getElementById('passcode-input-group');
+    
+    // Footer Buttons
+    const closeFooterBtn = document.getElementById('close-footer-btn');
+    const shareFooterBtn = document.getElementById('share-footer-btn');
+
+    let currentPasscodeValue = null;
 
     // Toggle Lock UI
     postLockToggle.onchange = (e) => {
@@ -63,7 +74,30 @@ document.addEventListener('DOMContentLoaded', () => {
             postLockInputArea.classList.remove('hidden');
         } else {
             postLockInputArea.classList.add('hidden');
+            // Reset passcode state if unchecked? User might want to keep it.
+            // Let's keep data but hide UI.
         }
+    };
+
+    // Set Passcode Logic
+    btnSetPasscode.onclick = () => {
+        const code = postPasscode.value.trim();
+        if (code.length !== 4 || isNaN(code)) {
+            showToast('Passcode must be 4 digits', 'error');
+            return;
+        }
+        currentPasscodeValue = code;
+        passcodeInputGroup.classList.add('hidden');
+        passcodeSetDisplay.classList.remove('hidden');
+        showToast('Passcode set successfully', 'success');
+    };
+
+    // Change Passcode Logic
+    btnChangePasscode.onclick = () => {
+        currentPasscodeValue = null;
+        postPasscode.value = '';
+        passcodeInputGroup.classList.remove('hidden');
+        passcodeSetDisplay.classList.add('hidden');
     };
 
     postFileInput.onchange = (e) => {
@@ -103,28 +137,36 @@ document.addEventListener('DOMContentLoaded', () => {
         resetPostForm();
     };
     backCreatePost.onclick = closeCreateLogic;
-    closeCreatePostBtn.onclick = closeCreateLogic;
+    closeFooterBtn.onclick = closeCreateLogic;
 
     function resetPostForm() {
         postCaption.value = '';
         postTitle.value = '';
         postLocation.value = '';
         postHashtags.value = '';
+        
+        // Reset Passcode Logic
         postPasscode.value = '';
+        currentPasscodeValue = null;
         postLockToggle.checked = false;
         postLockInputArea.classList.add('hidden');
+        passcodeInputGroup.classList.remove('hidden');
+        passcodeSetDisplay.classList.add('hidden');
+        
         selectedFileBase64 = null;
     }
 
-    sharePostBtn.onclick = async () => {
+    shareFooterBtn.onclick = async () => {
         if (!selectedFileBase64) return;
         
         // Validation for Locked
         const isLocked = postLockToggle.checked;
-        const passcode = postPasscode.value.trim();
-        if (isLocked && passcode.length !== 4) {
-            showToast('Please set a 4-digit passcode for locked posts', 'error');
-            return;
+        
+        if (isLocked) {
+             if (!currentPasscodeValue) {
+                 showToast('Please SET the passcode first', 'error');
+                 return;
+             }
         }
 
         showLoading(true);
@@ -142,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     location: postLocation.value,
                     hashtags: tags,
                     isLocked,
-                    passcode: isLocked ? passcode : null
+                    passcode: isLocked ? currentPasscodeValue : null
                 })
             });
 
