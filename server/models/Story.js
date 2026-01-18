@@ -24,11 +24,10 @@ storySchema.virtual('isExpired').get(function() {
 });
 
 // Pre-validate hook to set expiry (24 hours from creation)
-storySchema.pre('validate', function(next) {
+storySchema.pre('validate', function() {
     if (this.isNew && !this.expiresAt) {
         this.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
     }
-    next();
 });
 
 module.exports = mongoose.model('Story', storySchema);
