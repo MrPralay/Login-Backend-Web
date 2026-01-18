@@ -45,6 +45,15 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  location: {
+    type: String,
+    default: "New York, USA"
+  },
+  onlineStatus: {
+    type: String,
+    enum: ['online', 'offline', 'away'],
+    default: 'offline'
+  },
   // --- SOCIAL FEATURES ---
   isPrivate: {
     type: Boolean,
@@ -61,6 +70,10 @@ const userSchema = new mongoose.Schema({
   followRequests: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
+  }],
+  stories: [{
+    image: String,
+    createdAt: { type: Date, default: Date.now }
   }],
   // --- SETTINGS & SECURITY ---
   chatLockPasscode: {

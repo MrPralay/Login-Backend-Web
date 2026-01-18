@@ -72,6 +72,7 @@ router.post('/follow/:id', protect, async (req, res) => {
         }
 
         const isFollowing = currentUser.following.includes(userToFollow._id);
+        const isRequested = userToFollow.followRequests.includes(currentUser._id);
 
         if (isFollowing) {
             // Unfollow
@@ -80,14 +81,76 @@ router.post('/follow/:id', protect, async (req, res) => {
             await currentUser.save();
             await userToFollow.save();
             return res.json({ message: 'Unfollowed', isFollowing: false });
-        } else {
-            // Follow
-            currentUser.following.push(userToFollow._id);
-            userToFollow.followers.push(currentUser._id);
-            await currentUser.save();
+        } else if (isRequested) {
+            // Cancel request
+            userToFollow.followRequests = userToFollow.followRequests.filter(id => id.toString() !== currentUser._id.toString());
             await userToFollow.save();
-            return res.json({ message: 'Followed', isFollowing: true });
+            return res.json({ message: 'Request cancelled', isRequested: false });
+        } else {
+            // Follow logic
+            if (userToFollow.isPrivate) {
+                // Private: add to requests
+                userToFollow.followRequests.push(currentUser._id);
+                await userToFollow.save();
+                return res.json({ message: 'Request sent', isRequested: true });
+            } else {
+                // Public: direct follow
+                currentUser.following.push(userToFollow._id);
+                userToFollow.followers.push(currentUser._id);
+                await currentUser.save();
+                await userToFollow.save();
+                return res.json({ message: 'Followed', isFollowing: true });
+            }
         }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- GET FOLLOW REQUESTS ---
+router.get('/requests', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).populate('followRequests', 'username fullName profilePicture location');
+        res.json(user.followRequests);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- ACCEPT / DECLINE REQUEST ---
+router.post('/requests/:id/:action', protect, async (req, res) => {
+    try {
+        const { id, action } = req.params; // action: 'accept', 'decline'
+        const currentUser = await User.findById(req.user._id);
+        const requestUser = await User.findById(id);
+
+        if (!requestUser) return res.status(404).json({ message: 'User not found' });
+
+        // Remove from followRequests
+        currentUser.followRequests = currentUser.followRequests.filter(rid => rid.toString() !== id);
+
+        if (action === 'accept') {
+            currentUser.followers.push(requestUser._id);
+            requestUser.following.push(currentUser._id);
+            await requestUser.save();
+        }
+        
+        await currentUser.save();
+        res.json({ message: `Request ${action}ed` });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- GET SUGGESTIONS ---
+router.get('/suggestions', protect, async (req, res) => {
+    try {
+        const users = await User.find({
+            _id: { $nin: [...req.user.following, req.user._id] }
+        })
+        .select('username fullName profilePicture location')
+        .limit(10);
+        res.json(users);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
