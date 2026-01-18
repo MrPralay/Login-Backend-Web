@@ -12,85 +12,103 @@
     <div id="app-container">
         <!-- LEFT SIDEBAR -->
         <aside id="left-sidebar">
-            <div class="profile-card-mini">
-                <div class="pfp-wrap">
-                    <img src="me.png" id="me-pfp" alt="Profile">
-                </div>
-                <h3 id="me-fullname">Katia Zuere</h3>
-                <span id="me-location">Tallahassee, Florida</span>
-                
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <b id="me-posts-count">245</b>
-                        <span>Posts</span>
+            <div class="nav-menu-wrapper">
+                <nav class="nav-menu">
+                    <div class="nav-item active" data-tab="home">
+                        <i class="fa-solid fa-house-chimney"></i>
+                        <span>Feed</span>
                     </div>
-                    <div class="stat-item">
-                        <b id="me-followers-count">147.7K</b>
-                        <span>Follower</span>
+                    <div class="nav-item" data-tab="search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span>Search</span>
                     </div>
-                    <div class="stat-item">
-                        <b id="me-following-count">2.05M</b>
-                        <span>Following</span>
+                    <div class="nav-item" data-tab="messenger">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>Messenger</span>
                     </div>
-                </div>
+                    <div class="nav-item" data-tab="create">
+                        <i class="fa-solid fa-plus-square"></i>
+                        <span>Create Post</span>
+                    </div>
+                    <div class="nav-item" data-tab="activity">
+                        <i class="fa-solid fa-bookmark"></i>
+                        <span>My Favorites</span>
+                    </div>
+                    <div class="nav-item" data-tab="settings">
+                        <i class="fa-solid fa-gear"></i>
+                        <span>Setting</span>
+                    </div>
+                    <div class="nav-item" data-tab="profile" id="profile-nav-item">
+                        <i class="fa-solid fa-user"></i>
+                        <span>My Profile</span>
+                    </div>
+                </nav>
             </div>
-
-            <nav class="nav-menu">
-                <div class="nav-item active" data-tab="home">
-                    <i class="fa-solid fa-house-chimney"></i>
-                    <span>Feed</span>
-                </div>
-                <div class="nav-item" data-tab="search">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <span>Search</span>
-                </div>
-                <div class="nav-item" data-tab="create">
-                    <i class="fa-solid fa-plus-square"></i>
-                    <span>Create Post</span>
-                </div>
-                <div class="nav-item" data-tab="activity">
-                    <i class="fa-solid fa-bookmark"></i>
-                    <span>My Favorites</span>
-                </div>
-                <div class="nav-item" data-tab="settings">
-                    <i class="fa-solid fa-gear"></i>
-                    <span>Setting</span>
-                </div>
-                <div class="nav-item" data-tab="profile" id="profile-nav-item">
-                    <i class="fa-solid fa-user"></i>
-                    <span>My Profile</span>
-                </div>
-            </nav>
         </aside>
 
         <!-- CENTER CONTENT -->
         <main id="main-center">
+            <div id="feed-view">
+                <div class="section-header">
+                    <h2>Storise</h2>
+                    <a href="#">Watch All</a>
+                </div>
 
-            <div class="section-header">
-                <h2>Storise</h2>
-                <a href="#">Watch All</a>
-            </div>
-
-            <div class="stories-row" id="stories-container">
-                <div class="story-circle add-story">
-                    <div class="story-img">
-                        <i class="fa-solid fa-plus"></i>
+                <div class="stories-row" id="stories-container">
+                    <div class="story-circle add-story">
+                        <div class="story-img">
+                            <i class="fa-solid fa-plus"></i>
+                        </div>
+                        <span>Add Story</span>
                     </div>
-                    <span>Add Story</span>
+                    <!-- Dynamic stories go here -->
                 </div>
-                <!-- Dynamic stories go here -->
+
+                <div class="feed-header">
+                    <h2>Feeds</h2>
+                    <div class="tab-pill-group">
+                        <div class="tab-pill active" id="tab-popular">Popular</div>
+                        <div class="tab-pill" id="tab-latest">Latest</div>
+                    </div>
+                </div>
+
+                <div id="feed-container">
+                    <!-- Posts dynamic -->
+                </div>
             </div>
 
-            <div class="feed-header">
-                <h2>Feeds</h2>
-                <div class="tab-pill-group">
-                    <div class="tab-pill active" id="tab-popular">Popular</div>
-                    <div class="tab-pill" id="tab-latest">Latest</div>
+            <div id="profile-view" class="hidden">
+                <div class="profile-header-elite">
+                    <div class="pfp-large-wrap">
+                        <img src="me.png" id="profile-pfp-large" alt="Profile">
+                    </div>
+                    <div class="profile-info-elite">
+                        <div class="profile-username-row">
+                            <h2 id="profile-username">priya5</h2>
+                            <button class="btn-edit-profile">Edit Profile</button>
+                            <i class="fa-solid fa-gear" style="cursor: pointer;"></i>
+                        </div>
+                        <div class="profile-stats-row">
+                            <span><b id="prof-posts-count">0</b> posts</span>
+                            <span><b id="prof-followers-count">0</b> followers</span>
+                            <span><b id="prof-following-count">0</b> following</span>
+                        </div>
+                        <div class="profile-bio-elite">
+                            <b id="prof-fullname">Katia Zuere</b>
+                            <p id="prof-bio">Digital Creator | Explorer</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <div id="feed-container">
-                <!-- Posts dynamic -->
+                <div class="profile-posts-tabs">
+                    <div class="p-tab active"><i class="fa-solid fa-table-cells"></i> POSTS</div>
+                    <div class="p-tab"><i class="fa-solid fa-clapperboard"></i> REELS</div>
+                    <div class="p-tab"><i class="fa-solid fa-id-card"></i> TAGGED</div>
+                </div>
+
+                <div id="profile-content-area">
+                    <!-- Empty state or regular grid will be injected here -->
+                </div>
             </div>
         </main>
 
