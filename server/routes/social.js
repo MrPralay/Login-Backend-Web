@@ -481,18 +481,31 @@ router.get('/stories', protect, async (req, res) => {
         .populate('segments.likes', 'username')
         .sort({ createdAt: -1 });
 
-        // Group by user and mark if viewed
+        // Group by user and mark if viewed (Merging segments from all story documents)
         const storiesByUser = {};
         stories.forEach(story => {
             const userId = story.user._id.toString();
             if (!storiesByUser[userId]) {
                 storiesByUser[userId] = {
                     user: story.user,
-                    story: story,
+                    story: { 
+                        _id: story._id, // Keep latest ID for interaction base
+                        segments: [...story.segments] 
+                    },
                     hasUnviewed: story.segments.some(seg => 
                         !seg.views.some(v => v._id.toString() === req.user._id.toString())
                     )
                 };
+            } else {
+                // Merge segments and update unviewed status
+                storiesByUser[userId].story.segments.push(...story.segments);
+                if (!storiesByUser[userId].hasUnviewed) {
+                    storiesByUser[userId].hasUnviewed = story.segments.some(seg => 
+                        !seg.views.some(v => v._id.toString() === req.user._id.toString())
+                    );
+                }
+                // Sort segments by creation time to ensure chronological order
+                storiesByUser[userId].story.segments.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
             }
         });
 

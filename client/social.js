@@ -433,8 +433,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Mark as viewed on server
         markSegmentViewed(userGroup.story._id, segment._id);
 
-        // Update Media
-        storyMediaContainer.innerHTML = '';
+        // Update Media (Surgical removal to preserve navigation overlays)
+        const oldMedia = storyMediaContainer.querySelectorAll('img, video');
+        oldMedia.forEach(m => m.remove());
+
         if (segment.mediaType === 'video') {
             const video = document.createElement('video');
             video.src = segment.media;
