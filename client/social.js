@@ -211,7 +211,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- INITIALIZATION ---
     async function init() {
         showLoading(true);
-        loadStories(); // Start loading stories
         try {
             const [pRes, postsRes] = await Promise.all([
                 fetch('/api/user/profile'),
@@ -333,6 +332,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load and render story circles
     async function loadStories() {
+        if (!me) return; // Safety check
+        
         try {
             const res = await fetch('/api/social/stories');
             const stories = await res.json();
