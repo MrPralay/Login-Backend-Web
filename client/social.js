@@ -1222,7 +1222,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const isLiked = post.likes?.includes(me.id || me._id);
-            const isSaved = me.savedPosts && me.savedPosts.includes(post._id);
+            const isSaved = (me.savedPosts || []).includes(post._id);
 
             card.innerHTML = `
                 <div class="post-user">
@@ -1920,6 +1920,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // INSTANT CACHE UPDATE (Instagram Style)
             if (savedPostsCache === null) savedPostsCache = [];
+            if (!me.savedPosts) me.savedPosts = [];
 
             if (data.saved) {
                 if (!savedPostsCache.find(p => p._id === postId)) {

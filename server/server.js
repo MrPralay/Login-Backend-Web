@@ -166,7 +166,8 @@ app.get('/api/user/profile', protect, (req, res) => {
         isPrivate: req.user.isPrivate,
         followersCount: req.user.followers.length,
         followingCount: req.user.following.length,
-        stories: req.user.stories || []
+        stories: req.user.stories || [],
+        savedPosts: req.user.savedPosts || []
     });
 });
 
