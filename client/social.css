@@ -618,6 +618,10 @@ aside {
     color: #ed4956;
 }
 
+.post-actions-elite .fa-bookmark.fa-solid {
+    color: #000 !important;
+}
+
 .post-likes-info {
     padding: 0 16px 8px 16px;
     font-size: 0.9rem;

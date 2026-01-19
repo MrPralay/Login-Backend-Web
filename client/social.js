@@ -1318,23 +1318,46 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function toggleLike(postId, icon) {
+        const isLiked = icon.classList.contains('fa-solid');
+        const card = icon.closest('.post-card') || document.getElementById('post-detail-modal');
+        const likesText = card.querySelector('.post-likes-info') || document.getElementById('detail-likes-text');
+        
+        // Optimistic UI updates
+        if (isLiked) {
+            icon.className = 'fa-regular fa-heart';
+        } else {
+            icon.className = 'fa-solid fa-heart liked heart-pop';
+        }
+
+        if (likesText) {
+            let count = parseInt(likesText.textContent.replace(/[^0-9]/g, '')) || 0;
+            count = isLiked ? Math.max(0, count - 1) : count + 1;
+            likesText.textContent = `${formatStat(count)} likes`;
+        }
+
         try {
             const res = await fetch(`/api/social/post/${postId}/like`, { method: 'POST' });
             const data = await res.json();
             
+            // Sync with actual data from server
             if (data.isLiked) {
-                icon.className = 'fa-solid fa-heart liked heart-pop';
+                icon.className = 'fa-solid fa-heart liked';
             } else {
                 icon.className = 'fa-regular fa-heart';
             }
-            
-            // Update likes text in the card
-            const card = icon.closest('.post-card') || document.getElementById('post-detail-modal');
-            const likesText = card.querySelector('.post-likes-info') || document.getElementById('detail-likes-text');
             if (likesText) {
                 likesText.textContent = `${formatStat(data.likesCount)} likes`;
             }
-        } catch (err) { console.error(err); }
+        } catch (err) { 
+            console.error(err);
+            // Revert on error
+            if (isLiked) {
+                icon.className = 'fa-solid fa-heart liked';
+            } else {
+                icon.className = 'fa-regular fa-heart';
+            }
+            showToast('Failed to update like', 'error');
+        }
     }
 
     // Expose unlock function to global scope (hacky but works for onclick string)
@@ -1843,12 +1866,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function toggleSavePost(postId, btn) {
+    async function toggleSavePost(postId, icon) {
+        // icon is passed directly, no need to query for it inside itself
+        const isSaved = icon.classList.contains('fa-solid');
+        
+        // Optimistic UI
+        updateSaveBtnUI(icon, !isSaved);
+
         try {
             const res = await fetch(`/api/social/post/${postId}/save`, { method: 'POST' });
             const data = await res.json();
             
-            const icon = btn.querySelector('i');
+            // Sync with server state
             updateSaveBtnUI(icon, data.saved);
             
             // Clear cache to force refresh or update it
@@ -1864,6 +1893,9 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast(data.message, 'success');
         } catch (err) {
             console.error(err);
+            // Revert on error
+            updateSaveBtnUI(icon, isSaved);
+            showToast('Failed to save post', 'error');
         }
     }
 
