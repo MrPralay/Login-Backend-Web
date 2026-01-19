@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const feedView = document.getElementById('feed-view');
     const profileView = document.getElementById('profile-view');
     const profileContentArea = document.getElementById('profile-content-area');
+    const setModal = document.getElementById('settings-modal'); 
 
     function hideAllViews() {
         feedView.classList.add('hidden');
@@ -315,7 +316,8 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (tabId === 'activity') {
                 hideAllViews();
                 document.getElementById('activity-view').classList.remove('hidden');
-                initActivityView();
+                // Ensure the favorites tab is active if that's what we clicked
+                initActivityView('favorites'); 
             } else if (tabId === 'messenger') {
                 hideAllViews();
                 document.getElementById('messenger-view').classList.remove('hidden');
@@ -1201,67 +1203,133 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span>Private Content</span>
                             <small>Tap to Unlock</small>
                         </div>
-                        <div style="height: 300px; background: #000;"></div>
+                        <div style="height: 300px; background: #000; width: 100%;"></div>
                     </div>`;
             } else if (post.image) {
                 // Video check
                 const isVideo = (post.image.includes('data:video') || post.image.endsWith('.mp4'));
                 mediaContent = `
-                    <div class="post-image-grid">
+                    <div class="post-image-grid" ondblclick="handleDoubleTapLike('${post._id}', this)">
                         ${isVideo 
-                            ? `<video src="${post.image}" controls></video>` 
+                            ? `<video src="${post.image}" controls loop></video>` 
                             : `<img src="${post.image}">`}
                     </div>`;
             }
+
+            const isLiked = post.likes?.includes(me.id || me._id);
+            const isSaved = me.savedPosts && me.savedPosts.includes(post._id);
 
             card.innerHTML = `
                 <div class="post-user">
                     <img src="${post.user.profilePicture || 'me.png'}" onerror="this.src='me.png'">
                     <div class="post-user-info">
-                        <b>${post.user.fullName || post.user.username}</b>
-                        <span>@${post.user.username} · ${formatTime(post.createdAt)}</span>
-                        ${post.location ? `<div style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-solid fa-location-dot"></i> ${post.location}</div>` : ''}
+                        <b>${post.user.username}</b>
+                        ${post.location ? `<span>${post.location}</span>` : `<span>${formatTime(post.createdAt)}</span>`}
                     </div>
-                    <i class="fa-solid fa-ellipsis" style="margin-left: auto; color: #ccc; cursor: pointer;"></i>
+                    <i class="fa-solid fa-ellipsis" style="margin-left: auto; color: #8e8e8e; cursor: pointer;"></i>
                 </div>
-                <div class="post-content">
-                    ${post.title ? `<strong>${post.title}</strong><br>` : ''}
-                    ${post.content}
-                    ${post.hashtags && post.hashtags.length > 0 ? `<br><small style="color:#0095f6;">${post.hashtags.map(t=>'#'+t).join(' ')}</small>` : ''}
-                </div>
+                
                 ${mediaContent}
+
                 <div class="post-actions-elite">
                     <div class="action-left">
-                        <div class="like-btn" data-id="${post._id}">
-                            <i class="fa-regular fa-heart"></i>
-                            <span>${post.likes?.length || '0'}</span>
-                        </div>
-                        <div onclick="openPostDetail('${post._id}')" style="cursor: pointer;">
-                            <i class="fa-regular fa-comment"></i>
-                            <span>${post.comments?.length || '0'}</span>
-                        </div>
-                        <div class="share-btn" data-id="${post._id}" style="cursor: pointer;">
-                            <i class="fa-regular fa-paper-plane"></i>
-                        </div>
+                        <i class="${isLiked ? 'fa-solid fa-heart liked' : 'fa-regular fa-heart'}" data-btn="like" data-id="${post._id}"></i>
+                        <i class="fa-regular fa-comment" onclick="openPostDetail('${post._id}')"></i>
+                        <i class="fa-regular fa-paper-plane" data-btn="share" data-id="${post._id}"></i>
+                        <i class="fa-solid fa-download" data-btn="download" data-id="${post._id}" data-url="${post.image}" style="font-size: 1.3rem;"></i>
                     </div>
-                    <div class="save-btn" data-id="${post._id}" style="cursor: pointer;">
-                        <i class="fa-regular fa-bookmark"></i>
-                    </div>
+                    <i class="${isSaved ? 'fa-solid fa-bookmark' : 'fa-regular fa-bookmark'}" data-btn="save" data-id="${post._id}" style="color: ${isSaved ? '#000' : 'inherit'}"></i>
+                </div>
+
+                <div class="post-likes-info">
+                    ${formatStat(post.likes?.length || 0)} likes
+                </div>
+
+                <div class="post-content">
+                    <b>${post.user.username}</b> ${post.content}
+                    ${post.hashtags && post.hashtags.length > 0 ? `<br><span style="color:#00376b;">${post.hashtags.map(t=>'#'+t).join(' ')}</span>` : ''}
+                </div>
+                <div style="padding: 0 16px 16px 16px; font-size: 0.75rem; color: #8e8e8e; text-transform: uppercase;">
+                    ${formatTimeDetailed(post.createdAt)}
                 </div>
             `;
             feedContainer.appendChild(card);
             
             // Events
-            likeBtn.onclick = () => toggleLike(post._id, likeBtn);
+            const likeIcon = card.querySelector('[data-btn="like"]');
+            likeIcon.onclick = () => toggleLike(post._id, likeIcon);
 
-            const saveBtn = card.querySelector('.save-btn');
-            const isSaved = me.savedPosts && me.savedPosts.includes(post._id);
-            updateSaveBtnUI(saveBtn.querySelector('i'), isSaved);
-            saveBtn.onclick = () => toggleSavePost(post._id, saveBtn);
+            const saveIcon = card.querySelector('[data-btn="save"]');
+            saveIcon.onclick = () => toggleSavePost(post._id, saveIcon);
 
-            const shareBtn = card.querySelector('.share-btn');
-            shareBtn.onclick = () => openShareModal({ type: 'post', data: post });
+            const shareIcon = card.querySelector('[data-btn="share"]');
+            shareIcon.onclick = () => openShareModal({ type: 'post', data: post });
+
+            const downloadIcon = card.querySelector('[data-btn="download"]');
+            downloadIcon.onclick = () => downloadMedia(post.image, `post_${post._id}`);
         });
+    }
+
+    window.handleDoubleTapLike = async (postId, el) => {
+        // Show heart animation
+        const heart = document.createElement('i');
+        heart.className = 'fa-solid fa-heart highlight-heart';
+        el.appendChild(heart);
+        setTimeout(() => heart.remove(), 1000);
+
+        // Find the like icon in this card and trigger it if not liked
+        const card = el.closest('.post-card');
+        const likeIcon = card.querySelector('[data-btn="like"]');
+        if (likeIcon.classList.contains('fa-regular')) {
+            toggleLike(postId, likeIcon);
+        }
+    };
+
+    async function downloadMedia(url, filename) {
+        if (!url) {
+            showToast('No media to download', 'error');
+            return;
+        }
+        showToast('Starting download...', 'info');
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(blobUrl);
+            document.body.removeChild(a);
+        } catch (err) {
+            console.error('Download failed:', err);
+            showToast('Download failed', 'error');
+        }
+    }
+
+    function formatTimeDetailed(date) {
+        return new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+    }
+
+    async function toggleLike(postId, icon) {
+        try {
+            const res = await fetch(`/api/social/post/${postId}/like`, { method: 'POST' });
+            const data = await res.json();
+            
+            if (data.isLiked) {
+                icon.className = 'fa-solid fa-heart liked heart-pop';
+            } else {
+                icon.className = 'fa-regular fa-heart';
+            }
+            
+            // Update likes text in the card
+            const card = icon.closest('.post-card') || document.getElementById('post-detail-modal');
+            const likesText = card.querySelector('.post-likes-info') || document.getElementById('detail-likes-text');
+            if (likesText) {
+                likesText.textContent = `${formatStat(data.likesCount)} likes`;
+            }
+        } catch (err) { console.error(err); }
     }
 
     // Expose unlock function to global scope (hacky but works for onclick string)
@@ -1298,85 +1366,95 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentProfileTab = 'posts';
 
     async function renderProfile() {
-        // Use cached data to avoid delay
+        if (!me) return;
         profileContentArea.innerHTML = '';
         
         try {
-            if (currentProfileTab === 'posts') {
-                const posts = myPosts;
-                mePostsCount.textContent = posts.length;
+            // Get my posts
+            const res = await fetch(`/api/social/profile/${me.username}`);
+            const data = await res.json();
+            const posts = data.posts || [];
+            mePostsCount.textContent = posts.length;
 
-                if (posts.length === 0) {
+            if (currentProfileTab === 'posts') {
+                const myPosts = posts.filter(p => !p.image?.includes('data:video') && !p.image?.endsWith('.mp4'));
+                if (myPosts.length === 0) {
                     profileContentArea.innerHTML = `
                         <div class="empty-state-prof">
-                            <div class="empty-icon-wrap">
-                                <i class="fa-solid fa-camera"></i>
-                            </div>
+                            <div class="empty-icon-wrap"><i class="fa-solid fa-camera"></i></div>
                             <h2>Share Photos</h2>
                             <p>When you share photos, they will appear here.</p>
-                            <a href="#" id="share-first-post-link" style="color: #0095f6; font-weight: 600; text-decoration: none; font-size: 0.9rem; margin-top: 10px;">Share your first post</a>
-                        </div>
-                    `;
-                    document.getElementById('share-first-post-link').onclick = (e) => {
-                        e.preventDefault();
-                        document.getElementById('post-file-input').click();
-                    };
+                            <a href="#" onclick="document.getElementById('post-trigger-btn').click(); return false;">Share your first post</a>
+                        </div>`;
                 } else {
-                    // ELITE GRID RENDER
-                    profileContentArea.innerHTML = '<div class="grid-container"></div>';
-                    const grid = profileContentArea.querySelector('.grid-container');
-                    
-                    posts.forEach(post => {
-                        const div = document.createElement('div');
-                        div.className = 'profile-grid-item';
-                        
-                        // Check if video
-                        const isVideo = post.image && (post.image.includes('data:video') || post.image.endsWith('.mp4'));
-                        
-                        let mediaHtml = isVideo 
-                            ? `<video src="${post.image}" muted></video>` 
-                            : `<img src="${post.image || 'peg.png'}">`;
-
-                        div.innerHTML = `
-                            ${mediaHtml}
-                            <div class="grid-overlay">
-                                <div class="grid-stat">
-                                    <i class="fa-solid fa-heart"></i> ${formatStat(post.likes.length)}
-                                </div>
-                                <div class="grid-stat">
-                                    <i class="fa-solid fa-comment"></i> ${formatStat(post.comments.length)}
-                                </div>
-                            </div>
-                            ${isVideo ? '<i class="fa-solid fa-video grid-type-icon"></i>' : ''}
-                        `;
-                        
-                        div.onclick = () => openPostDetail(post._id);
-                        grid.appendChild(div);
-                    });
+                    renderGrid(profileContentArea, myPosts);
                 }
             } else if (currentProfileTab === 'reels') {
+                const myReels = posts.filter(p => p.image?.includes('data:video') || p.image?.endsWith('.mp4'));
+                if (myReels.length === 0) {
+                    profileContentArea.innerHTML = `
+                        <div class="empty-state-prof">
+                            <div class="empty-icon-wrap"><i class="fa-solid fa-clapperboard"></i></div>
+                            <h2>Reels</h2>
+                            <p>Capture and share your moments with Reels.</p>
+                        </div>`;
+                } else {
+                    renderGrid(profileContentArea, myReels);
+                }
+            } else if (currentProfileTab === 'saved') {
+                loadSavedPostsForProfile(profileContentArea);
+            } else {
                 profileContentArea.innerHTML = `
                     <div class="empty-state-prof">
-                        <div class="empty-icon-wrap">
-                            <i class="fa-solid fa-clapperboard"></i>
-                        </div>
-                        <h2>Reels</h2>
-                        <p>Reels help you grow your audience.</p>
-                    </div>
-                `;
-            } else if (currentProfileTab === 'tagged') {
-                profileContentArea.innerHTML = `
-                    <div class="empty-state-prof">
-                        <div class="empty-icon-wrap">
-                            <i class="fa-solid fa-id-card"></i>
-                        </div>
+                        <div class="empty-icon-wrap"><i class="fa-solid fa-id-card"></i></div>
                         <h2>Photos of you</h2>
                         <p>When people tag you in photos, they'll appear here.</p>
-                    </div>
-                `;
+                    </div>`;
             }
         } catch (err) {
             console.error(err);
+        }
+    }
+
+    function renderGrid(container, posts) {
+        container.innerHTML = '<div class="grid-container"></div>';
+        const grid = container.querySelector('.grid-container');
+        posts.forEach(post => {
+            const div = document.createElement('div');
+            div.className = 'profile-grid-item';
+            const isVideo = post.image && (post.image.includes('data:video') || post.image.endsWith('.mp4'));
+            
+            div.innerHTML = `
+                ${isVideo ? `<video src="${post.image}" muted></video>` : `<img src="${post.image || 'me.png'}">`}
+                <div class="grid-overlay">
+                    <div class="grid-stat"><i class="fa-solid fa-heart"></i> ${post.likes?.length || 0}</div>
+                    <div class="grid-stat"><i class="fa-solid fa-comment"></i> ${post.comments?.length || 0}</div>
+                </div>
+                ${isVideo ? '<i class="fa-solid fa-video grid-type-icon"></i>' : ''}
+            `;
+            div.onclick = () => openPostDetail(post._id);
+            grid.appendChild(div);
+        });
+    }
+
+    async function loadSavedPostsForProfile(container) {
+        container.innerHTML = '<p style="padding: 20px;">Loading saved posts...</p>';
+        try {
+            const res = await fetch('/api/social/saved');
+            const savedPosts = await res.json();
+            if (savedPosts.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state-prof">
+                        <div class="empty-icon-wrap"><i class="fa-solid fa-bookmark"></i></div>
+                        <h2>No Saved Posts</h2>
+                        <p>Only you can see what you've saved.</p>
+                    </div>`;
+            } else {
+                renderGrid(container, savedPosts);
+            }
+        } catch (err) {
+            console.error(err);
+            container.innerHTML = '<p style="padding: 20px; color: red;">Failed to load saved posts.</p>';
         }
     }
 
@@ -1613,7 +1691,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- SETTINGS LOGIC ---
-    const setModal = document.getElementById('settings-modal');
+    // setModal is already declared at the top
     const setTabs = document.querySelectorAll('.set-tab');
     const setContentBlocks = document.querySelectorAll('.set-content-block');
     
@@ -1841,14 +1919,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- ACTIVITY / FAVORITES LOGIC ---
-    function initActivityView() {
+    function initActivityView(targetTab = 'favorites') {
         const tabs = document.querySelectorAll('.act-tab');
         tabs.forEach(tab => {
             tab.onclick = () => {
+                const target = tab.getAttribute('data-act-tab');
                 tabs.forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
                 
-                const target = tab.getAttribute('data-act-tab');
                 document.querySelectorAll('.act-content-block').forEach(b => b.classList.add('hidden'));
                 document.getElementById(`activity-content-${target}`).classList.remove('hidden');
                 
@@ -1857,8 +1935,9 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         });
         
-        // Default load
-        loadSavedPosts();
+        // If a specific tab is requested, trigger it
+        const targetBtn = Array.from(tabs).find(t => t.getAttribute('data-act-tab') === targetTab);
+        if (targetBtn) targetBtn.click();
     }
 
     async function loadSavedPosts() {

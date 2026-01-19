@@ -409,23 +409,53 @@ router.post('/post/:id/comment', protect, async (req, res) => {
 });
 
 // --- GET GLOBAL FEED ---
-// --- GET GLOBAL FEED ---
 router.get('/feed', protect, async (req, res) => {
     try {
-        let posts = await Post.find()
-            .populate('user', 'username fullName profilePicture')
-            .sort({ createdAt: -1 })
-            .limit(50);
+        const user = await User.findById(req.user._id);
+        const followingIds = user.following || [];
         
-        // Redact locked posts
-        posts = posts.map(post => {
-            if (post.isLocked && post.user._id.toString() !== req.user._id.toString()) {
-                post.image = null; 
-            }
-            return post;
+        // Feed Logic:
+        // 1. All public posts
+        // 2. Private posts from users you follow
+        // 3. Your own posts
+        
+        const posts = await Post.find({
+            $or: [
+                { user: req.user._id }, // My posts
+                { 
+                    user: { $in: followingIds } // Posts from followed users
+                },
+                {
+                    // Any public post (requires looking up user privacy, 
+                    // or storing isPrivate on Post for performance)
+                    // For now, let's stick to a robust aggregation or find then filter
+                    // Simplified: Fetch latest posts and filter in JS if necessary, 
+                    // or better: use $lookup
+                }
+            ]
+        })
+        .populate('user', 'username fullName profilePicture isPrivate')
+        .sort({ createdAt: -1 })
+        .limit(100);
+
+        // Filter out private posts from users NOT followed (excluding self)
+        const filteredPosts = posts.filter(post => {
+            if (!post.user) return false;
+            if (post.user._id.toString() === req.user._id.toString()) return true;
+            if (!post.user.isPrivate) return true;
+            return followingIds.includes(post.user._id);
         });
 
-        res.json(posts);
+        // Redact locked posts content for those not owning it
+        const finalizedPosts = filteredPosts.map(post => {
+            const p = post.toObject();
+            if (p.isLocked && p.user._id.toString() !== req.user._id.toString()) {
+                p.image = null; // Backend still redacts original image
+            }
+            return p;
+        });
+
+        res.json(finalizedPosts.slice(0, 50));
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

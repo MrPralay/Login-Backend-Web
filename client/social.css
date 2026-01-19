@@ -531,48 +531,98 @@ aside {
     color: #fff;
 }
 
-/* POST CARDS */
+/* POST CARDS (INSTAGRAM STYLE) */
 .post-card {
-    background: var(--card-bg);
-    border-radius: var(--border-radius);
-    padding: 24px;
+    background: #ffffff;
+    border: 1px solid #dbdbdb;
+    border-radius: 8px;
     margin-bottom: 24px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    max-width: 470px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0;
+    overflow: hidden;
 }
 
 .post-user {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 16px;
+    padding: 12px 16px;
 }
 
-.post-user img { width: 45px; height: 45px; border-radius: 50%; }
-.post-user-info b { display: block; }
-.post-user-info span { font-size: 0.85rem; color: var(--text-muted); }
+.post-user img { 
+    width: 32px; 
+    height: 32px; 
+    border-radius: 50%; 
+    border: 1px solid #dbdbdb;
+}
 
-.post-content { margin-bottom: 16px; line-height: 1.5; color: #444; }
+.post-user-info b { 
+    font-size: 0.9rem; 
+    font-weight: 600;
+}
+
+.post-user-info span { 
+    font-size: 0.75rem; 
+    color: #8e8e8e; 
+}
+
+.post-content { 
+    padding: 0 16px 12px 16px; 
+    font-size: 0.9rem;
+    line-height: normal;
+}
+
 .post-image-grid {
-    display: grid;
-    gap: 8px;
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 16px;
+    margin: 0;
+    border-radius: 0;
+    background: #fafafa;
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.post-image-grid img { width: 100%; height: auto; object-fit: cover; }
+.post-image-grid img, .post-image-grid video {
+    width: 100%;
+    height: auto;
+    display: block;
+}
 
 .post-actions-elite {
     display: flex;
-    justify-content: flex-start;
-    gap: 30px;
-    padding-top: 15px;
-    border-top: 1px solid #f1f1f1;
-    color: var(--text-muted);
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    border-top: none;
 }
 
-.post-actions-elite div { cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
-.post-actions-elite div:hover i { color: #3a7bd5; }
+.action-left {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.post-actions-elite i {
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.post-actions-elite i:hover {
+    color: #8e8e8e;
+}
+
+.post-actions-elite .fa-heart.liked {
+    color: #ed4956;
+}
+
+.post-likes-info {
+    padding: 0 16px 8px 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
 
 /* RIGHT SIDEBAR */
 .sidebar-card {
