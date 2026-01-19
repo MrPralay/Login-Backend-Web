@@ -1265,7 +1265,7 @@ document.addEventListener('DOMContentLoaded', () => {
             likeIcon.onclick = () => toggleLike(post._id, likeIcon);
 
             const saveIcon = card.querySelector('[data-btn="save"]');
-            saveIcon.onclick = () => toggleSavePost(post._id, saveIcon);
+            saveIcon.onclick = () => toggleSavePost(post, saveIcon);
 
             const shareIcon = card.querySelector('[data-btn="share"]');
             shareIcon.onclick = () => openShareModal({ type: 'post', data: post });
@@ -1542,13 +1542,26 @@ document.addEventListener('DOMContentLoaded', () => {
             updateLikeBtnUI(likeBtn, isLiked);
 
             likeBtn.onclick = async () => {
-                const lRes = await fetch(`/api/social/post/${post._id}/like`, { method: 'POST' });
-                const lData = await lRes.json();
-                document.getElementById('detail-likes-text').textContent = `${formatStat(lData.likesCount)} likes`;
-                updateLikeBtnUI(likeBtn, lData.isLiked);
-                // Refresh grid stats in background
-                init(); 
+                const alreadyLiked = likeBtn.classList.contains('fa-solid');
+                updateLikeBtnUI(likeBtn, !alreadyLiked);
+                
+                try {
+                    const lRes = await fetch(`/api/social/post/${post._id}/like`, { method: 'POST' });
+                    const lData = await lRes.json();
+                    document.getElementById('detail-likes-text').textContent = `${formatStat(lData.likesCount)} likes`;
+                    updateLikeBtnUI(likeBtn, lData.isLiked);
+                    init(); 
+                } catch (err) {
+                    console.error(err);
+                    updateLikeBtnUI(likeBtn, alreadyLiked);
+                }
             };
+
+            // Save
+            const detailSaveBtn = document.getElementById('detail-save-btn');
+            const isSaved = (me.savedPosts || []).includes(post._id);
+            updateSaveBtnUI(detailSaveBtn, isSaved);
+            detailSaveBtn.onclick = () => toggleSavePost(post, detailSaveBtn);
             
             // Download
             document.getElementById('detail-download-btn').onclick = () => {
@@ -1866,12 +1879,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function toggleSavePost(postId, icon) {
+    async function toggleSavePost(post, icon) {
+        const postId = post._id;
         // icon is passed directly, no need to query for it inside itself
-        const isSaved = icon.classList.contains('fa-solid');
+        const isSavedNow = icon.classList.contains('fa-solid');
         
         // Optimistic UI
-        updateSaveBtnUI(icon, !isSaved);
+        updateSaveBtnUI(icon, !isSavedNow);
 
         try {
             const res = await fetch(`/api/social/post/${postId}/save`, { method: 'POST' });
@@ -1880,21 +1894,29 @@ document.addEventListener('DOMContentLoaded', () => {
             // Sync with server state
             updateSaveBtnUI(icon, data.saved);
             
-            // Clear cache to force refresh or update it
-            savedPostsCache = []; 
-
-            // Sync local 'me' state
+            // INSTANT CACHE UPDATE (Instagram Style)
             if (data.saved) {
+                // Add to cache if not already there
+                if (!savedPostsCache.find(p => p._id === postId)) {
+                    savedPostsCache.unshift(post); 
+                }
                 if (!me.savedPosts.includes(postId)) me.savedPosts.push(postId);
             } else {
+                // Remove from cache
+                savedPostsCache = savedPostsCache.filter(p => p._id !== postId);
                 me.savedPosts = me.savedPosts.filter(p => p !== postId);
             }
             
+            // If we are currently looking at the profile saved tab, re-render it instantly
+            if (!profileView.classList.contains('hidden') && currentProfileTab === 'saved') {
+                renderGrid(profileContentArea, savedPostsCache);
+            }
+
             showToast(data.message, 'success');
         } catch (err) {
             console.error(err);
             // Revert on error
-            updateSaveBtnUI(icon, isSaved);
+            updateSaveBtnUI(icon, isSavedNow);
             showToast('Failed to save post', 'error');
         }
     }
