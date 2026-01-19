@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let me = null;
     let myPosts = [];
-    let savedPostsCache = [];
+    let savedPostsCache = null;
 
     // --- INITIALIZATION ---
     async function init() {
@@ -1487,10 +1487,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+
     async function loadSavedPostsForProfile(container) {
-        // Use cache if available
-        if (savedPostsCache.length > 0) {
-            renderGrid(container, savedPostsCache);
+        // Use cache if available (null means never fetched)
+        if (savedPostsCache !== null) {
+            if (savedPostsCache.length === 0) {
+                renderEmptySavedState(container);
+            } else {
+                renderGrid(container, savedPostsCache);
+            }
             return;
         }
 
@@ -1500,12 +1505,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const savedPosts = await res.json();
             savedPostsCache = savedPosts; // Update cache
             if (savedPosts.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state-prof">
-                        <div class="empty-icon-wrap"><i class="fa-solid fa-bookmark"></i></div>
-                        <h2>No Saved Posts</h2>
-                        <p>Only you can see what you've saved.</p>
-                    </div>`;
+                renderEmptySavedState(container);
             } else {
                 renderGrid(container, savedPosts);
             }
@@ -1513,6 +1513,15 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(err);
             container.innerHTML = '<p style="padding: 20px; color: red;">Failed to load saved posts.</p>';
         }
+    }
+
+    function renderEmptySavedState(container) {
+        container.innerHTML = `
+            <div class="empty-state-prof">
+                <div class="empty-icon-wrap"><i class="fa-solid fa-bookmark"></i></div>
+                <h2>No Saved Posts</h2>
+                <p>Only you can see what you've saved.</p>
+            </div>`;
     }
 
     // --- POST DETAIL LOGIC ---
@@ -1900,40 +1909,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const res = await fetch(`/api/social/post/${postId}/save`, { method: 'POST' });
+            const data = await res.json().catch(() => ({}));
+
             if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.message || errData.error || 'Failed to save post');
+                throw new Error(data.message || data.error || 'Failed to save post');
             }
-            
-            const data = await res.json();
             
             // Sync with server state
             updateSaveBtnUI(icon, data.saved);
             
             // INSTANT CACHE UPDATE (Instagram Style)
+            if (savedPostsCache === null) savedPostsCache = [];
+
             if (data.saved) {
-                // Add to cache if not already there
                 if (!savedPostsCache.find(p => p._id === postId)) {
                     savedPostsCache.unshift(post); 
                 }
                 if (!me.savedPosts.includes(postId)) me.savedPosts.push(postId);
             } else {
-                // Remove from cache
                 savedPostsCache = savedPostsCache.filter(p => p._id !== postId);
                 me.savedPosts = me.savedPosts.filter(p => p !== postId);
             }
             
             // If we are currently looking at the profile saved tab, re-render it instantly
             if (!profileView.classList.contains('hidden') && currentProfileTab === 'saved') {
-                renderGrid(profileContentArea, savedPostsCache);
+                if (savedPostsCache.length === 0) {
+                    renderEmptySavedState(profileContentArea);
+                } else {
+                    renderGrid(profileContentArea, savedPostsCache);
+                }
             }
 
             showToast(data.message, 'success');
         } catch (err) {
             console.error(err);
-            // Revert on error
             updateSaveBtnUI(icon, isSavedNow);
-            showToast('Failed to update save status', 'error');
+            showToast(err.message || 'Failed to update save status', 'error');
         }
     }
 
