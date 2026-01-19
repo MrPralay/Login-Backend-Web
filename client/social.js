@@ -1337,7 +1337,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const res = await fetch(`/api/social/post/${postId}/like`, { method: 'POST' });
-            if (!res.ok) throw new Error('Failed to like post');
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.message || errData.error || 'Failed to like post');
+            }
             
             const data = await res.json();
             
@@ -1897,7 +1900,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const res = await fetch(`/api/social/post/${postId}/save`, { method: 'POST' });
-            if (!res.ok) throw new Error('Failed to save post');
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.message || errData.error || 'Failed to save post');
+            }
             
             const data = await res.json();
             

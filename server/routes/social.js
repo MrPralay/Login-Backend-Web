@@ -766,7 +766,10 @@ router.get('/search', protect, async (req, res) => {
 router.post('/post/:postId/save', protect, async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
-        const postIndex = user.savedPosts.findIndex(id => id.toString() === req.params.postId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        
+        // Safety: Filter out nulls and use toString() for robust comparison
+        const postIndex = user.savedPosts.findIndex(id => id && id.toString() === req.params.postId);
 
         let saved = false;
         if (postIndex === -1) {
@@ -780,6 +783,7 @@ router.post('/post/:postId/save', protect, async (req, res) => {
         await user.save();
         res.json({ saved, message: saved ? 'Post saved to favorites' : 'Post removed from favorites' });
     } catch (err) {
+        console.error('Save Post Error:', err);
         res.status(500).json({ error: err.message });
     }
 });
