@@ -217,6 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let me = null;
     let myPosts = [];
+    let savedPostsCache = [];
 
     // --- INITIALIZATION ---
     async function init() {
@@ -232,6 +233,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 me = await pRes.json();
                 if (postsRes.ok) myPosts = await postsRes.json();
                 
+                // Fetch saved posts for cache
+                const sRes = await fetch('/api/social/saved');
+                if (sRes.ok) savedPostsCache = await sRes.json();
+
                 updateMeUI();
                 loadFeed();
                 loadStories();
@@ -1367,35 +1372,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderProfile() {
         if (!me) return;
-        profileContentArea.innerHTML = '';
+        
+        // INSTANT CACHE LOGIC: 
+        // If we are looking at our own profile, use myPosts (cached) instead of fetching.
+        let posts = [];
         
         try {
-            // Get my posts
-            const res = await fetch(`/api/social/profile/${me.username}`);
-            const data = await res.json();
-            const posts = data.posts || [];
+            // Check if viewing self (this is the current behavior of our profile view)
+            posts = myPosts;
+            
+            // If we ever support viewing OTHER profiles, we'd fetch here
+            // but for current 'me' profile, use myPosts
+            
+            profileContentArea.innerHTML = '';
             mePostsCount.textContent = posts.length;
 
             if (currentProfileTab === 'posts') {
-                const myPosts = posts.filter(p => !p.image?.includes('data:video') && !p.image?.endsWith('.mp4'));
-                if (myPosts.length === 0) {
+                // Show everything EXCEPT videos in the 'Posts' tab (Standard Photos + Text)
+                const gridPosts = posts.filter(p => {
+                    const isVideo = p.image && (p.image.includes('data:video') || p.image.endsWith('.mp4'));
+                    return !isVideo;
+                });
+
+                if (gridPosts.length === 0) {
                     profileContentArea.innerHTML = `
                         <div class="empty-state-prof">
                             <div class="empty-icon-wrap"><i class="fa-solid fa-camera"></i></div>
-                            <h2>Share Photos</h2>
+                            <h2>No Photos Yet</h2>
                             <p>When you share photos, they will appear here.</p>
-                            <a href="#" onclick="document.getElementById('post-trigger-btn').click(); return false;">Share your first post</a>
                         </div>`;
                 } else {
-                    renderGrid(profileContentArea, myPosts);
+                    renderGrid(profileContentArea, gridPosts);
                 }
             } else if (currentProfileTab === 'reels') {
-                const myReels = posts.filter(p => p.image?.includes('data:video') || p.image?.endsWith('.mp4'));
+                // Show ONLY videos
+                const myReels = posts.filter(p => p.image && (p.image.includes('data:video') || p.image.endsWith('.mp4')));
                 if (myReels.length === 0) {
                     profileContentArea.innerHTML = `
                         <div class="empty-state-prof">
                             <div class="empty-icon-wrap"><i class="fa-solid fa-clapperboard"></i></div>
-                            <h2>Reels</h2>
+                            <h2>No Reels</h2>
                             <p>Capture and share your moments with Reels.</p>
                         </div>`;
                 } else {
@@ -1438,10 +1454,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadSavedPostsForProfile(container) {
+        // Use cache if available
+        if (savedPostsCache.length > 0) {
+            renderGrid(container, savedPostsCache);
+            return;
+        }
+
         container.innerHTML = '<p style="padding: 20px;">Loading saved posts...</p>';
         try {
             const res = await fetch('/api/social/saved');
             const savedPosts = await res.json();
+            savedPostsCache = savedPosts; // Update cache
             if (savedPosts.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state-prof">
@@ -1828,6 +1851,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const icon = btn.querySelector('i');
             updateSaveBtnUI(icon, data.saved);
             
+            // Clear cache to force refresh or update it
+            savedPostsCache = []; 
+
             // Sync local 'me' state
             if (data.saved) {
                 if (!me.savedPosts.includes(postId)) me.savedPosts.push(postId);

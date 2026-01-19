@@ -48,11 +48,16 @@ router.get('/profile/:username', protect, async (req, res) => {
             isSelf
         };
 
-        // If private and not following (and not self), hide "posts" (which we'll implement later)
         if (user.isPrivate && !isFollowing && !isSelf) {
             profileData.isRestricted = true;
+            profileData.posts = [];
         } else {
             profileData.isRestricted = false;
+            // Fetch posts
+            const posts = await Post.find({ user: user._id })
+                .populate('user', 'username fullName profilePicture')
+                .sort({ createdAt: -1 });
+            profileData.posts = posts;
         }
 
         res.json(profileData);
