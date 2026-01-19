@@ -766,7 +766,7 @@ router.get('/search', protect, async (req, res) => {
 router.post('/post/:postId/save', protect, async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
-        const postIndex = user.savedPosts.indexOf(req.params.postId);
+        const postIndex = user.savedPosts.findIndex(id => id.toString() === req.params.postId);
 
         let saved = false;
         if (postIndex === -1) {

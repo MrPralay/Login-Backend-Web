@@ -1337,6 +1337,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const res = await fetch(`/api/social/post/${postId}/like`, { method: 'POST' });
+            if (!res.ok) throw new Error('Failed to like post');
+            
             const data = await res.json();
             
             // Sync with actual data from server
@@ -1355,6 +1357,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 icon.className = 'fa-solid fa-heart liked';
             } else {
                 icon.className = 'fa-regular fa-heart';
+            }
+            // Revert likes text if possible
+            if (likesText) {
+                let count = parseInt(likesText.textContent.replace(/[^0-9]/g, '')) || 0;
+                count = isLiked ? count + 1 : Math.max(0, count - 1);
+                likesText.textContent = `${formatStat(count)} likes`;
             }
             showToast('Failed to update like', 'error');
         }
@@ -1889,6 +1897,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const res = await fetch(`/api/social/post/${postId}/save`, { method: 'POST' });
+            if (!res.ok) throw new Error('Failed to save post');
+            
             const data = await res.json();
             
             // Sync with server state
@@ -1917,7 +1927,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(err);
             // Revert on error
             updateSaveBtnUI(icon, isSavedNow);
-            showToast('Failed to save post', 'error');
+            showToast('Failed to update save status', 'error');
         }
     }
 
