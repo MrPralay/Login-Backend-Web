@@ -1175,14 +1175,55 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- FEED LOGIC ---
+    const tabPopular = document.getElementById('tab-popular');
+    const tabLatest = document.getElementById('tab-latest');
+    let currentFeedSort = 'popular'; // Default to popular for that Instagram feel
+
+    tabPopular.onclick = () => {
+        if (currentFeedSort === 'popular') return;
+        currentFeedSort = 'popular';
+        tabPopular.classList.add('active');
+        tabLatest.classList.remove('active');
+        loadFeed();
+    };
+
+    tabLatest.onclick = () => {
+        if (currentFeedSort === 'latest') return;
+        currentFeedSort = 'latest';
+        tabLatest.classList.add('active');
+        tabPopular.classList.remove('active');
+        loadFeed();
+    };
+
+    function showFeedSkeleton() {
+        feedContainer.innerHTML = '';
+        for (let i = 0; i < 3; i++) {
+            const skeleton = document.createElement('div');
+            skeleton.className = 'skeleton-card';
+            skeleton.innerHTML = `
+                <div class="skeleton-header">
+                    <div class="skeleton skeleton-pfp"></div>
+                    <div class="skeleton skeleton-name"></div>
+                </div>
+                <div class="skeleton skeleton-media"></div>
+                <div class="skeleton-footer">
+                    <div class="skeleton skeleton-line"></div>
+                    <div class="skeleton skeleton-line short"></div>
+                </div>
+            `;
+            feedContainer.appendChild(skeleton);
+        }
+    }
+
     async function loadFeed() {
-        feedContainer.innerHTML = '<div class="empty-state"><p>Loading elite feed...</p></div>';
+        showFeedSkeleton();
         try {
-            const res = await fetch('/api/social/feed');
+            const res = await fetch(`/api/social/feed?sort=${currentFeedSort}`);
             const posts = await res.json();
             renderPostsElite(posts);
         } catch (err) {
             console.error(err);
+            feedContainer.innerHTML = '<div class="empty-state"><p>Failed to load feed. Please try again.</p></div>';
         }
     }
 
@@ -1527,6 +1568,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- POST DETAIL LOGIC ---
     const detailModal = document.getElementById('post-detail-modal');
     async function openPostDetail(postId) {
+        // Increment view count in background
+        fetch(`/api/social/post/${postId}/view`, { method: 'POST' }).catch(() => {});
+
         showLoading(true);
         try {
             const res = await fetch(`/api/social/post/${postId}`);

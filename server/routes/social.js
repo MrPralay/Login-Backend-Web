@@ -416,46 +416,45 @@ router.post('/post/:id/comment', protect, async (req, res) => {
 // --- GET GLOBAL FEED ---
 router.get('/feed', protect, async (req, res) => {
     try {
+        const { sort } = req.query; // 'popular' or 'latest'
         const user = await User.findById(req.user._id);
-        const followingIds = user.following || [];
+        const followingIds = (user.following || []).map(id => id.toString());
         
-        // Feed Logic:
-        // 1. All public posts
-        // 2. Private posts from users you follow
-        // 3. Your own posts
-        
+        // Fetch posts
         const posts = await Post.find({
             $or: [
-                { user: req.user._id }, // My posts
-                { 
-                    user: { $in: followingIds } // Posts from followed users
-                },
-                {
-                    // Any public post (requires looking up user privacy, 
-                    // or storing isPrivate on Post for performance)
-                    // For now, let's stick to a robust aggregation or find then filter
-                    // Simplified: Fetch latest posts and filter in JS if necessary, 
-                    // or better: use $lookup
-                }
+                { user: req.user._id },
+                { user: { $in: followingIds } },
+                { user: { $exists: true } }
             ]
         })
         .populate('user', 'username fullName profilePicture isPrivate')
         .sort({ createdAt: -1 })
-        .limit(100);
+        .limit(200);
 
-        // Filter out private posts from users NOT followed (excluding self)
-        const filteredPosts = posts.filter(post => {
+        // Filter out private posts from users NOT followed
+        let filteredPosts = posts.filter(post => {
             if (!post.user) return false;
-            if (post.user._id.toString() === req.user._id.toString()) return true;
+            const postUserId = post.user._id.toString();
+            if (postUserId === req.user._id.toString()) return true;
             if (!post.user.isPrivate) return true;
-            return followingIds.includes(post.user._id);
+            return followingIds.includes(postUserId);
         });
 
-        // Redact locked posts content for those not owning it
+        // Apply Sorting
+        if (sort === 'popular') {
+            filteredPosts.sort((a, b) => {
+                const aScore = (a.likes ? a.likes.length : 0) * 2 + (a.views || 0);
+                const bScore = (b.likes ? b.likes.length : 0) * 2 + (b.views || 0);
+                if (bScore !== aScore) return bScore - aScore;
+                return b.createdAt - a.createdAt;
+            });
+        }
+
         const finalizedPosts = filteredPosts.map(post => {
             const p = post.toObject();
             if (p.isLocked && p.user._id.toString() !== req.user._id.toString()) {
-                p.image = null; // Backend still redacts original image
+                p.image = null;
             }
             return p;
         });
@@ -785,6 +784,16 @@ router.delete('/stories/cleanup', protect, async (req, res) => {
         });
 
         res.json({ message: `Deleted ${result.deletedCount} expired stories` });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Increment views
+router.post('/post/:postId/view', protect, async (req, res) => {
+    try {
+        await Post.findByIdAndUpdate(req.params.postId, { $inc: { views: 1 } });
+        res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
