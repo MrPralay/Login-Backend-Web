@@ -92,28 +92,40 @@
 
             <div id="profile-view" class="hidden">
                 <div class="profile-header-elite">
-                    <div class="profile-header-header">
-                        <div class="pfp-large-wrap">
-                            <img src="me.png" id="profile-pfp-large" alt="Profile">
+                    <!-- Column 1: PFP -->
+                    <div class="pfp-large-wrap">
+                        <img src="me.png" id="profile-pfp-large" alt="Profile">
+                    </div>
+
+                    <!-- Column 2: Info Content -->
+                    <div class="profile-info-column">
+                        <div class="profile-title-row">
+                            <h2 id="profile-username">priya5</h2>
+                            <i class="fa-solid fa-gear" id="btn-settings-prof-gear" style="cursor: pointer;"></i>
                         </div>
+
+                        <div class="profile-name-row">
+                            <b id="prof-fullname">Katia Zuere</b>
+                        </div>
+
                         <div class="profile-stats-row">
                             <span><b id="prof-posts-count">0</b> posts</span>
                             <span><b id="prof-followers-count">0</b> followers</span>
                             <span><b id="prof-following-count">0</b> following</span>
                         </div>
-                    </div>
-                    <div class="profile-bio-elite">
-                        <div class="profile-username-row desktop-only">
-                            <h2 id="profile-username">priya5</h2>
-                            <button class="btn-edit-profile">Edit Profile</button>
-                            <i class="fa-solid fa-gear" style="cursor: pointer; font-size: 1.2rem;"></i>
+
+                        <div class="profile-bio-text">
+                            <p id="prof-bio">Digital Creator | Explorer</p>
                         </div>
-                        <div class="profile-name-mobile" id="prof-fullname-m">Katia Zuere</div>
-                        <p id="prof-bio">Digital Creator | Explorer</p>
-                    </div>
-                    <div class="profile-actions-mobile">
-                        <button class="btn-edit-profile">Edit Profile</button>
-                        <button class="btn-edit-profile">Share Profile</button>
+
+                        <div class="profile-link-row">
+                            <i class="fa-brands fa-threads"></i> <span id="prof-threads-tag">@priya5</span>
+                        </div>
+
+                        <div class="profile-actions-desktop">
+                            <button class="btn-prof-action primary">Edit Profile</button>
+                            <button class="btn-prof-action secondary">View archive</button>
+                        </div>
                     </div>
                 </div>
 

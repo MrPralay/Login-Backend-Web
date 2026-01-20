@@ -263,8 +263,11 @@ document.addEventListener('DOMContentLoaded', () => {
             profUsername.innerHTML = `${me.username} ${me.isPrivate ? '<i class="fa-solid fa-lock" style="font-size: 0.9rem; margin-left: 5px;"></i>' : ''}`;
         }
 
-        document.getElementById('prof-fullname-m').textContent = me.fullName || me.username;
+        document.getElementById('prof-fullname').textContent = me.fullName || me.username;
         document.getElementById('prof-bio').textContent = me.bio || 'Digital Creator | Explorer';
+
+        const threadsTag = document.getElementById('prof-threads-tag');
+        if (threadsTag) threadsTag.textContent = `@${me.username}`;
         
         mePostsCount.textContent = '0'; // We'll update this based on actual posts
         meFollowersCount.textContent = formatStat(me.followersCount);
@@ -2247,4 +2250,27 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('Showing suggested people...', 'normal');
         };
     }
+
+    // --- PROFILE ACTIONS ---
+    const btnSettingsGear = document.getElementById('btn-settings-prof-gear');
+    if (btnSettingsGear) {
+        btnSettingsGear.onclick = () => {
+            setModal.classList.remove('hidden');
+            if (typeof populateSettings === 'function') populateSettings();
+        };
+    }
+
+    const btnEditProfiles = document.querySelectorAll('.btn-prof-action.primary');
+    btnEditProfiles.forEach(btn => {
+        btn.onclick = () => {
+            setModal.classList.remove('hidden');
+            const editTab = Array.from(document.querySelectorAll('.set-tab')).find(t => t.getAttribute('data-set-tab') === 'edit-profile');
+            if (editTab) editTab.click();
+        };
+    });
+
+    const btnViewArchives = document.querySelectorAll('.btn-prof-action.secondary');
+    btnViewArchives.forEach(btn => {
+        btn.onclick = () => showToast('View archive is currently unavailable.', 'normal');
+    });
 });
