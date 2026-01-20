@@ -609,17 +609,20 @@ aside {
 .post-image-grid {
   margin: 0;
   border-radius: 0;
-  background: #fafafa;
+  background: #000;
   min-height: 300px;
+  max-height: 585px; /* Pro 4:5 ratio for 470px width */
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .post-image-grid img,
 .post-image-grid video {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover; /* Professional fill */
   display: block;
 }
 
@@ -2588,6 +2591,7 @@ input:checked + .slider:before {
 .skeleton-media {
   width: 100%;
   aspect-ratio: 1/1;
+  max-height: 585px;
   border-radius: 0;
 }
 
