@@ -2806,12 +2806,13 @@ input:checked + .slider:before {
   /* MOBILE PROFILE (Instagram Style) */
   .profile-header-elite {
     display: grid;
-    grid-template-columns: 80px 1fr;
+    grid-template-columns: 85px 1fr;
     grid-template-areas: 
+      "pfp name"
       "pfp stats"
       "info info"
       "actions actions";
-    gap: 20px;
+    gap: 10px 20px;
     padding: 20px 16px;
     margin-bottom: 0;
   }
@@ -2850,13 +2851,21 @@ input:checked + .slider:before {
     font-size: 1.1rem;
   }
 
-  .profile-name-row, .profile-bio-text, .profile-link-row {
-    grid-area: info;
+  .profile-name-row {
+    grid-area: name;
+    align-self: flex-end;
     margin: 0;
+    font-size: 1.1rem;
   }
-  
-  .profile-name-row { margin-bottom: 2px; }
-  .profile-bio-text { margin-bottom: 5px; }
+
+  .profile-bio-text {
+    grid-area: info;
+    margin: 5px 0 0 0;
+  }
+
+  .profile-link-row {
+    display: none; /* Removed Threads tag as requested */
+  }
 
   .profile-actions-desktop {
     grid-area: actions;
@@ -2877,8 +2886,10 @@ input:checked + .slider:before {
   }
 
   .p-tab {
-      font-size: 1.4rem;
+      font-size: 0.85rem; /* Reduced font size for mobile tabs */
       padding-bottom: 10px;
+      text-transform: uppercase;
+      font-weight: 500;
   }
 
   .p-tab.active {
