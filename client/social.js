@@ -255,8 +255,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateMeUI() {
         // Updated for profile view
         document.getElementById('profile-pfp-large').src = me.profilePicture || 'me.png';
-        document.getElementById('profile-username').innerHTML = `${me.username} ${me.isPrivate ? '<i class="fa-solid fa-lock" style="font-size: 0.9rem; margin-left: 5px;"></i>' : ''}`;
-        document.getElementById('prof-fullname').textContent = me.fullName || me.username;
+        const mNavPfp = document.getElementById('m-nav-pfp');
+        if (mNavPfp) mNavPfp.src = me.profilePicture || 'me.png';
+
+        const profUsername = document.getElementById('profile-username');
+        if (profUsername) {
+            profUsername.innerHTML = `${me.username} ${me.isPrivate ? '<i class="fa-solid fa-lock" style="font-size: 0.9rem; margin-left: 5px;"></i>' : ''}`;
+        }
+
+        document.getElementById('prof-fullname-m').textContent = me.fullName || me.username;
         document.getElementById('prof-bio').textContent = me.bio || 'Digital Creator | Explorer';
         
         mePostsCount.textContent = '0'; // We'll update this based on actual posts
@@ -1187,25 +1194,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { threshold: 0.6 });
 
     // --- FEED LOGIC ---
-    const tabPopular = document.getElementById('tab-popular');
-    const tabLatest = document.getElementById('tab-latest');
-    let currentFeedSort = 'popular'; // Default to popular for that Instagram feel
+    let currentFeedSort = 'latest'; // Mobile always loads latest
 
-    tabPopular.onclick = () => {
-        if (currentFeedSort === 'popular') return;
-        currentFeedSort = 'popular';
-        tabPopular.classList.add('active');
-        tabLatest.classList.remove('active');
-        loadFeed();
-    };
-
-    tabLatest.onclick = () => {
-        if (currentFeedSort === 'latest') return;
-        currentFeedSort = 'latest';
-        tabLatest.classList.add('active');
-        tabPopular.classList.remove('active');
-        loadFeed();
-    };
 
     function showFeedSkeleton() {
         feedContainer.innerHTML = '';
@@ -2203,6 +2193,58 @@ document.addEventListener('DOMContentLoaded', () => {
         globalCancelBtn.onclick = () => optionsOverlay.classList.add('hidden');
         optionsOverlay.onclick = (e) => {
             if (e.target === optionsOverlay) optionsOverlay.classList.add('hidden');
+        };
+    }
+
+    // --- MOBILE NAVIGATION & HEADER ---
+    const mNavItems = document.querySelectorAll('.m-nav-item');
+    mNavItems.forEach(item => {
+        item.onclick = () => {
+            const tabId = item.getAttribute('data-tab');
+            
+            if (tabId === 'create') {
+                postFileInput.click();
+                return;
+            }
+
+            mNavItems.forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+
+            hideAllViews();
+            if (tabId === 'home') {
+                feedView.classList.remove('hidden');
+                loadFeed();
+            } else if (tabId === 'search') {
+                document.getElementById('search-view').classList.remove('hidden');
+                initSearchView();
+            } else if (tabId === 'activity') {
+                document.getElementById('activity-view').classList.remove('hidden');
+                initActivityView('notifications');
+            } else if (tabId === 'profile') {
+                profileView.classList.remove('hidden');
+                renderProfile();
+            }
+        };
+    });
+
+    const mHeaderCreate = document.getElementById('m-header-create');
+    const mHeaderNotif = document.getElementById('m-header-notif');
+    const mHeaderSuggest = document.getElementById('m-header-suggest');
+
+    if (mHeaderCreate) mHeaderCreate.onclick = () => postFileInput.click();
+    if (mHeaderNotif) {
+        mHeaderNotif.onclick = () => {
+            hideAllViews();
+            document.getElementById('activity-view').classList.remove('hidden');
+            initActivityView('notifications');
+        };
+    }
+    if (mHeaderSuggest) {
+        mHeaderSuggest.onclick = () => {
+            hideAllViews();
+            document.getElementById('search-view').classList.remove('hidden');
+            initSearchView(); 
+            showToast('Showing suggested people...', 'normal');
         };
     }
 });

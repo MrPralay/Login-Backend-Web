@@ -2609,19 +2609,312 @@ input:checked + .slider:before {
   width: 40%;
 }
 
-/* TAB PILLS */
-.tab-pill {
-  padding: 8px 16px;
-  border-radius: 20px;
-  background: #efefef;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s;
-  color: var(--text-muted);
+/* MOBILE ELEMENTS (Hidden on Desktop) */
+#mobile-top-bar, #mobile-bottom-nav {
+  display: none;
 }
 
-.tab-pill.active {
-  background: var(--text-main);
-  color: #fff;
+/* DESKTOP PROFILE TWEAKS (Ensuring consistency after HTML restructure) */
+.profile-header-header {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    margin-bottom: 20px;
+}
+
+.profile-actions-mobile {
+    display: none; /* Hide on desktop, desktop has its own buttons in the row */
+}
+
+.profile-name-mobile {
+    display: none; /* Hide on desktop */
+}
+
+@media (min-width: 769px) {
+    .profile-header-elite {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 60px;
+        padding: 40px 20px;
+        position: relative;
+    }
+    
+    .profile-header-header {
+        margin-bottom: 0;
+    }
+
+    /* Original row layout for desktop */
+    .profile-bio-elite {
+        margin-top: 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .desktop-only {
+        display: none !important;
+    }
+}
+
+.btn-follow-inline {
+    background: #efefef;
+    color: #000;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-left: auto;
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.btn-follow-inline.active {
+    background: #0095f6;
+    color: #fff;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  #left-sidebar, #right-sidebar {
+    display: none !important;
+  }
+
+  #app-container {
+    flex-direction: column;
+    max-width: 100%;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  #main-center {
+    padding: 0;
+    margin-top: 50px; /* Space for top bar */
+    margin-bottom: 60px; /* Space for bottom nav */
+    background: #fff;
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* MOBILE TOP BAR */
+  #mobile-top-bar {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50px;
+    background: #fff;
+    border-bottom: 1px solid #dbdbdb;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 16px;
+    z-index: 1000;
+  }
+
+  .logo-m {
+    font-family: "Dancing Script", cursive;
+    font-size: 1.6rem;
+    font-weight: 700;
+  }
+
+  .m-header-left, .m-header-right {
+    display: flex;
+    gap: 18px;
+    font-size: 1.4rem;
+  }
+
+  .m-header-right .m-header-suggest {
+      font-size: 1.2rem;
+  }
+
+  /* MOBILE BOTTOM NAV */
+  #mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background: #fff;
+    border-top: 1px solid #dbdbdb;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+  }
+
+  .m-nav-item {
+    font-size: 1.6rem;
+    color: #262626;
+    cursor: pointer;
+  }
+
+  .m-nav-item.active {
+      color: #000;
+  }
+
+  .nav-pfp-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #dbdbdb;
+  }
+
+  .m-nav-item.active .nav-pfp-circle {
+      border: 2px solid #000;
+  }
+
+  /* FEED TWEAKS */
+  .feed-header {
+      padding: 10px 16px;
+      margin-bottom: 0;
+  }
+  .stories-row {
+      padding: 10px 16px;
+  }
+  .post-card {
+      max-width: 100%;
+      border-left: none;
+      border-right: none;
+      border-radius: 0;
+      margin-bottom: 15px;
+  }
+
+  /* PROFILE VIEW MOBILE (Instagram Style) */
+  .profile-header-elite {
+      flex-direction: column;
+      gap: 20px;
+      padding: 20px 16px;
+      margin-bottom: 10px;
+  }
+
+  .profile-header-header {
+      display: flex;
+      width: 100%;
+      align-items: center;
+      gap: 25px;
+  }
+
+  .pfp-large-wrap {
+      width: 80px;
+      height: 80px;
+  }
+
+  .profile-stats-row {
+      flex: 1;
+      justify-content: space-around;
+      gap: 0;
+  }
+
+  .profile-stats-row span {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.85rem;
+      color: #262626;
+  }
+
+  .profile-stats-row span b {
+      font-size: 1.1rem;
+      color: #000;
+  }
+
+  .profile-bio-elite {
+      width: 100%;
+      font-size: 0.9rem;
+  }
+
+  .profile-username-row {
+      position: absolute;
+      top: -45px; /* Move name to top bar if needed, or keep in header */
+      display: none; /* Hide desktop row */
+  }
+
+  /* New mobile username display in header */
+  .profile-name-mobile {
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 2px;
+  }
+
+  .profile-actions-mobile {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      margin-top: 5px;
+  }
+
+  .btn-edit-profile {
+      flex: 1;
+      text-align: center;
+      background: #efefef;
+      border: none;
+      padding: 8px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #000;
+  }
+
+  .post-user {
+      padding: 8px 12px;
+  }
+
+  .post-user-info b {
+      font-size: 0.85rem;
+  }
+
+  .profile-posts-tabs {
+      gap: 0;
+      justify-content: space-around;
+      border-top: 1px solid #dbdbdb;
+      padding-top: 10px;
+  }
+
+  .p-tab {
+      font-size: 1.4rem;
+      padding-bottom: 10px;
+  }
+
+  .p-tab.active {
+      border-top: none;
+      border-bottom: 2px solid #000;
+      margin-top: 0;
+      padding-top: 5px;
+  }
+
+  .p-tab span {
+      display: none; /* Hide text, only icons */
+  }
+
+  /* Grid adjustment */
+  #profile-content-area .grid-container {
+      gap: 1.5px;
+  }
+
+  .post-grid-placeholder {
+      gap: 1.5px;
+  }
+
+  /* Detail modal on mobile */
+  .detail-modal-card {
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      border-radius: 0;
+  }
+  .detail-left-pane {
+      max-height: 50vh;
+  }
+  .detail-right-pane {
+      flex: 1;
+      overflow-y: auto;
+  }
+}
+
+/* Ensure desktop elements are hidden by default when they should be */
+.hidden {
+  display: none !important;
 }

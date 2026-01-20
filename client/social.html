@@ -10,6 +10,20 @@
 </head>
 <body>
     <div id="app-container">
+        <!-- MOBILE TOP BAR -->
+        <header id="mobile-top-bar">
+            <div class="m-header-left">
+                <i class="fa-regular fa-square-plus" id="m-header-create"></i>
+            </div>
+            <div class="m-header-center">
+                <span class="logo-m">Socially <i class="fa-solid fa-chevron-down" style="font-size: 0.8rem;"></i></span>
+            </div>
+            <div class="m-header-right">
+                <i class="fa-regular fa-heart" id="m-header-notif"></i>
+                <i class="fa-solid fa-user-plus" id="m-header-suggest"></i>
+            </div>
+        </header>
+
         <!-- LEFT SIDEBAR -->
         <aside id="left-sidebar">
             <div class="nav-menu-wrapper">
@@ -69,10 +83,6 @@
 
                 <div class="feed-header">
                     <h2>Feeds</h2>
-                    <div class="tab-pill-group">
-                        <div class="tab-pill active" id="tab-popular">Popular</div>
-                        <div class="tab-pill" id="tab-latest">Latest</div>
-                    </div>
                 </div>
 
                 <div id="feed-container">
@@ -82,24 +92,28 @@
 
             <div id="profile-view" class="hidden">
                 <div class="profile-header-elite">
-                    <div class="pfp-large-wrap">
-                        <img src="me.png" id="profile-pfp-large" alt="Profile">
-                    </div>
-                    <div class="profile-info-elite">
-                        <div class="profile-username-row">
-                            <h2 id="profile-username">priya5</h2>
-                            <button class="btn-edit-profile">Edit Profile</button>
-                            <i class="fa-solid fa-gear" style="cursor: pointer;"></i>
+                    <div class="profile-header-header">
+                        <div class="pfp-large-wrap">
+                            <img src="me.png" id="profile-pfp-large" alt="Profile">
                         </div>
                         <div class="profile-stats-row">
                             <span><b id="prof-posts-count">0</b> posts</span>
                             <span><b id="prof-followers-count">0</b> followers</span>
                             <span><b id="prof-following-count">0</b> following</span>
                         </div>
-                        <div class="profile-bio-elite">
-                            <b id="prof-fullname">Katia Zuere</b>
-                            <p id="prof-bio">Digital Creator | Explorer</p>
+                    </div>
+                    <div class="profile-bio-elite">
+                        <div class="profile-username-row desktop-only">
+                            <h2 id="profile-username">priya5</h2>
+                            <button class="btn-edit-profile">Edit Profile</button>
+                            <i class="fa-solid fa-gear" style="cursor: pointer; font-size: 1.2rem;"></i>
                         </div>
+                        <div class="profile-name-mobile" id="prof-fullname-m">Katia Zuere</div>
+                        <p id="prof-bio">Digital Creator | Explorer</p>
+                    </div>
+                    <div class="profile-actions-mobile">
+                        <button class="btn-edit-profile">Edit Profile</button>
+                        <button class="btn-edit-profile">Share Profile</button>
                     </div>
                 </div>
 
@@ -235,6 +249,25 @@
                 <p>Business Services</p>
             </footer>
         </aside>
+
+        <!-- MOBILE BOTTOM NAV -->
+        <nav id="mobile-bottom-nav">
+            <div class="m-nav-item active" data-tab="home">
+                <i class="fa-solid fa-house"></i>
+            </div>
+            <div class="m-nav-item" data-tab="search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+            <div class="m-nav-item" data-tab="create">
+                <i class="fa-regular fa-square-plus"></i>
+            </div>
+            <div class="m-nav-item" data-tab="activity">
+                <i class="fa-regular fa-heart"></i>
+            </div>
+            <div class="m-nav-item" data-tab="profile">
+                <img src="me.png" id="m-nav-pfp" class="nav-pfp-circle">
+            </div>
+        </nav>
     </div>
 
     <!-- Modals -->
