@@ -2695,13 +2695,14 @@ input:checked + .slider:before {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    align-items: flex-start;
-    text-align: left;
+    align-items: center; /* PERFECT CENTERING */
+    text-align: center;   /* PERFECT CENTERING */
   }
 
   .profile-title-row {
     display: flex;
     align-items: center;
+    justify-content: center; /* Center username and gear */
     gap: 20px;
     width: 100%;
   }
@@ -2715,6 +2716,7 @@ input:checked + .slider:before {
 
   .profile-stats-row {
     display: flex;
+    justify-content: center; /* PERFECT CENTERING */
     gap: 40px;
     margin: 5px 0;
   }
@@ -2739,6 +2741,7 @@ input:checked + .slider:before {
   .profile-link-row {
     display: flex;
     align-items: center;
+    justify-content: center; /* PERFECT CENTERING */
     gap: 8px;
     font-size: 1rem;
     font-weight: 500;
@@ -2750,7 +2753,7 @@ input:checked + .slider:before {
     gap: 15px;
     margin-top: 25px;
     width: 100%;
-    justify-content: flex-start;
+    justify-content: center; /* PERFECT CENTERING */
   }
 
   .btn-prof-action {
@@ -2822,6 +2825,95 @@ input:checked + .slider:before {
   #post-trigger-btn:hover {
     transform: scale(1.02);
     box-shadow: 0 6px 20px rgba(0, 210, 255, 0.4) !important;
+  }
+
+  /* Premium Middle Column / Post Cards */
+  #main-center {
+    background: transparent !important;
+  }
+
+  .post-card {
+    background: var(--premium-glass) !important;
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--premium-border) !important;
+    border-radius: 20px !important;
+    color: var(--premium-text) !important;
+    box-shadow: var(--premium-shadow);
+    transition: 0.3s;
+    max-width: 500px !important; /* Slightly more professional width */
+  }
+
+  .post-card:hover {
+    border-color: rgba(0, 210, 255, 0.3) !important;
+  }
+
+  .post-user-info b {
+    color: var(--premium-text) !important;
+    font-weight: 500 !important;
+  }
+
+  .post-content {
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  .post-actions-elite i {
+    color: var(--premium-text) !important;
+    opacity: 0.8;
+  }
+
+  .post-actions-elite i:hover {
+    color: var(--premium-accent) !important;
+    opacity: 1;
+    transform: scale(1.1);
+  }
+
+  .post-likes-info {
+    color: var(--premium-text) !important;
+  }
+
+  /* Premium Stories Section */
+  .section-header h2, .feed-header h2 {
+    color: var(--premium-text) !important;
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+
+  .stories-row {
+    background: var(--premium-glass);
+    backdrop-filter: blur(15px);
+    border: 1px solid var(--premium-border);
+    border-radius: 24px;
+    padding: 20px 15px;
+    margin-bottom: 30px;
+    box-shadow: var(--premium-shadow);
+  }
+
+  .story-img {
+    background: var(--premium-bg) !important;
+    border: 2px solid var(--premium-border);
+  }
+
+  .story-circle.unviewed .story-img {
+    background: 
+      linear-gradient(var(--premium-bg), var(--premium-bg)) padding-box,
+      linear-gradient(45deg, var(--premium-accent), #3a7bd5) border-box !important;
+    border: 3px solid transparent !important;
+  }
+
+  .story-img img {
+    border: 2px solid var(--premium-bg) !important;
+  }
+
+  .plus-icon {
+    background: var(--premium-accent) !important;
+    color: #fff !important;
+    border: 3px solid var(--premium-bg) !important;
+  }
+
+  .story-circle span {
+    color: rgba(255, 255, 255, 0.7) !important;
+    font-size: 0.8rem;
+    margin-top: 5px;
   }
 }
 
