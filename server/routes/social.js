@@ -466,42 +466,6 @@ router.get('/feed', protect, async (req, res) => {
     }
 });
 
-// --- SEED DUMMY DATA ---
-router.post('/seed', protect, async (req, res) => {
-    try {
-        // Only allow seeding if the DB is empty or for testing
-        const count = await User.countDocuments();
-        if (count > 10) return res.status(400).json({ message: "Already seeded" });
-
-        const demoUsers = [
-            { username: 'JaneDoe', fullName: 'Jane Doe', email: 'jane@demo.com', password: 'hashed' },
-            { username: 'JohnDoe', fullName: 'John Doe', email: 'john@demo.com', password: 'hashed' },
-            { username: 'PralayDev', fullName: 'Pralay Designer', email: 'pralay@demo.com', password: 'hashed' }
-        ];
-
-        // This is simplified. In real seed we'd hash passwords.
-        // For now, let's just create some posts for the EXISTING user and maybe 1-2 new ones.
-        
-        const contentExamples = [
-            "Just launched the new UI! What do you guys think? 🚀",
-            "Designing a unique experience is always better than following trends.",
-            "Who else loves glassmorphism in web design? ✨",
-            "The future of social media is here. 100x better than Insta!"
-        ];
-
-        for (let i = 0; i < 5; i++) {
-            await new Post({
-                user: req.user._id,
-                content: contentExamples[i % contentExamples.length],
-                image: "mynew.png"
-            }).save();
-        }
-
-        res.json({ message: "Demo posts created for your profile!" });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
 
 // ===== STORIES API =====
 
