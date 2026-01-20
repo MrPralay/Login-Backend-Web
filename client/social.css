@@ -2681,30 +2681,40 @@ input:checked + .slider:before {
   color: var(--text-main);
 }
 
+/* 1. The Container: Remove centering and align to the left edge */
 .profile-actions-desktop {
   display: flex;
   gap: 12px;
   margin-top: 15px;
   width: 100%;
-  justify-content: center; /* Center the buttons */
+  /* This ensures the buttons start at the left edge of the profile info */
+  justify-content: flex-start; 
+  /* Reset any inherited centering */
+  text-align: left;
 }
 
+/* 2. The Buttons: Maintain consistent size and style */
 .btn-prof-action {
-  flex: 0 1 170px; /* Constrain width for a professional look */
+  /* flex-grow: 0 (don't grow), flex-shrink: 1 (shrink if tiny), basis: 170px */
+  flex: 0 1 170px; 
   padding: 10px 20px;
   border: 1px solid #dbdbdb;
   border-radius: 8px;
   font-weight: 600;
   font-size: 0.9rem;
-  background: #ffffff !important; /* Force professional white */
-  color: #262626 !important;      /* Force professional dark text */
+  /* Use !important only if other global styles are fighting you */
+  background: #ffffff !important; 
+  color: #262626 !important;
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: center;
+  white-space: nowrap; /* Keeps text on one line */
 }
 
+/* 3. Hover effect for a professional feel */
 .btn-prof-action:hover {
-  background: #f0f0f0;
+  background-color: #fafafa !important;
+  border-color: #afafaf;
 }
 
 .pfp-large-wrap {
