@@ -333,35 +333,82 @@ body {
 
 @media (max-width: 768px) {
   body {
-    min-height: 100dvh;
-    background-image: url("walpaper.webp");
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-image: url('walpaper.webp');
     background-size: cover;
     background-position: center;
+    min-height: 100dvh;
+    margin: 0;
+    background-repeat: no-repeat;
+    font-family: Cambria, Georgia, serif;
   }
 
+  /* Splash image box */
   .pic {
     width: 90%;
     max-width: 360px;
     height: auto;
+    padding: 16px;
+    background-color: rgb(252, 252, 252);
+    border-radius: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
   .photo {
     width: 150px;
+    height: auto;
   }
 
+  /* Main container */
   .screen-container {
     width: 90%;
     max-width: 260px;
-    max-height: 54vh;
+    height: auto;
+    max-height: 80vh; /* Taller for reg form */
     padding: 16px;
+    background-color: rgba(237, 232, 228, 0.4);
     backdrop-filter: blur(3px);
-    overflow: hidden;
+    border-radius: 19px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 0%;
+    overflow: hidden; /* Changed from hidden to auto/hidden based on content */
+    animation: cardIn 0.6s ease-out forwards;
   }
 
   .username input,
-  .pass input {
+  .pass input,
+  .email-container input {
     width: 100%;
+    padding: 10px 14px;
+    margin: 10px auto;
+    font-size: 14px;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 15px;
+    outline: 1px solid rgb(100, 32, 121);
+    background: white; /* Ensure visibility on mobile */
+    color: black;
     animation: dividerIn 0.7s ease-out forwards;
+  }
+
+  .password-wrapper {
+      width: 100%;
+  }
+  .password-wrapper input {
+      margin: 10px auto !important;
+  }
+  
+  .toggle-password {
+    right: 12%; 
+    top: 32%;
+    color: #555; /* Darker for better visibility on white input */
   }
 
   @keyframes dividerIn {
@@ -377,7 +424,9 @@ body {
 
   .btn {
     width: 100%;
+    padding: 10px;
     font-size: 15px;
+    border-radius: 13px;
   }
 
   .btn:hover {
@@ -391,15 +440,43 @@ body {
   }
 
   .power {
+    font-size: 13px;
+    margin-top: 20px;
     visibility: hidden;
   }
 
   .fuck {
-    transform: scale(0.78);
+    transform: scale(0.85); /* Slightly larger than login to fit content */
+  }
+  
+  .logo-pic {
+      width: 180px;
+      height: auto;
+      margin-top: 0;
   }
 
+  .signup-text {
+      margin-top: 10px;
+      font-size: 14px;
+      transform: translateY(0);
+  }
+  
   .again {
-    transform: scale(0.91);
-    transform: translateY(-13px);
+    transform: scale(0.9);
+    transform: translateY(0);
+  }
+  
+  .send-otp-btn {
+      width: 100%;
+  }
+
+  .otp-inputs {
+      gap: 8px; /* Reduce gap for mobile */
+  }
+
+  .otp-box {
+      width: 38px;
+      height: 38px;
+      font-size: 18px;
   }
 }
