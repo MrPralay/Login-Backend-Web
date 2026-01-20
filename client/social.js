@@ -1174,6 +1174,18 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {}
     }
 
+    // --- VIDEO AUTOPLAY OBSERVER ---
+    const videoObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const video = entry.target;
+            if (entry.isIntersecting) {
+                video.play().catch(() => {});
+            } else {
+                video.pause();
+            }
+        });
+    }, { threshold: 0.6 });
+
     // --- FEED LOGIC ---
     const tabPopular = document.getElementById('tab-popular');
     const tabLatest = document.getElementById('tab-latest');
@@ -1301,6 +1313,10 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             feedContainer.appendChild(card);
             
+            // Observe video if present
+            const videoEl = card.querySelector('video');
+            if (videoEl) videoObserver.observe(videoEl);
+
             // Events
             const optionsIcon = card.querySelector('.fa-ellipsis');
             optionsIcon.onclick = (e) => {
@@ -1642,9 +1658,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // --- HEADER ACTIONS ---
             // Close Button
-            document.getElementById('close-detail-btn-header').onclick = () => {
-                detailModal.classList.add('hidden');
-            };
+            document.getElementById('close-detail-btn-header').onclick = closeDetailModal;
 
             // Options Menu logic
             const optionsBtn = document.getElementById('post-options-btn');
@@ -1723,10 +1737,28 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         container.appendChild(div);
     }
-    
-    // Close Detail Modal (Header Button)
-    document.getElementById('close-detail-btn-header').onclick = () => {
+
+
+    // Unified Close Modal Logic
+    function closeDetailModal() {
         detailModal.classList.add('hidden');
+        // Stop any playing video immediately
+        const vids = detailModal.querySelectorAll('video');
+        vids.forEach(v => {
+            v.pause();
+            v.currentTime = 0;
+            v.src = ""; // Force stop download/buffer
+        });
+    }
+    
+    // Close Detail Modal (Header Button) - Initial Bind
+    document.getElementById('close-detail-btn-header').onclick = closeDetailModal;
+
+    // Close on Outside Click
+    window.onclick = (event) => {
+        if (event.target == detailModal) {
+            closeDetailModal();
+        }
     };
 
     // Add profile tab switching listeners
