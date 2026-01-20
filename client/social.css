@@ -2685,6 +2685,7 @@ input:checked + .slider:before {
   display: flex;
   gap: 10px;
   margin-top: 5px;
+  justify-content: center;
 }
 
 .btn-prof-action {
