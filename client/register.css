@@ -368,7 +368,7 @@ body {
     width: 90%;
     max-width: 260px;
     height: auto;
-    max-height: 80vh; /* Taller for reg form */
+    max-height: 58vh; /* Adjusted to fit content better similar to login */
     padding: 16px;
     background-color: rgba(237, 232, 228, 0.4);
     backdrop-filter: blur(3px);
@@ -378,8 +378,18 @@ body {
     justify-content: center;
     align-items: center;
     margin: 0%;
-    overflow: hidden; /* Changed from hidden to auto/hidden based on content */
+    overflow: hidden;
     animation: cardIn 0.6s ease-out forwards;
+  }
+
+  .username,
+  .pass,
+  .email-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
   }
 
   .username input,
@@ -389,17 +399,25 @@ body {
     padding: 10px 14px;
     margin: 10px auto;
     font-size: 14px;
-    margin-left: auto;
-    margin-right: auto;
     border-radius: 15px;
     outline: 1px solid rgb(100, 32, 121);
-    background: white; /* Ensure visibility on mobile */
+    background: white; /* Visibility on mobile */
     color: black;
     animation: dividerIn 0.7s ease-out forwards;
+    box-sizing: border-box; /* Ensure padding doesn't affect width */
+  }
+
+  .username input::placeholder,
+  .pass input::placeholder,
+  .email-container input::placeholder {
+    color: #555 !important; /* Visible placeholder on white background */
   }
 
   .password-wrapper {
       width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
   }
   .password-wrapper input {
       margin: 10px auto !important;
@@ -407,8 +425,9 @@ body {
   
   .toggle-password {
     right: 12%; 
-    top: 32%;
-    color: #555; /* Darker for better visibility on white input */
+    top: 50%;
+    transform: translateY(-50%);
+    color: #555;
   }
 
   @keyframes dividerIn {
@@ -446,32 +465,35 @@ body {
   }
 
   .fuck {
-    transform: scale(0.85); /* Slightly larger than login to fit content */
+    transform: scale(0.78); /* Match login screen's scale */
   }
   
   .logo-pic {
       width: 180px;
       height: auto;
       margin-top: 0;
+      transform: translateY(16px); /* Match login screen logo offset */
   }
 
   .signup-text {
-      margin-top: 10px;
-      font-size: 14px;
-      transform: translateY(0);
+      margin-top: 20px;
+      font-size: 15px;
+      transform: translateY(20px);
   }
   
   .again {
-    transform: scale(0.9);
-    transform: translateY(0);
+    transform: scale(0.91);
+    transform: translateY(-13px);
   }
   
   .send-otp-btn {
       width: 100%;
+      margin-top: 0;
+      margin-bottom: 5px;
   }
 
   .otp-inputs {
-      gap: 8px; /* Reduce gap for mobile */
+      gap: 8px;
   }
 
   .otp-box {
