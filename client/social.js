@@ -1302,6 +1302,11 @@ document.addEventListener('DOMContentLoaded', () => {
             feedContainer.appendChild(card);
             
             // Events
+            const optionsIcon = card.querySelector('.fa-ellipsis');
+            optionsIcon.onclick = (e) => {
+                e.stopPropagation();
+                showPostOptions(post);
+            };
             const likeIcon = card.querySelector('[data-btn="like"]');
             likeIcon.onclick = () => toggleLike(post._id, likeIcon);
 
@@ -1643,57 +1648,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Options Menu logic
             const optionsBtn = document.getElementById('post-options-btn');
-            const optionsMenu = document.getElementById('post-options-menu');
-            const deleteOption = document.getElementById('option-delete');
-            const copyLinkOption = document.getElementById('option-copy-link');
-            const cancelOption = document.getElementById('option-cancel');
-
-            // Reset menu state
-            optionsMenu.classList.add('hidden');
-
-            const isOwner = post.user._id === (me.id || me._id);
-            if (isOwner) {
-                deleteOption.classList.remove('hidden');
-            } else {
-                deleteOption.classList.add('hidden');
-            }
-
             optionsBtn.onclick = (e) => {
                 e.stopPropagation();
-                optionsMenu.classList.toggle('hidden');
-            };
-
-            // Close menu when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!optionsMenu.contains(e.target) && e.target !== optionsBtn) {
-                    optionsMenu.classList.add('hidden');
-                }
-            });
-
-            cancelOption.onclick = () => optionsMenu.classList.add('hidden');
-
-            copyLinkOption.onclick = () => {
-                const url = `${window.location.origin}/?post=${post._id}`;
-                navigator.clipboard.writeText(url).then(() => {
-                    showToast('Link copied to clipboard!', 'success');
-                    optionsMenu.classList.add('hidden');
-                });
-            };
-
-            deleteOption.onclick = async () => {
-                if (!confirm('Are you sure you want to delete this post?')) return;
-                
-                try {
-                    const res = await fetch(`/api/social/post/${post._id}`, { method: 'DELETE' });
-                    if (res.ok) {
-                        detailModal.classList.add('hidden');
-                        init(); // Refresh feed/profile
-                    } else {
-                        showToast('Failed to delete post', 'error');
-                    }
-                } catch (err) {
-                    console.error(err);
-                }
+                showPostOptions(post);
             };
 
             // Comments
@@ -2170,4 +2127,50 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     init();
+
+    // --- GLOBAL POST OPTIONS ---
+    const optionsOverlay = document.getElementById('options-modal-overlay');
+    const globalDeleteBtn = document.getElementById('global-option-delete');
+    const globalCopyBtn = document.getElementById('global-option-copy-link');
+    const globalCancelBtn = document.getElementById('global-option-cancel');
+
+    function showPostOptions(post) {
+        optionsOverlay.classList.remove('hidden');
+        
+        const isOwner = (post.user._id || post.user) === (me.id || me._id);
+        
+        if (isOwner) {
+            globalDeleteBtn.classList.remove('hidden');
+        } else {
+            globalDeleteBtn.classList.add('hidden');
+        }
+
+        globalDeleteBtn.onclick = async () => {
+            if (!confirm('Are you sure you want to delete this post?')) return;
+            try {
+                const res = await fetch(`/api/social/post/${post._id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    showToast('Post deleted', 'success');
+                    optionsOverlay.classList.add('hidden');
+                    document.getElementById('post-detail-modal').classList.add('hidden');
+                    init();
+                } else {
+                    showToast('Failed to delete', 'error');
+                }
+            } catch (err) { console.error(err); }
+        };
+
+        globalCopyBtn.onclick = () => {
+            const url = `${window.location.origin}/?post=${post._id}`;
+            navigator.clipboard.writeText(url).then(() => {
+                showToast('Link copied to clipboard!', 'success');
+                optionsOverlay.classList.add('hidden');
+            });
+        };
+
+        globalCancelBtn.onclick = () => optionsOverlay.classList.add('hidden');
+        optionsOverlay.onclick = (e) => {
+            if (e.target === optionsOverlay) optionsOverlay.classList.add('hidden');
+        };
+    }
 });

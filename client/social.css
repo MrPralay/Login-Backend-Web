@@ -1035,17 +1035,32 @@ aside {
   align-items: center;
 }
 
+#options-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  transition: opacity 0.2s;
+}
+
 .post-options-menu {
-  position: absolute;
-  top: 50px;
-  right: 15px;
   background: #fff;
-  width: 200px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  z-index: 100;
+  width: 400px;
+  max-width: 90%;
+  border-radius: 12px;
   overflow: hidden;
-  border: 1px solid var(--border);
+  animation: modalScaleUp 0.1s ease-out;
+}
+
+@keyframes modalScaleUp {
+  from { transform: scale(1.1); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 .option-item {
@@ -2544,9 +2559,12 @@ input:checked + .slider:before {
 .skeleton-card {
   background: #fff;
   border: 1px solid #dbdbdb;
-  border-radius: 12px;
+  border-radius: 8px;
   margin-bottom: 24px;
   padding-bottom: 12px;
+  max-width: 470px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .skeleton-header {
