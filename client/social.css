@@ -19,173 +19,180 @@
   --glass-blur: blur(25px);
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Outfit", sans-serif;
-}
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Outfit", sans-serif;
+  }
 
-body {
-  background-image: url('https://images.unsplash.com/photo-1694500069324-d782decdd190?q=80&w=2000&auto=format&fit=crop');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  color: var(--text-main);
-  overflow: hidden;
-  height: 100vh;
-}
+  body {
+    background-image: url('https://wallpapershome.com/images/pages/pic_h/26418.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: var(--text-main);
+    overflow: hidden;
+    height: 100vh;
+  }
 
-#app-container {
-  display: flex;
-  justify-content: center;
-  max-width: 1300px;
-  margin: 0 auto;
-  height: 100vh;
-}
+  #app-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin: 0;
+    height: 100vh;
+  }
 
-/* --- SIDEBAR LEFT --- */
-#left-sidebar {
-  width: var(--sidebar-width);
-  padding: 10px 12px;
+  /* --- SIDEBAR LEFT --- */
+  #left-sidebar {
+    width: var(--sidebar-width);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    border-right: 1px solid var(--border);
+  }
+
+  .logo {
+    font-size: 2.2rem;
+    padding: 12px;
+    color: var(--text-main);
+    font-family: "Dancing Script", cursive;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-radius: 50%;
+    width: fit-content;
+  }
+
+  #main-nav {
+    margin-top: 5px;
+  }
+
+  .nav-btn {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    font-size: 1.25rem;
+    cursor: pointer;
+    border-radius: 30px;
+    transition: 0.2s;
+    margin-bottom: 4px;
+    width: fit-content;
+    gap: 20px;
+  }
+
+  .nav-btn i {
+    font-size: 1.6rem;
+  }
+
+  .nav-btn:hover {
+    background-color: var(--border);
+  }
+
+  .nav-btn.active {
+    font-weight: 800;
+  }
+
+  #post-trigger-btn {
+    background-color: var(--accent-blue);
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 30px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    width: 90%;
+    margin-top: 15px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  #post-trigger-btn:hover {
+    background-color: var(--accent-blue-hover);
+  }
+
+  .sidebar-bottom {
+    padding-bottom: 20px;
+  }
+
+  .current-user-pill {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 35px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .current-user-pill:hover {
+    background-color: var(--border);
+  }
+
+  .current-user-pill img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .pill-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pill-info span:first-child {
+    font-weight: 700;
+  }
+
+  /* Consolidated variables in the first root block */
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Outfit", sans-serif;
+  }
+
+  /* Global Body Style refined above */
+
+  #app-container {
+    display: flex;
+    height: 100vh;
+    /* edited now */
+    width: 100%;
+  }
+
+  /* SIDEBARS */
+  aside {
+    /* edited now */
+    overflow-y: auto;
+  }
+
+ #left-sidebar {
+  flex: 1;              /* This makes it fill the left gap */
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  border-right: 1px solid var(--border);
-}
-
-.logo {
-  font-size: 2.2rem;
-  padding: 12px;
-  color: var(--text-main);
-  font-family: "Dancing Script", cursive;
-  cursor: pointer;
-  transition: background 0.2s;
-  border-radius: 50%;
-  width: fit-content;
-}
-
-#main-nav {
-  margin-top: 5px;
-}
-
-.nav-btn {
-  display: flex;
-  align-items: center;
-  padding: 12px 15px;
-  font-size: 1.25rem;
-  cursor: pointer;
-  border-radius: 30px;
-  transition: 0.2s;
-  margin-bottom: 4px;
-  width: fit-content;
-  gap: 20px;
-}
-
-.nav-btn i {
-  font-size: 1.6rem;
-}
-
-.nav-btn:hover {
-  background-color: var(--border);
-}
-
-.nav-btn.active {
-  font-weight: 800;
-}
-
-#post-trigger-btn {
-  background-color: var(--accent-blue);
-  color: white;
-  border: none;
-  padding: 15px;
-  border-radius: 30px;
-  font-size: 1.1rem;
-  font-weight: 700;
-  width: 90%;
-  margin-top: 15px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-#post-trigger-btn:hover {
-  background-color: var(--accent-blue-hover);
-}
-
-.sidebar-bottom {
-  padding-bottom: 20px;
-}
-
-.current-user-pill {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 35px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.current-user-pill:hover {
-  background-color: var(--border);
-}
-
-.current-user-pill img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.pill-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.pill-info span:first-child {
-  font-weight: 700;
-}
-
-/* Consolidated variables in the first root block */
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Outfit", sans-serif;
-}
-
-/* Global Body Style refined above */
-
-#app-container {
-  display: flex;
-  height: 100vh;
-  max-width: 1440px;
-  margin: 0 auto;
-}
-
-/* SIDEBARS */
-aside {
-  padding: 24px;
-  overflow-y: auto;
-}
-
-#left-sidebar {
-  width: var(--sidebar-width);
-  display: flex;
-  flex-direction: column;
+  align-items: center; /* This pushes your menu icons to the right (toward the center) */
   justify-content: center;
   border-right: 1px solid var(--border-color);
   background: rgba(10, 10, 12, 0.4);
   backdrop-filter: var(--glass-blur);
+  padding: 10px 40px;    /* Added some right padding so it doesn't touch the line */
 }
 
 #right-sidebar {
-  width: var(--right-sidebar-width);
+  flex: 1;                /* This makes it fill the right gap */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; /* This keeps your cards on the left (toward the center) */
   border-left: 1px solid var(--border-color);
   background: rgba(10, 10, 12, 0.4);
   backdrop-filter: var(--glass-blur);
+  padding: 10px 40px;      /* Added some left padding so it doesn't touch the line */
 }
 
 .nav-menu {
@@ -399,13 +406,12 @@ aside {
 
 /* CENTER CONTENT */
 #main-center {
-  flex: 1;
+  width: 800px;  /* Use a fixed width like 800px or 900px */
   overflow-y: auto;
   padding: 24px;
   background: rgba(10, 10, 12, 0.3);
   backdrop-filter: var(--glass-blur);
 }
-
 .top-actions {
   display: flex;
   justify-content: space-between;
